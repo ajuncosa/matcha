@@ -1,0 +1,28 @@
+services:
+    backend:
+        container_name: "matcha-back"
+        image: oven/bun:1.3
+        networks:
+            - "matcha-net"
+        tty: true
+        volumes:
+            - "./backend:/home/bun/app"
+        command: ["bash"]
+        ports:
+            - 81:3000
+
+    frontend:
+        container_name: "matcha-front"
+        image: oven/bun:1.3
+        networks:
+            - "matcha-net"
+        tty: true
+        volumes:
+            - "./frontend:/home/bun/app"
+        command: ["bash"]
+        ports:
+            - 80:5173
+
+networks:
+    matcha-net:
+        driver: bridge
