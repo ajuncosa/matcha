@@ -23,6 +23,26 @@ services:
         ports:
             - 80:5173
 
+    database:
+        container_name: "matcha-database"
+        image: postgres:18.0
+        networks:
+            - "matcha-net"
+        volumes:
+            - "db-data:/var/lib/postgresql"
+        env_file: "db/.env"
+
+    adminer:
+        container_name: "matcha-adminer"
+        image: adminer
+        networks:
+            - "matcha-net"
+        ports:
+            - 8080:8080
+
 networks:
     matcha-net:
         driver: bridge
+
+volumes:
+    db-data:
