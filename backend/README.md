@@ -1,4 +1,4 @@
-# /app
+# Application
 
 To install dependencies:
 
@@ -9,7 +9,19 @@ bun install
 To run:
 
 ```bash
-bun run index.ts
+bun run dev
 ```
 
-This project was created using `bun init` in bun v1.3.1. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+# Database migration
+
+To run migrations:
+
+```bash
+bun run migrate
+```
+
+To rollback last migrations:
+
+```bash
+bun run migrate:rollback
+```
