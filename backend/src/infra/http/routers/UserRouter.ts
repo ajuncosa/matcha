@@ -1,0 +1,68 @@
+import type { UserRegisterRequestDto, UserLoginRequestDto } from "@/app/user/UserDto";
+import type { UserUseCases } from "@/app/user/UserUseCases";
+import { InvalidEmailFormatError, UserEmailAlreadyExists, UserNotFound } from "@/core/user/User";
+import { Router, type Request, type Response } from "express";
+
+export default class UserRouter {
+    private router: Router;
+    private userUseCases: UserUseCases;
+
+    constructor(userUseCases: UserUseCases) {
+        this.router = Router();
+        this.userUseCases = userUseCases;
+        console.log(this.userUseCases)
+        this.router.post("/login", (req, res) => this.login(req, res));
+        this.router.post("/register", this.register);
+    }
+
+    login(req: Request, res: Response) {
+        const dto: UserLoginRequestDto = {
+            email: req.body.email,
+            password: req.body.password
+        }
+        console.log(this.userUseCases)
+
+        try {
+            this.userUseCases.loginUser(dto);
+        }
+        catch (e) {
+            if (e instanceof UserNotFound) {
+                res.status(401).send(`User does not exist with email \"${req.body.email}\"`);
+            }
+            // TODO: add invalid password or whatever
+            else {
+                throw e;
+            }
+        }
+        res.status(200).send("User logged in");
+    }
+
+    register(req: Request, res: Response) {
+        const dto: UserRegisterRequestDto = {
+            email: req.body.email,
+            name: req.body.name,
+            lastname: req.body.lastname,
+            password: req.body.password
+        }
+        try {
+            this.userUseCases.registerUser(dto);
+        }
+        catch (e) {
+            if (e instanceof InvalidEmailFormatError) {
+                res.status(422).send(`Invalid email format \"${req.body.email}\"`);
+            }
+            else if (e instanceof UserEmailAlreadyExists) {
+                res.status(409).send(`Email \"${req.body.email}\" is already in use`);
+            }
+            else {
+                throw e;
+            }
+        }
+        res.status(200).send(`Hello ${req.body.email}`); 
+    }
+
+    getRouter(): Router {
+        return this.router;
+    }
+}
+

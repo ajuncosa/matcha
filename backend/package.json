@@ -12,11 +12,12 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "body-parser": "^2.2.0",
     "express": "^5.1.0",
     "pg": "^8.16.3"
   },
   "scripts": {
-    "dev": "bun run src/index.ts",
+    "dev": "bun --hot run src/index.ts",
     "migrate": "bun run ./scripts/migrate.ts",
     "migrate:rollback": "bun run ./scripts/migrate.ts --rollback"
   }

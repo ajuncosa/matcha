@@ -1,27 +1,27 @@
-class InvalidEmailFormatError extends Error {
+export class InvalidEmailFormatError extends Error {
     constructor() {
         super("Invalid email format");
     }
 }
 
-class Email {
-    private email: string;
-
-    constructor(email: string) {
-        //TODO: validate if email format is correct
-        this.email = email;
-    }
-}
-
-class UserNotFound extends Error {
+export class UserNotFound extends Error {
     constructor() {
         super("User not found");
     }
 }
 
-class UserEmailAlreadyExists extends Error {
+export class UserEmailAlreadyExists extends Error {
     constructor() {
         super("User email already exists");
+    }
+}
+
+export class Email {
+    private email: string;
+
+    constructor(email: string) {
+        //TODO: validate if email format is correct
+        this.email = email;
     }
 }
 
@@ -32,14 +32,18 @@ export class User {
     name: string;
     lastname: string;
     email: Email;
-    emailValidatedAt: Date;
+    emailValidatedAt: Date | null;
     password: string;
     createdAt: Date;
 
-    constructor(id: UserId) {
-
+    constructor(id: UserId, name: string, lastname: string, email: Email, password: string, createdAt: Date) {
+        this.id = id;
+        this.name = name;
+        this.lastname = lastname;
+        this.email = email;
+        this.password = password;
+        this.createdAt = createdAt;
+        this.emailValidatedAt = null;
     }
-
-    User() = delete;
 
 }
