@@ -10,9 +10,8 @@ export default class UserRouter {
     constructor(userUseCases: UserUseCases) {
         this.router = Router();
         this.userUseCases = userUseCases;
-        console.log(this.userUseCases)
         this.router.post("/login", (req, res) => this.login(req, res));
-        this.router.post("/register", this.register);
+        this.router.post("/register", (req, res) => this.register(req, res));
     }
 
     login(req: Request, res: Response) {
@@ -20,10 +19,10 @@ export default class UserRouter {
             email: req.body.email,
             password: req.body.password
         }
-        console.log(this.userUseCases)
 
         try {
             this.userUseCases.loginUser(dto);
+            res.status(200).send("User logged in");
         }
         catch (e) {
             if (e instanceof UserNotFound) {
@@ -34,10 +33,9 @@ export default class UserRouter {
                 throw e;
             }
         }
-        res.status(200).send("User logged in");
     }
 
-    register(req: Request, res: Response) {
+    async register(req: Request, res: Response) {
         const dto: UserRegisterRequestDto = {
             email: req.body.email,
             name: req.body.name,
@@ -45,7 +43,8 @@ export default class UserRouter {
             password: req.body.password
         }
         try {
-            this.userUseCases.registerUser(dto);
+            await this.userUseCases.registerUser(dto);
+            res.status(200).send(`Hello ${req.body.email}`); 
         }
         catch (e) {
             if (e instanceof InvalidEmailFormatError) {
@@ -58,7 +57,6 @@ export default class UserRouter {
                 throw e;
             }
         }
-        res.status(200).send(`Hello ${req.body.email}`); 
     }
 
     getRouter(): Router {

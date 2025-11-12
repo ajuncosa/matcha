@@ -23,6 +23,10 @@ export class Email {
         //TODO: validate if email format is correct
         this.email = email;
     }
+
+    value(): string {
+        return this.email;
+    }
 }
 
 export type UserId = number;

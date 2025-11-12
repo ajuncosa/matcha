@@ -1,18 +1,28 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { User, UserEmailAlreadyExists } from "@/core/user/User";
+import { Email, User, UserEmailAlreadyExists } from "@/core/user/User";
 import type { UserRegisterRequestDto, UserLoginRequestDto } from "@/app/user/UserDto";
+import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
+    private passwordHasher: IPasswordHasher;
 
-    constructor(userRepo: IUserRepository) {
+    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher) {
         this.userRepo = userRepo;
+        this.passwordHasher = passwordHasher;
     }
 
-    registerUser(dto: UserRegisterRequestDto): void {
-        console.log("register")
-        //user: User = new User();
-        //this.userRepo.createUser();
+    async registerUser(dto: UserRegisterRequestDto): Promise<void> {
+        const userEmail = new Email(dto.email);
+        const userExists: User | null = await this.userRepo.findUserByEmail(userEmail);
+        if (userExists)
+            throw new UserEmailAlreadyExists();
+
+        //TODO: check if password format and length is valid
+
+        const hashedPassword: string = await this.passwordHasher.hash(dto.password);
+
+        await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
     }
 
     loginUser(dto: UserLoginRequestDto): void {
