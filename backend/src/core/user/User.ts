@@ -10,6 +10,12 @@ export class UserNotFound extends Error {
     }
 }
 
+export class IncorrectPassword extends Error {
+    constructor() {
+        super("Incorrect password");
+    }
+}
+
 export class UserEmailAlreadyExists extends Error {
     constructor() {
         super("User email already exists");

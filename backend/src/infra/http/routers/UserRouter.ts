@@ -1,6 +1,6 @@
 import type { UserRegisterRequestDto, UserLoginRequestDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
-import { InvalidEmailFormatError, UserEmailAlreadyExists, UserNotFound } from "@/core/user/User";
+import { IncorrectPassword, InvalidEmailFormatError, UserEmailAlreadyExists, UserNotFound } from "@/core/user/User";
 import { Router, type Request, type Response } from "express";
 
 export default class UserRouter {
@@ -14,21 +14,23 @@ export default class UserRouter {
         this.router.post("/register", (req, res) => this.register(req, res));
     }
 
-    login(req: Request, res: Response) {
+    async login(req: Request, res: Response) {
         const dto: UserLoginRequestDto = {
             email: req.body.email,
             password: req.body.password
         }
 
         try {
-            this.userUseCases.loginUser(dto);
+            await this.userUseCases.loginUser(dto);
             res.status(200).send("User logged in");
         }
         catch (e) {
             if (e instanceof UserNotFound) {
                 res.status(401).send(`User does not exist with email \"${req.body.email}\"`);
             }
-            // TODO: add invalid password or whatever
+            else if (e instanceof IncorrectPassword) {
+                res.status(401).send(e.message);
+            }
             else {
                 throw e;
             }

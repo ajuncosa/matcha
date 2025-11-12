@@ -10,15 +10,11 @@ export default class UserRepositoryPostgres implements IUserRepository {
         this.pool = pool;
     }
 
-    findUserById(user: UserId): Promise<User | null> {
-
-    }
-
-    async findUserByEmail(email: Email): Promise<User | null> {
-        const query = await this.pool.query("SELECT * FROM users WHERE email=$1", [email.value()]);
+    async findUserById(userId: UserId): Promise<User | null> {
+        const query = await this.pool.query("SELECT * FROM users WHERE id=$1", [userId]);
         if (query.rows.length == 0)
             return null;
-        
+
         return new User(
             query.rows[0].id,
             query.rows[0].name,
@@ -27,7 +23,21 @@ export default class UserRepositoryPostgres implements IUserRepository {
             query.rows[0].password,
             new Date(query.rows[0].created_at)
         )
-        
+    }
+
+    async findUserByEmail(email: Email): Promise<User | null> {
+        const query = await this.pool.query("SELECT * FROM users WHERE email=$1", [email.value()]);
+        if (query.rows.length == 0)
+            return null;
+
+        return new User(
+            query.rows[0].id,
+            query.rows[0].name,
+            query.rows[0].lastName,
+            new Email(query.rows[0].email),
+            query.rows[0].password,
+            new Date(query.rows[0].created_at)
+        )
     }
 
     async createUser(name: string, lastname: string, email: Email, password: string): Promise<void> {

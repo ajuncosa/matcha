@@ -1,5 +1,5 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { Email, User, UserEmailAlreadyExists } from "@/core/user/User";
+import { Email, IncorrectPassword, User, UserEmailAlreadyExists, UserNotFound } from "@/core/user/User";
 import type { UserRegisterRequestDto, UserLoginRequestDto } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 
@@ -25,8 +25,19 @@ export class UserUseCases {
         await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
     }
 
-    loginUser(dto: UserLoginRequestDto): void {
-        console.log("login user case!");
+    async loginUser(dto: UserLoginRequestDto): Promise<void> {
+        const userEmail = new Email(dto.email);
+        const user: User | null = await this.userRepo.findUserByEmail(userEmail);
+        if (!user)
+            throw new UserNotFound();
+
+        const passwordIsValid: boolean = await this.passwordHasher.checkHash(dto.password, user.password);
+        
+        if (!passwordIsValid)
+            throw new IncorrectPassword();
+
+        // TODO: actually log in
+        
     }
 
     getUserProfile(): void  {
