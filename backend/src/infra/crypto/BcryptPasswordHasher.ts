@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 export class BcryptPasswordHasher implements IPasswordHasher {
     async hash(password: string): Promise<string> {
+        // TODO: generate different salt per user or something
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(password, salt);
 

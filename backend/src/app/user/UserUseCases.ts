@@ -1,6 +1,6 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
 import { Email, IncorrectPassword, User, UserEmailAlreadyExists, UserNotFound } from "@/core/user/User";
-import type { UserRegisterRequestDto, UserLoginRequestDto } from "@/app/user/UserDto";
+import type { UserRegisterRequestDto, UserLoginRequestDto, UserProfileRequestDto } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 
 export class UserUseCases {
@@ -40,7 +40,10 @@ export class UserUseCases {
         
     }
 
-    getUserProfile(): void  {
-
+    async getUserProfile(dto: UserProfileRequestDto): Promise<User> {
+        const user: User | null = await this.userRepo.findUserById(dto.id);
+        if (!user)
+            throw new UserNotFound();
+        return user;
     }
 }
