@@ -8,15 +8,16 @@ import type { IPasswordHasher } from "./core/user/IPasswordHasher";
 import { BcryptPasswordHasher } from "./infra/crypto/BcryptPasswordHasher";
 import { Pool } from "pg";
 import cookieSession from "cookie-session";
-import JwtAuthMiddleware from "@/infra/crypto/JwtAuthMiddleware";
+import AuthRouter from "@/infra/http/routers/AuthRouter";
+import { verifyToken } from "@/infra/http/Middlewares";
 
 const pgPool: Pool = new Pool(); 
 
 const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
 const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
 const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher);
-const jwtAuthMiddleware: JwtAuthMiddleware = new JwtAuthMiddleware("my-secret"); // FIXME: add a real key
-const userRouter: UserRouter = new UserRouter(userUseCases, jwtAuthMiddleware);
+const authRouter: AuthRouter = new AuthRouter(userUseCases);
+const userRouter: UserRouter = new UserRouter(userUseCases);
 
 declare global {
    namespace Express {
@@ -31,7 +32,7 @@ app.use(bodyParser.json());
 
 app.use(cookieSession({
     name: 'session',
-    keys: ['my-secret-key'], // FIXME: add something secret (?)
+    keys: [process.env.COOKIESESSIONSECRETKEY!], // FIXME: remove exclamation
     httpOnly: true,
     //secure: true, // cookie only sent through HTTPS
     sameSite: 'strict',
@@ -39,9 +40,9 @@ app.use(cookieSession({
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
-app.use("/user", userRouter.getRouter());
+app.use("/auth", authRouter.getRouter());
+app.use("/user", verifyToken, userRouter.getRouter());
 
 app.listen(3000, () => {
     console.log("Running")
 });
-
