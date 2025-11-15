@@ -1,19 +1,25 @@
-import type { UserRegisterRequestDto, UserLoginRequestDto, UserProfileRequestDto, UserProfileResponseDto, UserLoginResponseDto } from "@/app/user/UserDto";
+import type { UserRegisterRequestDto, UserLoginRequestDto, UserProfileResponseDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
-import { IncorrectPassword, InvalidEmailFormatError, UserEmailAlreadyExists, UserNotFound } from "@/core/user/User";
+import { IncorrectPassword, InvalidEmailFormatError, User, UserEmailAlreadyExists, UserNotFound } from "@/core/user/User";
+import type JwtAuthMiddleware from "@/infra/crypto/JwtAuthMiddleware";
 import { Router, type Request, type Response } from "express";
 
 export default class UserRouter {
     private router: Router;
     private userUseCases: UserUseCases;
+    private jwtAuthMiddleware: JwtAuthMiddleware;
 
-    constructor(userUseCases: UserUseCases) {
+    constructor(userUseCases: UserUseCases, jwtAuthMiddleware: JwtAuthMiddleware) {
         this.router = Router();
         this.userUseCases = userUseCases;
-        this.router.post("/login", (req, res) => this.login(req, res));
+        this.jwtAuthMiddleware = jwtAuthMiddleware;
+
         this.router.post("/register", (req, res) => this.register(req, res));
-        // TODO: implement authenticator and insert instead of first handler
-        this.router.get("/profile", (req, res, next) => {console.log("requires auth"); return next()}, (req, res) => this.getProfile(req, res));
+        this.router.post("/login", (req, res) => this.login(req, res));
+        this.router.post("/logout", (req, res) => this.logout(req, res));
+        this.router.get("/profile",
+            (req, res, next) => this.jwtAuthMiddleware.verifyToken(req, res, next),
+            (req, res) => this.getProfile(req, res));
     }
 
     async login(req: Request, res: Response) {
@@ -23,11 +29,9 @@ export default class UserRouter {
         }
 
         try {
-            await this.userUseCases.loginUser(dto);
-            const responseDto: UserLoginResponseDto = {
-                jwt: "abcd" // TODO: implement jwt
-            }
-            res.status(200).send(responseDto);
+            const user: User = await this.userUseCases.loginUser(dto);
+            req.session!.jwt = this.jwtAuthMiddleware.getNewToken(user.id);
+            res.status(200).send("User logged in");
         }
         catch (e) {
             if (e instanceof UserNotFound) {
@@ -40,6 +44,11 @@ export default class UserRouter {
                 throw e;
             }
         }
+    }
+
+    logout(req: Request, res: Response) {
+        req.session = null;
+        res.send("Logged out");
     }
 
     async register(req: Request, res: Response) {
@@ -67,11 +76,13 @@ export default class UserRouter {
     }
 
     async getProfile(req: Request, res: Response) {
-        const dto: UserProfileRequestDto = {
-            id: req.body.id
-        }
         try {
-            const user = await this.userUseCases.getUserProfile(dto);
+            if (!req.userId)
+            {
+                res.status(401).send(`No user ID.`);
+                return;
+            }
+            const user: User = await this.userUseCases.getUserProfile(req.userId);
             const responseDto: UserProfileResponseDto = {
                 id: user.id,
                 name: user.name,
@@ -84,7 +95,7 @@ export default class UserRouter {
         }
         catch (e) {
             if (e instanceof UserNotFound) {
-                res.status(401).send(`User with ID \"${req.body.id}\" was not found`);
+                res.status(401).send(`User with ID \"${req.userId}\" was not found`);
             }
             else {
                 throw e;

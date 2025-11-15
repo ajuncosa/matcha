@@ -25,7 +25,7 @@ export class UserUseCases {
         await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
     }
 
-    async loginUser(dto: UserLoginRequestDto): Promise<void> {
+    async loginUser(dto: UserLoginRequestDto): Promise<User> {
         const userEmail = new Email(dto.email);
         const user: User | null = await this.userRepo.findUserByEmail(userEmail);
         if (!user)
@@ -36,12 +36,11 @@ export class UserUseCases {
         if (!passwordIsValid)
             throw new IncorrectPassword();
 
-        // TODO: actually log in
-        
+        return user;        
     }
 
-    async getUserProfile(dto: UserProfileRequestDto): Promise<User> {
-        const user: User | null = await this.userRepo.findUserById(dto.id);
+    async getUserProfile(userId: number): Promise<User> {
+        const user: User | null = await this.userRepo.findUserById(userId);
         if (!user)
             throw new UserNotFound();
         return user;
