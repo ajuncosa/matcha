@@ -10,14 +10,6 @@ export interface UserLoginRequestDto {
     password: string;
 }
 
-export interface UserLoginResponseDto {
-    jwt: string;
-}
-
-export interface UserProfileRequestDto {
-    id: number;
-}
-
 export interface UserProfileResponseDto {
     id: number;
     name: string;

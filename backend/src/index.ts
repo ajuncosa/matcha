@@ -7,20 +7,42 @@ import UserRepositoryPostgres from "@/infra/repositories/UserRepositoryPostgres"
 import type { IPasswordHasher } from "./core/user/IPasswordHasher";
 import { BcryptPasswordHasher } from "./infra/crypto/BcryptPasswordHasher";
 import { Pool } from "pg";
+import cookieSession from "cookie-session";
+import AuthRouter from "@/infra/http/routers/AuthRouter";
+import { verifyToken } from "@/infra/http/Middlewares";
 
 const pgPool: Pool = new Pool(); 
 
 const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
 const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
 const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher);
+const authRouter: AuthRouter = new AuthRouter(userUseCases);
 const userRouter: UserRouter = new UserRouter(userUseCases);
+
+declare global {
+   namespace Express {
+      interface Request {
+         userId?: number
+      }
+   }
+}
 
 const app = express()
 app.use(bodyParser.json());
 
-app.use("/user", userRouter.getRouter());
+app.use(cookieSession({
+    name: 'session',
+    keys: [process.env.COOKIESESSIONSECRETKEY!], // FIXME: remove exclamation
+    httpOnly: true,
+    //secure: true, // cookie only sent through HTTPS
+    sameSite: 'strict',
+    signed: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
+
+app.use("/auth", authRouter.getRouter());
+app.use("/user", verifyToken, userRouter.getRouter());
 
 app.listen(3000, () => {
     console.log("Running")
-})
-
+});

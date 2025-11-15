@@ -5,7 +5,9 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/cookie-session": "^2.0.49",
     "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.15.6"
   },
   "peerDependencies": {
@@ -14,6 +16,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.0",
+    "cookie-session": "^2.1.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3"
