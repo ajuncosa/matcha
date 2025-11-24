@@ -7,9 +7,9 @@ import UserRepositoryPostgres from "@/infra/repositories/UserRepositoryPostgres"
 import type { IPasswordHasher } from "./core/user/IPasswordHasher";
 import { BcryptPasswordHasher } from "./infra/crypto/BcryptPasswordHasher";
 import { Pool } from "pg";
-import cookieSession from "cookie-session";
 import AuthRouter from "@/infra/http/routers/AuthRouter";
-import { verifyToken } from "@/infra/http/Middlewares";
+import { isAuthenticated } from "@/infra/http/Middlewares";
+import session, { MemoryStore } from "express-session";
 
 const pgPool: Pool = new Pool(); 
 
@@ -19,29 +19,26 @@ const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHash
 const authRouter: AuthRouter = new AuthRouter(userUseCases);
 const userRouter: UserRouter = new UserRouter(userUseCases);
 
-declare global {
-   namespace Express {
-      interface Request {
-         userId?: number
-      }
-   }
-}
-
 const app = express()
 app.use(bodyParser.json());
 
-app.use(cookieSession({
-    name: 'session',
-    keys: [process.env.COOKIESESSIONSECRETKEY!], // FIXME: remove exclamation
-    httpOnly: true,
-    //secure: true, // cookie only sent through HTTPS
-    sameSite: 'strict',
-    signed: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+app.use(session({
+    secret: [process.env.COOKIESESSIONSECRETKEY!], // FIXME: remove exclamation
+    resave: false,
+    //rolling: true,
+    saveUninitialized: false,
+    store: new MemoryStore, // FIXME: use a production one
+    cookie: {
+        httpOnly: true,
+        //secure: true, // cookie only sent through HTTPS
+        //secure: process.env.NODE_ENV === "production",
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
 }));
 
 app.use("/auth", authRouter.getRouter());
-app.use("/user", verifyToken, userRouter.getRouter());
+app.use("/user", isAuthenticated, userRouter.getRouter());
 
 app.listen(3000, () => {
     console.log("Running")

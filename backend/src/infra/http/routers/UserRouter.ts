@@ -15,12 +15,7 @@ export default class UserRouter extends MatchaRouter {
 
     async getProfile(req: Request, res: Response) {
         try {
-            if (!req.userId)
-            {
-                res.status(401).send(`No user ID.`);
-                return;
-            }
-            const user: User = await this.userUseCases.getUserProfile(req.userId);
+            const user: User = await this.userUseCases.getUserProfile(req.session.userId!);
             const responseDto: UserProfileResponseDto = {
                 id: user.id,
                 name: user.name,
@@ -33,7 +28,7 @@ export default class UserRouter extends MatchaRouter {
         }
         catch (e) {
             if (e instanceof UserNotFound) {
-                res.status(401).send(`User with ID \"${req.userId}\" was not found`);
+                res.status(401).send(`User with ID \"${req.session.userId}\" was not found`);
             }
             else {
                 throw e;

@@ -3,7 +3,6 @@ import type { UserUseCases } from "@/app/user/UserUseCases";
 import MatchaRouter from "./MatchaRouter";
 import type { UserLoginRequestDto, UserRegisterRequestDto } from "@/app/user/UserDto";
 import { IncorrectPassword, InvalidEmailFormatError, UserEmailAlreadyExists, UserNotFound, type User } from "@/core/user/User";
-import jwt from "jsonwebtoken"
 
 export default class AuthRouter extends MatchaRouter {
     private userUseCases: UserUseCases;
@@ -17,10 +16,6 @@ export default class AuthRouter extends MatchaRouter {
     }
 
     async login(req: Request, res: Response) {
-        if (req.session?.isPopulated) {
-            res.status(200).send("User is already logged in");
-            return;
-        }
 
         const dto: UserLoginRequestDto = {
             email: req.body.email,
@@ -29,15 +24,7 @@ export default class AuthRouter extends MatchaRouter {
 
         try {
             const user: User = await this.userUseCases.loginUser(dto);
-            // TODO: implement token refresh
-            req.session!.jwt = jwt.sign(
-                { id: user.id },
-                process.env.JWTSECRET!, // FIXME: remove exclamation
-                {
-                    algorithm: 'HS256',
-                    expiresIn: '10m',
-                }
-            );
+            req.session.userId = user.id;
             res.status(200).send("User logged in");
         }
         catch (e) {
@@ -54,15 +41,17 @@ export default class AuthRouter extends MatchaRouter {
     }
 
     logout(req: Request, res: Response) {
-        req.session = null;
-        res.send("Logged out");
+        req.session.destroy(function(err) {
+            if (err) {
+                console.log(err);
+            }
+            else {
+                res.status(200).send("Logged out"); // TODO: redirect?
+            }
+        });
     }
 
     async register(req: Request, res: Response) {
-        if (req.session?.isPopulated) {
-            res.status(200).send("User is already logged in");
-            return;
-        }
 
         const dto: UserRegisterRequestDto = {
             email: req.body.email,
