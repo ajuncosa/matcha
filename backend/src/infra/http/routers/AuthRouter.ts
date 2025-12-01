@@ -25,14 +25,14 @@ export default class AuthRouter extends MatchaRouter {
         try {
             const user: User = await this.userUseCases.loginUser(dto);
             req.session.userId = user.id;
-            res.status(200).send("User logged in");
+            res.status(200).send("User logged in");   //TODO: easier for frontend to parse if JSON
         }
         catch (e) {
             if (e instanceof UserNotFound) {
-                res.status(401).send(`User with email \"${req.body.email}\" does not exist`);
+                res.status(401).send(`User with email \"${req.body.email}\" does not exist`);   //TODO: easier for frontend to parse if JSON
             }
             else if (e instanceof IncorrectPassword) {
-                res.status(401).send(e.message);
+                res.status(401).send(e.message);   //TODO: easier for frontend to parse if JSON
             }
             else {
                 throw e;
@@ -46,13 +46,12 @@ export default class AuthRouter extends MatchaRouter {
                 console.log(err);
             }
             else {
-                res.status(200).send("Logged out"); // TODO: redirect?
+                res.status(200).send("Logged out"); // TODO: redirect?   //TODO: easier for frontend to parse if JSON
             }
         });
     }
 
     async register(req: Request, res: Response) {
-
         const dto: UserRegisterRequestDto = {
             email: req.body.email,
             name: req.body.name,
@@ -61,14 +60,14 @@ export default class AuthRouter extends MatchaRouter {
         }
         try {
             await this.userUseCases.registerUser(dto);
-            res.status(200).send(`Hello ${req.body.email}`); 
+            res.status(200).send(`Hello ${req.body.email}`); //TODO: easier for frontend to parse if JSON
         }
         catch (e) {
             if (e instanceof InvalidEmailFormatError) {
-                res.status(422).send(`Invalid email format \"${req.body.email}\"`);
+                res.status(422).send(`Invalid email format \"${req.body.email}\"`);   //TODO: easier for frontend to parse if JSON
             }
             else if (e instanceof UserEmailAlreadyExists) {
-                res.status(409).send(`Email \"${req.body.email}\" is already in use`);
+                res.status(409).send(`Email \"${req.body.email}\" is already in use`);  //TODO: easier for frontend to parse if JSON
             }
             else {
                 throw e;

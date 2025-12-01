@@ -7,6 +7,7 @@ import './index.css';
 
 import Register from '@/views/Register';
 import Login from '@/views/Login';
+import Home from '@/views/Home';
 
 
 function Index() {
@@ -66,6 +67,7 @@ const router = createBrowserRouter([
             { index: true, element: <Index /> },
             { path: 'login', element: <Login /> },
             { path: 'register', element: <Register /> },
+            { path: 'home', element: <Home /> },
             { path: '*', element: <NotFoundPage /> },
         ],
     },
