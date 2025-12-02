@@ -14,12 +14,69 @@ import {
     FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useState } from "react"
+
+interface LoginForm {
+    email: string;
+    password: string;
+};
 
 export function LoginForm({
     className,
     ...props
 }: React.ComponentProps<"div">) {
+
+    let navigate = useNavigate();
+    const [form, setForm] = useState<LoginForm>({
+        email: "",
+        password: ""
+    });
+    const [formError, setFormError] = useState<string>("")
+
+    function onFormChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setForm({
+            ...form,
+            [e.target.id]: e.target.value
+        })
+    }
+
+    async function submit(e: React.MouseEvent) {
+        e.preventDefault();
+        setFormError("");
+
+        if (!form.email || !form.password) {
+            setFormError("Please fill all the required fields");
+            return;
+        }
+
+        const req = await fetch("http://localhost/api/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: form.email,
+                password: form.password
+            })
+        });
+
+        if (req.status != 200) {
+            if (req.body) {
+                const reqBody = await req.text();
+                setFormError(reqBody);
+            }
+            else
+                setFormError(`Server error (${req.status})`);
+            return;
+        }
+        else {
+            navigate('/home');
+        }
+
+    }
+
+
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
@@ -39,6 +96,7 @@ export function LoginForm({
                                     type="email"
                                     placeholder="m@example.com"
                                     required
+                                    onChange={onFormChange} 
                                 />
                             </Field>
                             <Field>
@@ -51,10 +109,11 @@ export function LoginForm({
                                         Forgot your password?
                                     </a>
                                 </div>
-                                <Input id="password" type="password" required />
+                                <Input id="password" type="password" required onChange={onFormChange} value={form.password} />
                             </Field>
                             <Field>
-                                <Button type="submit">Login</Button>
+                                <span>{formError}</span>
+                                <Button type="submit" onClick={submit}>Login</Button>
                                 <FieldDescription className="text-center">
                                     Don&apos;t have an account? <Link to="/register">Sign up</Link>
                                 </FieldDescription>

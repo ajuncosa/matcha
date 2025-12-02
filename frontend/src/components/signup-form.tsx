@@ -14,12 +14,12 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useState } from "react";
-import { Link, redirect, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 interface RegisterForm {
-    firstname: string,
-    lastname: string,
-    email: string,
+    firstname: string;
+    lastname: string;
+    email: string;
     password: string;
     confirm_password: string;
 };
