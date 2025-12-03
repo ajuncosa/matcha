@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Link, useNavigate } from "react-router";
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface LoginForm {
     email: string;
@@ -28,10 +28,12 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
 
     let navigate = useNavigate();
+
     const [form, setForm] = useState<LoginForm>({
         email: "",
         password: ""
     });
+
     const [formError, setFormError] = useState<string>("")
 
     function onFormChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -71,9 +73,9 @@ export function LoginForm({
             return;
         }
         else {
+            localStorage.setItem("loggedIn", "true");
             navigate('/home');
         }
-
     }
 
 

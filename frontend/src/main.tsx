@@ -1,4 +1,4 @@
-import React, { StrictMode } from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
@@ -8,6 +8,7 @@ import './index.css';
 import Register from '@/views/Register';
 import Login from '@/views/Login';
 import Home from '@/views/Home';
+import { AuthGuard, NoAuthGuard } from './components/auth-guard';
 
 
 function Index() {
@@ -65,9 +66,9 @@ const router = createBrowserRouter([
         errorElement: <RootErrorBoundary />,
         children: [
             { index: true, element: <Index /> },
-            { path: 'login', element: <Login /> },
-            { path: 'register', element: <Register /> },
-            { path: 'home', element: <Home /> },
+            { path: 'login', middleware: [NoAuthGuard], element: <Login /> },
+            { path: 'register', middleware: [NoAuthGuard], element: <Register /> },
+            { path: 'home', middleware: [AuthGuard], element: <Home /> },
             { path: '*', element: <NotFoundPage /> },
         ],
     },
