@@ -41,7 +41,7 @@ export default function MobileNavigation() {
     }
 
     return (
-        <div className="absolute bottom-0 w-full flex justify-between p-2 md:hidden gap-2">
+        <div className="fixed bottom-0 w-full flex justify-between p-2 md:hidden gap-2 bg-white">
             {menuItems.map((menuItem) => {
                 return (
                     <NavLink

@@ -66,7 +66,7 @@ export default function HomeLayout() {
                         <Sheet>
                             <SheetTrigger className="cursor-pointer relative flex gap-1">
                                 <Bell />
-                                <Badge variant="outline">99</Badge>
+                                <Badge variant="destructive">4</Badge>
                             </SheetTrigger>
                             <SheetContent>
                                 <SheetHeader>
@@ -90,7 +90,7 @@ export default function HomeLayout() {
                                         </Item>
                                     </div>
                                 </div>
-                                
+
                                 <SheetFooter>
                                     <SheetClose asChild>
                                         <Button variant="outline" className="cursor-pointer">Clear all</Button>
@@ -100,10 +100,10 @@ export default function HomeLayout() {
                         </Sheet>
                     </div>
                 </header>
-                <main className="p-4 pt-0">
+                <main className="p-4 pt-0 mb-24 max-w-[1024px] mx-auto">
                     <Outlet />
                 </main>
-                <MobileNavigation/>
+                <MobileNavigation />
             </SidebarInset>
         </SidebarProvider>
     )
