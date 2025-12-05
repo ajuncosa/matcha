@@ -5,10 +5,14 @@ import { RouterProvider } from 'react-router/dom';
 import { useRouteError, isRouteErrorResponse, Outlet } from 'react-router';
 import './index.css';
 
-import Register from '@/views/Register';
-import Login from '@/views/Login';
-import Home from '@/views/Home';
-import { AuthGuard, NoAuthGuard } from './components/auth-guard';
+import Register from '@/pages/Register';
+import Login from '@/pages/Login';
+import { AuthGuard, NoAuthGuard } from '@/components/auth-guard';
+import HomeLayout from '@/components/home-layout';
+import SearchPage from './pages/Search';
+import BrowsePage from './pages/Browse';
+import ProfilePage from './pages/Profile';
+import ChatPage from './pages/Chat';
 
 
 function Index() {
@@ -16,8 +20,6 @@ function Index() {
         
     </>;
 }
-
-
 
 function RootLayout() {
     return (
@@ -68,7 +70,28 @@ const router = createBrowserRouter([
             { index: true, element: <Index /> },
             { path: 'login', middleware: [NoAuthGuard], element: <Login /> },
             { path: 'register', middleware: [NoAuthGuard], element: <Register /> },
-            { path: 'home', middleware: [AuthGuard], element: <Home /> },
+            {
+                element: <HomeLayout/>,
+                middleware: [AuthGuard],
+                children: [
+                    {
+                        path: "/search",
+                        element: <SearchPage/>
+                    },
+                    {
+                        path: "/browser",
+                        element: <BrowsePage/>
+                    },
+                    {
+                        path: "/profile",
+                        element: <ProfilePage/>
+                    },
+                    {
+                        path: "/chat",
+                        element: <ChatPage/>
+                    }
+                ]
+            },
             { path: '*', element: <NotFoundPage /> },
         ],
     },
