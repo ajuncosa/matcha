@@ -10,6 +10,6 @@ export function authGuard() {
 export function noAuthGuard() {
     if (localStorage.getItem("loggedIn") == "true")
     {
-        throw redirect("/home");
+        throw redirect("/browser");
     }
 }

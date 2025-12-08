@@ -2,11 +2,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item";
-import { Label } from "@/components/ui/label";
-import { ArrowRight, CircleArrowUp, MoveUp, SearchIcon, SendHorizonal } from "lucide-react";
+import { SendHorizonal } from "lucide-react";
 
 export default function ChatPage() {
     return (
@@ -73,7 +72,7 @@ export default function ChatPage() {
                             </ItemContent>
                         </Item>
                     </CardHeader>
-                    <CardContent className="px-5">
+                    <CardContent className="px-5 flex flex-col gap-2">
                         <div className="flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm bg-muted">
                             Hi, how can I help you today?
                         </div>
