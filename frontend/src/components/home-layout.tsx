@@ -100,7 +100,7 @@ export default function HomeLayout() {
                         </Sheet>
                     </div>
                 </header>
-                <main className="p-4 pt-0 mb-24 max-w-[1024px] mx-auto">
+                <main className="p-4 pt-0 mb-24 max-w-[1200px] mx-auto w-full">
                     <Outlet />
                 </main>
                 <MobileNavigation />
