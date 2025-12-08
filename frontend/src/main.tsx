@@ -7,7 +7,7 @@ import './index.css';
 
 import Register from '@/pages/Register';
 import Login from '@/pages/Login';
-import { AuthGuard, NoAuthGuard } from '@/components/auth-guard';
+import { authGuard, noAuthGuard } from '@/components/auth-guard';
 import HomeLayout from '@/components/home-layout';
 import SearchPage from './pages/Search';
 import BrowsePage from './pages/Browse';
@@ -68,11 +68,11 @@ const router = createBrowserRouter([
         errorElement: <RootErrorBoundary />,
         children: [
             { index: true, element: <Index /> },
-            { path: 'login', middleware: [NoAuthGuard], element: <Login /> },
-            { path: 'register', middleware: [NoAuthGuard], element: <Register /> },
+            { path: 'login', middleware: [noAuthGuard], element: <Login /> },
+            { path: 'register', middleware: [noAuthGuard], element: <Register /> },
             {
                 element: <HomeLayout/>,
-                middleware: [AuthGuard],
+                middleware: [authGuard],
                 children: [
                     {
                         path: "/search",

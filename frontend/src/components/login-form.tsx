@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Link, useNavigate } from "react-router";
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 interface LoginForm {
     email: string;

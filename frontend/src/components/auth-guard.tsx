@@ -1,13 +1,13 @@
 import { redirect } from "react-router";
 
-export function AuthGuard() {
+export function authGuard() {
     if (localStorage.getItem("loggedIn") != "true")
     {
         throw redirect("/login");
     }
 }
 
-export function NoAuthGuard() {
+export function noAuthGuard() {
     if (localStorage.getItem("loggedIn") == "true")
     {
         throw redirect("/home");
