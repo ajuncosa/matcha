@@ -129,16 +129,16 @@ export default function BrowsePage() {
                     </PopoverContent>
                 </Popover>
             </div>
-            <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4">
                 {
                     people.map((item, idx) =>
-                        <Card className="w-full rounded-md">
-                            <CardContent>
+                        <Card className="w-full rounded-md py-4 gap-3">
+                            <CardContent className="px-4">
                                 <div className="object-cover w-full">
                                     <img className="rounded-lg" src={`https://lipsum.app/random/680x420?seed=${idx}`} alt="#" />
                                 </div>
                             </CardContent>
-                            <CardFooter className="flex flex-col items-start">
+                            <CardFooter className="flex flex-col items-start px-4">
                                 <div className="text-xl">
                                     <span className="font-bold">
                                         {item.name} {item.lastname}
@@ -154,7 +154,6 @@ export default function BrowsePage() {
                         </Card>
                     )
                 }
-
             </div>
         </div>
     )
