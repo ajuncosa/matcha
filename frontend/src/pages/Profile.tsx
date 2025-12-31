@@ -2,6 +2,10 @@ import { AvatarFallback, AvatarImage, Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mars, ThumbsUpIcon } from "lucide-react";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card"
 
 export default function ProfilePage() {
     return (
@@ -70,7 +74,7 @@ export default function ProfilePage() {
                 </p>
             </div>
             
-             <div className="w-full mt-4">
+            <div className="w-full mt-4">
                 <h2 className="text-2xl">Photos</h2>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                     <div className="object-cover w-full">
@@ -79,6 +83,38 @@ export default function ProfilePage() {
                     <div className="object-cover w-full">
                         <img className="rounded-lg" src="https://lipsum.app/random/680x420?seed=2" alt="#" />
                     </div>
+                </div>
+            </div>
+
+            <div className="w-full mt-4">
+                <h2 className="text-2xl">Visit History</h2>
+                <div className="mt-2 grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-2">
+                    {
+                        [1, 2, 3, 4, 5, 6, 7, 9, 11, 11, 1, 1, 1, 1, 1].map(() => {
+                            return (
+                                <Card className="p-2">
+                                <CardContent className="flex items-center gap-4 p-2">
+                                    <Avatar className="rounded-lg w-12 h-12">
+                                        <AvatarImage
+                                            src="https://github.com/evilrabbit.png"
+                                            alt="@evilrabbit"
+                                        />
+                                        <AvatarFallback>ER</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="text-lg">
+                                            Juan manuel
+                                        </p>
+                                        <p className="text-gray-500 text-sm">
+                                            24-03-1999 13:69
+                                        </p>
+                                    </div>
+                                    
+                                </CardContent>
+                            </Card>
+                            );
+                        })
+                    }
                 </div>
             </div>
 
