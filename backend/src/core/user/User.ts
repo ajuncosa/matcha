@@ -37,14 +37,66 @@ export class Email {
 
 export type UserId = number;
 
+export enum UserGender {
+    Man,
+    Woman,
+    NonBinary,
+    Other
+};
+
+export enum UserSex {
+    Male,
+    Female,
+    Intersex
+    // FIXME: maybe add "prefer not to say" or something like that?
+};
+
+class UserDetails {
+    gender: UserGender;
+    sex: UserSex;
+    birthday: Date;
+    lat: number;
+    lon: number;
+    preferredGender: UserGender;
+    preferredSex: UserSex;
+    preferredMinAge: number;
+    preferredMaxAge: number;
+    biography: string;
+    fameRating: number;
+    lastConnection: Date | null;
+    tags: string[];
+    photos: string[];
+
+    constructor(gender: UserGender, sex: UserSex, birthday: Date, lat: number, lon: number,
+        preferredGender: UserGender, preferredSex: UserSex, preferredMinAge: number, preferredMaxAge: number)
+    {
+        this.gender = gender;
+        this.sex = sex;
+        this.birthday = birthday;
+        this.lat = lat;
+        this.lon = lon;
+        this.preferredGender = preferredGender;
+        this.preferredSex = preferredSex;
+        this.preferredMinAge = preferredMinAge;
+        this.preferredMaxAge = preferredMaxAge;
+
+        this.biography = "";
+        this.fameRating = 0;
+        this.lastConnection = null;
+        this.tags = [];
+        this.photos = [];
+    }
+}
+
 export class User {
     id: UserId;
     name: string;
     lastname: string;
     email: Email;
-    emailValidatedAt: Date | null;
     password: string;
     createdAt: Date;
+    emailValidatedAt: Date | null;
+    details: UserDetails | null;
 
     constructor(id: UserId, name: string, lastname: string, email: Email, password: string, createdAt: Date) {
         this.id = id;
@@ -54,6 +106,7 @@ export class User {
         this.password = password;
         this.createdAt = createdAt;
         this.emailValidatedAt = null;
+        this.details = null;
     }
 
 }

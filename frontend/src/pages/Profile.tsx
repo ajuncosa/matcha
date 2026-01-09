@@ -5,9 +5,38 @@ import { Mars, ThumbsUpIcon } from "lucide-react";
 import {
   Card,
   CardContent,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
+import type { UserProfileResponseDto } from "@/dto/UserDto";
+import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
+
+    const [userProfileData, setUserProfileData] = useState<UserProfileResponseDto>();
+
+    async function getProfile() : Promise<void> {
+
+        const resp : Response = await fetch("http://localhost/api/user/profile", {
+            method: "GET"
+        });
+
+        if (resp.status != 200)
+        {
+            // TODO: logout? redirect to error page?
+        }
+        if (!resp.body)
+        {
+            // TODO: manage error
+        }
+
+        const respBody : UserProfileResponseDto = await resp.json();
+
+        setUserProfileData(respBody);
+    }
+
+    useEffect(() => {
+        getProfile();
+    }, []);
+
     return (
         <div className="w-full">
             {/* Header */}
@@ -17,18 +46,18 @@ export default function ProfilePage() {
                     <div>
                         <Avatar className="rounded-lg w-32 h-32">
                             <AvatarImage
-                                src="https://github.com/evilrabbit.png"
-                                alt="@evilrabbit"
+                                src="https://github.com/evilrabbit.png" // FIXME: change
+                                alt="@evilrabbit" // FIXME: change
                             />
-                            <AvatarFallback>ER</AvatarFallback>
+                            <AvatarFallback>ER</AvatarFallback> {/* FIXME: change */}
                         </Avatar>
                     </div>
                     {/* User info */}
                     <div className="flex flex-col justify-center">
-                        <Badge className="bg-emerald-600">Online</Badge>
+                        <Badge className="bg-emerald-600">Online</Badge>  {/* FIXME: change */}
                         <div className="flex gap-2 mt-2">
-                            <span className="text-4xl">Name</span>
-                            <span className="text-4xl">Lastname</span>
+                            <span className="text-4xl">{userProfileData?.name}</span>
+                            <span className="text-4xl">{userProfileData?.lastname}</span>
                         </div>
                         <div className="mt-2">
                             <Mars width={32} height={32} />
