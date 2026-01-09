@@ -18,7 +18,7 @@ export default class UserRepositoryPostgres implements IUserRepository {
         return new User(
             query.rows[0].id,
             query.rows[0].name,
-            query.rows[0].lastName,
+            query.rows[0].lastname,
             new Email(query.rows[0].email),
             query.rows[0].password,
             new Date(query.rows[0].created_at)

@@ -43,6 +43,7 @@ export class UserUseCases {
         const user: User | null = await this.userRepo.findUserById(userId);
         if (!user)
             throw new UserNotFound();
+
         return user;
     }
 }

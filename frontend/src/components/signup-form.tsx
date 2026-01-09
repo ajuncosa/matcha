@@ -59,7 +59,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 
         //TODO: check password things
 
-        const req = await fetch("http://localhost/api/auth/register", {
+        const resp : Response = await fetch("http://localhost/api/auth/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -72,13 +72,13 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             })
         });
 
-        if (req.status != 200) {
-            if (req.body) {
-                const reqBody = await req.text();
+        if (resp.status != 200) {
+            if (resp.body) {
+                const reqBody = await resp.text();
                 setFormError(reqBody);
             }
             else
-                setFormError(`Server error (${req.status})`);
+                setFormError(`Server error (${resp.status})`);
             return;
         }
         else {

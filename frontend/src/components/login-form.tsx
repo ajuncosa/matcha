@@ -52,7 +52,7 @@ export function LoginForm({
             return;
         }
 
-        const req = await fetch("http://localhost/api/auth/login", {
+        const resp : Response = await fetch("http://localhost/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -63,18 +63,18 @@ export function LoginForm({
             })
         });
 
-        if (req.status != 200) {
-            if (req.body) {
-                const reqBody = await req.text();
-                setFormError(reqBody);
+        if (resp.status != 200) {
+            if (resp.body) {
+                const respBody = await resp.text();
+                setFormError(respBody);
             }
             else
-                setFormError(`Server error (${req.status})`);
+                setFormError(`Server error (${resp.status})`);
             return;
         }
         else {
             localStorage.setItem("loggedIn", "true");
-            navigate('/home');
+            navigate('/browser');
         }
     }
 

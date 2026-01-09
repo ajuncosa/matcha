@@ -36,4 +36,3 @@ export default class UserRouter extends MatchaRouter {
         }
     }
 }
-
