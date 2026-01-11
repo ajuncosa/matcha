@@ -13,7 +13,7 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { Outlet } from "react-router"
+import { Outlet, useNavigate } from "react-router"
 
 import {
     Sheet,
@@ -25,7 +25,7 @@ import {
     SheetClose
 } from "@/components/ui/sheet"
 import { Button } from "./ui/button"
-import { Bell, ThumbsUp } from "lucide-react"
+import { Bell, LogOutIcon, ThumbsUp } from "lucide-react"
 import { Badge } from "./ui/badge"
 import {
     Item,
@@ -37,6 +37,25 @@ import {
 import MobileNavigation from "./movile-navigation"
 
 export default function HomeLayout() {
+
+    let navigate = useNavigate();
+
+    async function handleLogoutClick() : Promise<void> {
+        const resp : Response = await fetch("http://localhost/api/auth/logout", {
+            method: "POST"
+        });
+
+        if (resp.status != 200) {
+            // FIXME: handle error somehow?
+            console.log(resp.body);
+            return;
+        }
+        else {
+            localStorage.setItem("loggedIn", "false");
+            navigate('/login');
+        }
+    }
+
     return (
         <SidebarProvider>
             <AppSidebar />
@@ -62,42 +81,49 @@ export default function HomeLayout() {
                             </BreadcrumbList>
                         </Breadcrumb>
                     </div>
-                    <div className="px-4">
-                        <Sheet>
-                            <SheetTrigger className="cursor-pointer relative flex gap-1">
-                                <Bell />
-                                <Badge variant="destructive">4</Badge>
-                            </SheetTrigger>
-                            <SheetContent>
-                                <SheetHeader>
-                                    <SheetTitle>Notifications</SheetTitle>
-                                </SheetHeader>
+                    <div className="flex items-center gap-4 px-4">
+                        <div>
+                            <Sheet>
+                                <SheetTrigger className="cursor-pointer relative flex gap-1">
+                                    <Bell />
+                                    <Badge variant="destructive">4</Badge>
+                                </SheetTrigger>
+                                <SheetContent>
+                                    <SheetHeader>
+                                        <SheetTitle>Notifications</SheetTitle>
+                                    </SheetHeader>
 
-                                <div className="px-4">
-                                    <div className="flex w-full max-w-lg flex-col gap-6">
-                                        <Item variant="outline">
-                                            <ItemMedia variant="icon">
-                                                <ThumbsUp />
-                                            </ItemMedia>
-                                            <ItemContent>
-                                                <ItemTitle>Maria liked you</ItemTitle>
-                                            </ItemContent>
-                                            <ItemActions>
-                                                <Button size="sm" variant="outline">
-                                                    Review
-                                                </Button>
-                                            </ItemActions>
-                                        </Item>
+                                    <div className="px-4">
+                                        <div className="flex w-full max-w-lg flex-col gap-6">
+                                            <Item variant="outline">
+                                                <ItemMedia variant="icon">
+                                                    <ThumbsUp />
+                                                </ItemMedia>
+                                                <ItemContent>
+                                                    <ItemTitle>Maria liked you</ItemTitle>
+                                                </ItemContent>
+                                                <ItemActions>
+                                                    <Button size="sm" variant="outline">
+                                                        Review
+                                                    </Button>
+                                                </ItemActions>
+                                            </Item>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <SheetFooter>
-                                    <SheetClose asChild>
-                                        <Button variant="outline" className="cursor-pointer">Clear all</Button>
-                                    </SheetClose>
-                                </SheetFooter>
-                            </SheetContent>
-                        </Sheet>
+                                    <SheetFooter>
+                                        <SheetClose asChild>
+                                            <Button variant="outline" className="cursor-pointer">Clear all</Button>
+                                        </SheetClose>
+                                    </SheetFooter>
+                                </SheetContent>
+                            </Sheet>
+                        </div>
+                        <div>
+                            <Button variant="default" size="icon" className="cursor-pointer" onClick={async () => await handleLogoutClick()}>
+                                <LogOutIcon />
+                            </Button>
+                        </div>
                     </div>
                 </header>
                 <main className="p-4 pt-0 mb-24 max-w-[1200px] mx-auto w-full">
