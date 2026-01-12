@@ -38,16 +38,16 @@ export class Email {
 export type UserId = number;
 
 export enum UserGender {
-    Man,
-    Woman,
-    NonBinary,
-    Other
+    Man = "man",
+    Woman = "woman",
+    NonBinary = "nonbinary",
+    Other = "other"
 };
 
 export enum UserSex {
-    Male,
-    Female,
-    Intersex
+    Male = "male",
+    Female = "female",
+    Intersex = "intersex"
     // FIXME: maybe add "prefer not to say" or something like that?
 };
 

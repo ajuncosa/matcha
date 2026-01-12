@@ -19,4 +19,5 @@ export interface UserProfileResponseDto {
     createdAt: Date;
     gender: string;
     sex: string;
+    biography: string;
 }

@@ -1,7 +1,7 @@
 import { AvatarFallback, AvatarImage, Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mars, ThumbsUpIcon } from "lucide-react";
+import { Mars, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -96,10 +96,7 @@ export default function ProfilePage() {
             <div className="w-full mt-4">
                 <h2 className="text-2xl">Biography</h2>
                 <p className="mt-2 text-justify">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-                    dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-                    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    {userProfileData?.biography}
                 </p>
             </div>
             
