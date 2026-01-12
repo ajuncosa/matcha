@@ -39,7 +39,7 @@ export class UserUseCases {
         return user;        
     }
 
-    async getUserProfile(userId: number): Promise<User> {
+    async getUser(userId: number): Promise<User> {
         const user: User | null = await this.userRepo.findUserById(userId);
         if (!user)
             throw new UserNotFound();

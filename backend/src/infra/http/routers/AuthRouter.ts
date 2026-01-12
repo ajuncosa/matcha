@@ -13,6 +13,7 @@ export default class AuthRouter extends MatchaRouter {
         this.router.post("/register", (req, res) => this.register(req, res));
         this.router.post("/login", (req, res) => this.login(req, res));
         this.router.post("/logout", (req, res) => this.logout(req, res));
+        this.router.get('/check-session', (req, res) => this.checkSession(req, res));
     }
 
     async login(req: Request, res: Response) {
@@ -25,7 +26,9 @@ export default class AuthRouter extends MatchaRouter {
         try {
             const user: User = await this.userUseCases.loginUser(dto);
             req.session.userId = user.id;
-            res.status(200).send("User logged in");   //TODO: easier for frontend to parse if JSON
+            res.status(200).json({
+                profileCompleted: user.details != null
+            });
         }
         catch (e) {
             if (e instanceof UserNotFound) {
@@ -72,6 +75,19 @@ export default class AuthRouter extends MatchaRouter {
             else {
                 throw e;
             }
+        }
+    }
+
+    async checkSession(req: Request, res: Response) {
+        if (req.session && req.session.userId) {
+            const user: User = await this.userUseCases.getUser(req.session.userId);
+
+            res.status(200).json({
+                profileCompleted: user.details != null
+            });
+        }
+        else {
+            res.status(401);
         }
     }
 

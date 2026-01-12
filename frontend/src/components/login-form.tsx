@@ -74,7 +74,14 @@ export function LoginForm({
         }
         else {
             localStorage.setItem("loggedIn", "true");
-            navigate('/browser');
+            const respJson = await resp.json();
+
+            if (respJson["profileCompleted"] == true) {
+                navigate('/browser');
+            }
+            else {
+                navigate('/welcome');
+            }
         }
     }
 

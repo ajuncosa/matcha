@@ -15,7 +15,7 @@ export default class UserRouter extends MatchaRouter {
 
     async getProfile(req: Request, res: Response) {
         try {
-            const user: User = await this.userUseCases.getUserProfile(req.session.userId!);
+            const user: User = await this.userUseCases.getUser(req.session.userId!);
             const responseDto: UserProfileResponseDto = {
                 id: user.id,
                 name: user.name,
