@@ -136,7 +136,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                         </Field>
                         <FieldGroup>
                             <Field>
-                                <span>{formError}</span>
+                                <span className="text-red-600">{formError}</span>
                                 <Button type="submit" onClick={submit}>Create Account</Button>
                                 <FieldDescription className="px-6 text-center">
                                     Already have an account? <Link to="/login">Sign in</Link>

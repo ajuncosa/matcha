@@ -1,21 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Label } from "@/components/ui/label"
 import { ChevronDownIcon } from "lucide-react";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"
@@ -44,34 +44,115 @@ export default function Welcome() {
         birthday: undefined,
         lat: 0,
         lon: 0,
-        preferredGender: "",
-        preferredSex: "",
+        preferredGender: "any",
+        preferredSex: "any",
         preferredMinAge: 18,
         preferredMaxAge: 150,
         biography: "",
         tags: [],
         photos: [],
     });
+    const [formError, setFormError] = useState<string>("")
 
     function prevStep() {
         if (currentStep == 'about-you') {
             setCurrentStep('preferences');
         }
+        else if (currentStep == 'location') {
+            setCurrentStep('about-you');
+        }
+        else if (currentStep == 'photos') {
+            setCurrentStep('location');
+        }
+        else if (currentStep == 'tags') {
+            setCurrentStep('photos');
+        }
     }
 
     function nextStep() {
+        setFormError("");
+        console.log(formState)
         if (currentStep == 'preferences') {
+            if (!formState.preferredGender || !formState.preferredSex || !formState.preferredMinAge || !formState.preferredMaxAge) {
+                setFormError("Please fill all the required fields");
+                return;
+            }
             setCurrentStep('about-you');
         }
         else if (currentStep == 'about-you') {
+            if (!formState.gender || !formState.sex || !formState.birthday || !formState.biography) {
+                setFormError("Please fill all the required fields");
+                return;
+            }
             setCurrentStep('location');
         }
         else if (currentStep == 'location') {
+            /*
+            if (!formState.lat || !formState.lon) {
+                setFormError("Please fill all the required fields");
+                return;
+            }
+            */
             setCurrentStep('photos');
         }
         else if (currentStep == 'photos') {
+            /*
+            if (formState.photos.empty()) {
+                setFormError("You must upload at least one photo");
+                return;
+            }
+            */
             setCurrentStep('tags');
         }
+    }
+
+    function setInputFormValue(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
+    {
+        setFormState({
+            ...formState,
+            [e.target.id]: e.target.value
+        });
+    }
+
+    function setSelectFormValue(key: string, value: string)
+    {
+        setFormState({
+            ...formState,
+            [key]: value
+        });
+    }
+
+    async function submit(e: React.MouseEvent) {
+        e.preventDefault();
+        setFormError("");
+        
+        /*
+        const resp : Response = await fetch("http://localhost/api/auth/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: form.email,
+                name: form.firstname,
+                lastname: form.lastname,
+                password: form.password
+            })
+        });
+
+        if (resp.status != 200) {
+            if (resp.body) {
+                const reqBody = await resp.text();
+                setFormError(reqBody);
+            }
+            else
+                setFormError(`Server error (${resp.status})`);
+            return;
+        }
+        else {
+            navigate('/login');
+        }
+*/
     }
 
     return (
@@ -88,56 +169,62 @@ export default function Welcome() {
                                 <Label htmlFor="gender-select" className="px-1">
                                     Gender
                                 </Label>
-                                <Select>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select one" />
-                                </SelectTrigger>
-                                <SelectContent id="gender-select">
-                                    <SelectGroup>
-                                        <SelectLabel>Gender</SelectLabel>
-                                        <SelectItem value="man">Man</SelectItem>
-                                        <SelectItem value="woman">Woman</SelectItem>
-                                        <SelectItem value="non-binary">Non Binary</SelectItem>
-                                        <SelectItem value="other">other</SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
+                                <Select value={formState.preferredGender} onValueChange={(str) => {setSelectFormValue("preferredGender", str)}} >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select one" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Gender</SelectLabel>
+                                            <SelectItem value="man">Man</SelectItem>
+                                            <SelectItem value="woman">Woman</SelectItem>
+                                            <SelectItem value="non-binary">Non Binary</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
+                                            <SelectItem value="any">Any</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
                                 </Select>
                             </div>
                             <div className="flex flex-1 flex-col gap-3 mt-4">
                                 <Label htmlFor="sex-select" className="px-1">
                                     Sex
                                 </Label>
-                                <Select>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select one" />
-                                </SelectTrigger>
-                                <SelectContent id="sex-select">
-                                    <SelectGroup>
-                                        <SelectLabel>Sex</SelectLabel>
-                                        <SelectItem value="male">Male</SelectItem>
-                                        <SelectItem value="female">Female</SelectItem>
-                                        <SelectItem value="intersex">Intersex</SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
+                                <Select value={formState.preferredSex} onValueChange={(str) => {setSelectFormValue("preferredSex", str)}} >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select one" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Sex</SelectLabel>
+                                            <SelectItem value="male">Male</SelectItem>
+                                            <SelectItem value="female">Female</SelectItem>
+                                            <SelectItem value="intersex">Intersex</SelectItem>
+                                            <SelectItem value="any">Any</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
                                 </Select>
                             </div>
                         </div>
-                        
+
                         {/** Age range */}
                         <div className="flex justify-between gap-2">
                             <div className="flex flex-1 flex-col gap-3 mt-4">
                                 <Label htmlFor="age" className="px-1">Age</Label>
                                 <div className="col-span-2 flex gap-1">
                                     <Input
-                                        id="min-age"
-                                        placeholder="min"
+                                        id="preferredMinAge"
+                                        placeholder={`min (${formState.preferredMinAge})`}
+                                        value={formState.preferredMinAge}
                                         className="h-8 flex-1"
+                                        onChange={setInputFormValue}
                                     />
                                     -
                                     <Input
-                                        id="max-age"
-                                        placeholder="max"
+                                        id="preferredMaxAge"
+                                        placeholder={`max (${formState.preferredMaxAge})`}
+                                        value={formState.preferredMaxAge}
                                         className="h-8 flex-1"
+                                        onChange={setInputFormValue}
                                     />
                                 </div>
                             </div>
@@ -153,25 +240,25 @@ export default function Welcome() {
                             </Label>
                             <Popover open={openBirthdayCalendar} onOpenChange={setOpenBirthdayCalendar}>
                                 <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    id="date"
-                                    className="w-full justify-between font-normal"
-                                >
-                                    {formState.birthday ? formState.birthday.toLocaleDateString() : "Select date"}
-                                    <ChevronDownIcon />
-                                </Button>
+                                    <Button
+                                        variant="outline"
+                                        id="date"
+                                        className="w-full justify-between font-normal"
+                                    >
+                                        {formState.birthday ? formState.birthday.toLocaleDateString() : "Select date"}
+                                        <ChevronDownIcon />
+                                    </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={formState.birthday}
-                                    captionLayout="dropdown"
-                                    onSelect={(date) => {
-                                        setFormState({...formState, birthday: date})
-                                        setOpenBirthdayCalendar(false)
-                                    }}
-                                />
+                                    <Calendar
+                                        mode="single"
+                                        selected={formState.birthday}
+                                        captionLayout="dropdown"
+                                        onSelect={(date) => {
+                                            setFormState({ ...formState, birthday: date })
+                                            setOpenBirthdayCalendar(false)
+                                        }}
+                                    />
                                 </PopoverContent>
                             </Popover>
                         </div>
@@ -180,17 +267,17 @@ export default function Welcome() {
                                 <Label htmlFor="gender-select" className="px-1">
                                     Gender
                                 </Label>
-                                <Select>
+                                <Select value={formState.gender} onValueChange={(str) => {setSelectFormValue("gender", str)}} >
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Select one" />
                                     </SelectTrigger>
-                                    <SelectContent id="gender-select">
+                                    <SelectContent>
                                         <SelectGroup>
                                             <SelectLabel>Gender</SelectLabel>
                                             <SelectItem value="man">Man</SelectItem>
                                             <SelectItem value="woman">Woman</SelectItem>
                                             <SelectItem value="non-binary">Non Binary</SelectItem>
-                                            <SelectItem value="other">other</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
@@ -199,18 +286,18 @@ export default function Welcome() {
                                 <Label htmlFor="sex-select" className="px-1">
                                     Sex
                                 </Label>
-                                <Select>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select one" />
-                                </SelectTrigger>
-                                <SelectContent id="sex-select">
-                                    <SelectGroup>
-                                        <SelectLabel>Sex</SelectLabel>
-                                        <SelectItem value="male">Male</SelectItem>
-                                        <SelectItem value="female">Female</SelectItem>
-                                        <SelectItem value="intersex">Intersex</SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
+                                <Select value={formState.sex} onValueChange={(str) => {setSelectFormValue("sex", str)}}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select one" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectLabel>Sex</SelectLabel>
+                                            <SelectItem value="male">Male</SelectItem>
+                                            <SelectItem value="female">Female</SelectItem>
+                                            <SelectItem value="intersex">Intersex</SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
                                 </Select>
                             </div>
                         </div>
@@ -218,33 +305,47 @@ export default function Welcome() {
                             <Label htmlFor="bio" className="px-1 mt-4">
                                 Bio
                             </Label>
-                            <Textarea id="bio" className="mt-3 h-32" placeholder="Tell people about yourself :)" />
+                            <Textarea id="biography" className="mt-3 h-32" placeholder="Tell people about yourself :)" value={formState.biography} onChange={setInputFormValue}/>
                         </div>
                     </>}
 
                     {(currentStep == 'location') && <>
+                        <h1 className="text-xl font-bold">Where are you? o_O</h1>
+                        TODO
                         {/** TODO: mapa */}
                     </>}
 
                     {(currentStep == 'photos') && <>
+                        <h1 className="text-xl font-bold">Qué llevas puesto? e.e</h1>
                         photos
                     </>}
 
                     {(currentStep == 'tags') && <>
-                        tags
+                        <h1 className="text-xl font-bold">What are you interested in?</h1>
+                        suggestions
+                        or add your own tags
                     </>}
                 </div>
+                <div className="mt-6 w-full text-red-600">{formError}</div>
                 <div className="flex justify-between mt-6 w-full">
-                    {(currentStep != 'preferences') && 
+                    {(currentStep != 'preferences') &&
                         <Button variant="outline" onClick={prevStep}>
-                            Prev step
+                            Go back
                         </Button>
                     }
-                    {(currentStep == 'preferences') && <span></span>}
-                    
-                    <Button variant="default" onClick={nextStep}>
-                        Next step
-                    </Button>
+                    {(currentStep == 'preferences') && <span></span> }
+
+                    {(currentStep != 'tags') &&
+                        <Button variant="default" onClick={nextStep}>
+                            Next
+                        </Button>
+                    }
+
+                    {(currentStep == 'tags') &&
+                        <Button variant="default" onClick={submit}>
+                            Save and find love!
+                        </Button>
+                    }
                 </div>
             </div>
         </div>
