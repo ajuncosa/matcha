@@ -51,7 +51,7 @@ export enum UserSex {
     // FIXME: maybe add "prefer not to say" or something like that?
 };
 
-class UserDetails {
+export class UserDetails {
     gender: UserGender;
     sex: UserSex;
     birthday: Date;
@@ -109,4 +109,45 @@ export class User {
         this.details = null;
     }
 
+}
+
+export function getUserGenderFromString(genderString: string): UserGender | null {
+    switch (genderString.toLowerCase()) {
+        case "man":
+            return UserGender.Man;
+            break;
+        case "woman":
+            return UserGender.Woman;
+            break;
+        case "nonbinary":
+            return UserGender.NonBinary;
+            break;
+        case "other":
+            return UserGender.Other;
+            break;
+        default:
+            return null;
+            break;
+    }
+
+    return null;
+}
+
+export function getUserSexFromString(sexString: string): UserSex | null {
+    switch (sexString.toLowerCase()) {
+        case "male":
+            return UserSex.Male;
+            break;
+        case "female":
+            return UserSex.Female;
+            break;
+        case "intersex":
+            return UserSex.Intersex;
+            break;
+        default:
+            return null;
+            break;
+    }
+
+    return null;
 }

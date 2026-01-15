@@ -26,12 +26,21 @@ function RootLayout() {
     let navigate = useNavigate();
 
     async function checkSession() {
+        console.log('check session');
+
         const sessionCheck = await fetch('http://localhost/api/auth/check-session');
 
+
         if (sessionCheck.status != 200) {
+            console.log('caaca');
             localStorage.setItem("loggedIn", "false");
         } else {
+            console.log('pedo');
+
             const response = await sessionCheck.json();
+            
+            console.log(response);
+            
             if (response["profileCompleted"] == false) {
                 navigate('/welcome');
             }

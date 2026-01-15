@@ -79,8 +79,12 @@ export default class AuthRouter extends MatchaRouter {
     }
 
     async checkSession(req: Request, res: Response) {
+        console.log("check session");
+
         if (req.session && req.session.userId) {
             const user: User = await this.userUseCases.getUser(req.session.userId);
+
+            console.log(user);
 
             res.status(200).json({
                 profileCompleted: user.details != null
