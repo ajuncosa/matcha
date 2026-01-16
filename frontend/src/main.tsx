@@ -49,9 +49,7 @@ function RootLayout() {
     }
 
     async function destroyApp() {
-        console.log("destroy app");
-        console.log(user);
-        if (user) user.disconnectSocket();
+        //if (user) user.disconnectSocket();
     }
 
     useEffect(() => {

@@ -1,5 +1,5 @@
-import { type IUserSocketRegistry, type Socket } from "@/core/socket/IUserSocketRegistry"
-import { type UserId } from "@/core/user/User";
+import { type IUserSocketRegistry, type Socket, type SocketId } from "@/core/socket/IUserSocketRegistry"
+import { User, type UserId } from "@/core/user/User";
 import { Server as SocketIOServer, Socket as IORawSocket, type DisconnectReason, type DefaultEventsMap } from "socket.io";
 
 interface SocketSessionData {
@@ -8,24 +8,23 @@ interface SocketSessionData {
     }
 }
 
-type IOSocketWithSession = IORawSocket<
-  DefaultEventsMap,
-  DefaultEventsMap,  
-  DefaultEventsMap,
-  SocketSessionData
->;
-
 class IoSocket implements Socket {
+    id: SocketId;
     userId: UserId;
-    ioSocket: IOSocketWithSession;
+    ioSocket: IORawSocket;
 
-    constructor(ioSocket: IOSocketWithSession, userId: UserId) {
+    constructor(ioSocket: IORawSocket, id: SocketId ,userId: UserId) {
         this.ioSocket = ioSocket;
         this.userId = userId;
+        this.id = id;
     }
 
     send(event: string, data: any): boolean {
         return this.ioSocket.emit(event, data);
+    }
+
+    disconnect() {
+        this.ioSocket.disconnect();
     }
 }
 
@@ -35,15 +34,13 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
 
     constructor(socketServer: SocketIOServer) { 
         this.server = socketServer;
-        this.server.on('connection', (socket: IOSocketWithSession) => 
+        this.server.on('connection', (socket: IORawSocket) => 
             this.onSocketConnection(socket)
         );
     }
 
-    onSocketConnection(socket: IOSocketWithSession) {
+    onSocketConnection(socket: IORawSocket) {
         const userId = socket.request?.session?.userId;
-
-        //console.log(socket.request);
 
         console.log("[SOCKET]: CONNECTED", socket.id, "User:", userId);
 
@@ -52,16 +49,21 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
             console.log("[SOCKET]: DISCONNECTED", socket.id, "User:", userId, "reason: User not authenticated");
             return;
         }
-            
-        this.usersSocketsMap.set(userId, new IoSocket(socket, userId));
-        
+
+        const userSocket: Socket | undefined = this.usersSocketsMap.get(userId);
+        if (userSocket) {
+            userSocket.disconnect();
+            console.log("[SOCKET]: WILL DISCONNECT", userSocket.id, "User:", userId, "reason: User already has a socket");
+        }
+
+        this.usersSocketsMap.set(userId, new IoSocket(socket, socket.id, userId));
         socket.on('disconnect', (reason: DisconnectReason) => 
             this.onSocketDisconnection(socket, reason)
         );
     }
 
-    onSocketDisconnection(socket: IOSocketWithSession, reason: DisconnectReason) {
-        const userId = socket.data?.request?.session?.userId;
+    onSocketDisconnection(socket: IORawSocket, reason: DisconnectReason) {
+        const userId = socket.request?.session?.userId;
 
         console.log("[SOCKET]: DISCONNECTED", socket.id, "User:", userId, "reason:", reason);
 
