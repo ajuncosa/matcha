@@ -79,6 +79,7 @@ export default class AuthRouter extends MatchaRouter {
     }
 
     async checkSession(req: Request, res: Response) {
+        console.log("asd")
         if (req.session && req.session.userId) {
             const user: User = await this.userUseCases.getUser(req.session.userId);
 
@@ -87,7 +88,7 @@ export default class AuthRouter extends MatchaRouter {
             });
         }
         else {
-            res.status(401);
+            res.status(401).send();
         }
     }
 
