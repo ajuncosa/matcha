@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import {
     Popover,
     PopoverContent,
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"
+import { AuthContext } from "@/entities/AuthContext";
+import { useNavigate } from "react-router";
 
 interface FormState {
     gender: string;
@@ -36,6 +38,9 @@ interface FormState {
 }
 
 export default function Welcome() {
+    const { user } = useContext(AuthContext);
+    let navigate = useNavigate();
+
     const [currentStep, setCurrentStep] = useState<string>("preferences"); //preferences, about-you, location, photos, tags
     const [openBirthdayCalendar, setOpenBirthdayCalendar] = useState(false);
     const [formState, setFormState] = useState<FormState>({
@@ -154,6 +159,12 @@ export default function Welcome() {
         }
 */
     }
+
+    useEffect(() => {
+        console.log(user);
+        if (user && user.hasProfileCompleted())
+            navigate('/browser');
+    }, []);
 
     return (
         <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">

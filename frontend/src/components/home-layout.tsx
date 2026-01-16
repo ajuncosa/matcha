@@ -35,25 +35,21 @@ import {
     ItemTitle,
 } from "@/components/ui/item"
 import MobileNavigation from "./movile-navigation"
+import { useContext } from "react"
+import { AuthContext } from "@/entities/AuthContext"
 
 export default function HomeLayout() {
-
+    const { user, setUser } = useContext(AuthContext);
     let navigate = useNavigate();
 
     async function handleLogoutClick() : Promise<void> {
-        const resp : Response = await fetch("http://localhost/api/auth/logout", {
-            method: "POST"
-        });
 
-        if (resp.status != 200) {
-            // FIXME: handle error somehow?
-            console.log(resp.body);
-            return;
+        if (user && setUser) {
+            await user.logout();
+            setUser(null);
         }
-        else {
-            localStorage.setItem("loggedIn", "false");
-            navigate('/login');
-        }
+
+        navigate('/login');
     }
 
     return (

@@ -14,8 +14,11 @@ import {
     FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { User } from "@/entities/User";
 import { Link, useNavigate } from "react-router";
-import { useState } from "react"
+import { useContext, useState } from "react"
+import { AuthContext } from "@/entities/AuthContext"
+import { SocketContext } from "@/entities/Socket"
 
 interface LoginForm {
     email: string;
@@ -26,7 +29,8 @@ export function LoginForm({
     className,
     ...props
 }: React.ComponentProps<"div">) {
-
+    const { setUser } = useContext(AuthContext);
+    const { socket } = useContext(SocketContext);
     let navigate = useNavigate();
 
     const [form, setForm] = useState<LoginForm>({
@@ -52,31 +56,14 @@ export function LoginForm({
             return;
         }
 
-        const resp : Response = await fetch("http://localhost/api/auth/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: form.email,
-                password: form.password
-            })
-        });
+        const user: User | null = await User.login(form.email, form.password);
 
-        if (resp.status != 200) {
-            if (resp.body) {
-                const respBody = await resp.text();
-                setFormError(respBody);
-            }
-            else
-                setFormError(`Server error (${resp.status})`);
-            return;
+        if (!user) {
+            setFormError("Invalid credentials");
         }
         else {
-            localStorage.setItem("loggedIn", "true");
-            const respJson = await resp.json();
-
-            if (respJson["profileCompleted"] == true) {
+            if (setUser) setUser(user);
+            if (user.hasProfileCompleted()) {
                 navigate('/browser');
             }
             else {

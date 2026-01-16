@@ -1,4 +1,4 @@
-import { StrictMode, useEffect } from 'react';
+import {StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, useNavigate } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
@@ -15,7 +15,9 @@ import ProfilePage from './pages/Profile';
 import ChatPage from './pages/Chat';
 import Welcome from './pages/Welcome';
 
-import io from 'socket.io-client';
+import { User } from './entities/User';
+import { AuthContext } from './entities/AuthContext';
+import { SocketContext } from './entities/Socket';
 
 function Index() {
     return <>
@@ -23,46 +25,40 @@ function Index() {
     </>;
 }
 
-
-let socket = io("http://localhost");
-
-setTimeout(() => {socket.emit('hi');}, 5000);
-
-
 function RootLayout() {
     let navigate = useNavigate();
 
-    async function checkSession() {
-        console.log('check session');
+    const [user, setUser] = useState<User | null>(null);
 
-        const sessionCheck = await fetch('http://localhost/api/auth/check-session');
+    async function initApp() {
+        const user: User | null = await User.checkSession();
 
+        if (!user) {
+            navigate('/login');
+            return;
+        }
 
-        if (sessionCheck.status != 200) {
-            localStorage.setItem("loggedIn", "false");
-        } else {
+        setUser(user);
 
-            const response = await sessionCheck.json();
-            
-            console.log(response);
-            
-            if (response["profileCompleted"] == false) {
-                navigate('/welcome');
-            }
-
-            localStorage.setItem("loggedIn", "true");
+        if (user.hasProfileCompleted()) {
+            navigate("/browser");
+            return;
+        }
+        else {
+            navigate("/welcome");
         }
     }
 
     useEffect(() => {
-        checkSession();
-
-
-        
+        initApp();
     }, []);
 
     return (
-        <Outlet />
+        <AuthContext value={{user, setUser}}>
+            <SocketContext value={{socket: null}}>
+                <Outlet />
+            </SocketContext>
+        </AuthContext>
     );
 }
 
