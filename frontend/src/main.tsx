@@ -15,12 +15,19 @@ import ProfilePage from './pages/Profile';
 import ChatPage from './pages/Chat';
 import Welcome from './pages/Welcome';
 
+import io from 'socket.io-client';
 
 function Index() {
     return <>
         Sup dude
     </>;
 }
+
+
+let socket = io("http://localhost");
+
+setTimeout(() => {socket.emit('hi');}, 5000);
+
 
 function RootLayout() {
     let navigate = useNavigate();
@@ -32,10 +39,8 @@ function RootLayout() {
 
 
         if (sessionCheck.status != 200) {
-            console.log('caaca');
             localStorage.setItem("loggedIn", "false");
         } else {
-            console.log('pedo');
 
             const response = await sessionCheck.json();
             
@@ -51,6 +56,9 @@ function RootLayout() {
 
     useEffect(() => {
         checkSession();
+
+
+        
     }, []);
 
     return (

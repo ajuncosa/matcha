@@ -1,17 +1,21 @@
-import express from "express";
-import bodyParser from "body-parser";
-import UserRouter from "@/infra/http/routers/UserRouter";
-import { UserUseCases } from "@/app/user/UserUseCases";
 import type { IUserRepository } from "@/core/user/IUserRepository";
+import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
+import { UserUseCases } from "@/app/user/UserUseCases";
 import UserRepositoryPostgres from "@/infra/repositories/UserRepositoryPostgres";
-import type { IPasswordHasher } from "./core/user/IPasswordHasher";
-import { BcryptPasswordHasher } from "./infra/crypto/BcryptPasswordHasher";
-import { Pool } from "pg";
-import AuthRouter from "@/infra/http/routers/AuthRouter";
+import { BcryptPasswordHasher } from "@/infra/crypto/BcryptPasswordHasher";
+import UserRouter from "@/infra/http/routers/UserRouter";
 import { isAuthenticated } from "@/infra/http/Middlewares";
-import session, { MemoryStore } from "express-session";
+import AuthRouter from "@/infra/http/routers/AuthRouter";
 
-const pgPool: Pool = new Pool(); 
+import express, { type RequestHandler } from "express";
+import bodyParser from "body-parser";
+import { Server as SocketIOServer } from "socket.io";
+import { createServer, type Server as HTTPServer } from 'http';
+import { Pool } from "pg";
+import session, { MemoryStore } from "express-session";
+import { SocketRegistrySocketIO } from "./infra/socket/SocketRegistrySocketIO";
+
+const pgPool: Pool = new Pool();
 
 const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
 const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
@@ -19,10 +23,8 @@ const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHash
 const authRouter: AuthRouter = new AuthRouter(userUseCases);
 const userRouter: UserRouter = new UserRouter(userUseCases);
 
-const app = express()
-app.use(bodyParser.json());
-
-app.use(session({
+const expressApp = express();
+const expressSession: RequestHandler = session({
     secret: [process.env.COOKIESESSIONSECRETKEY!], // FIXME: remove exclamation
     resave: false,
     //rolling: true,
@@ -35,11 +37,25 @@ app.use(session({
         sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
-}));
+})
 
-app.use("/auth", authRouter.getRouter());
-app.use("/user", isAuthenticated, userRouter.getRouter());
+expressApp.use(bodyParser.json());
+expressApp.use(expressSession);
 
-app.listen(3000, () => {
-    console.log("Running")
+// Express routes
+expressApp.use("/auth", authRouter.getRouter());
+expressApp.use("/user", isAuthenticated, userRouter.getRouter());
+
+// Socket management
+const httpServer: HTTPServer = createServer(expressApp);
+const socketServer: SocketIOServer = new SocketIOServer(httpServer, {
+  serveClient: false
+});
+
+socketServer.engine.use(expressSession);
+
+const socketRegistry = new SocketRegistrySocketIO(socketServer);
+
+httpServer.listen(3000, () => {
+    console.log(`Server running on http://localhost:${3000}`);
 });

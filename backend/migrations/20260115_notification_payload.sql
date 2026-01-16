@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS notifications
+ADD IF NOT EXISTS payload JSON;
