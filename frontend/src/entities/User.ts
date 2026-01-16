@@ -11,6 +11,10 @@ export class Socket {
     connect() {
         this.socket = io(this.url);
     }
+
+    disconnect() {
+        if (this.socket) this.socket.disconnect();
+    }
 }
 
 export class User {
@@ -23,10 +27,6 @@ export class User {
         this.name = name;
         this.lastname = lastname;
         this.profileCompleted = profileCompleted;
-    }
-
-    isLoggedIn(): boolean {
-        return false;
     }
 
     hasProfileCompleted(): boolean {
@@ -49,7 +49,6 @@ export class User {
             return null;
         }
         else {
-            localStorage.setItem("loggedIn", "true");
             const respJson = await resp.json();
 
             let profileCompleted = false;
@@ -77,19 +76,22 @@ export class User {
         }
 
         localStorage.clear();
+        this.disconnectSocket();
     }
 
     static async checkSession(): Promise<User | null> {
         const localUser = localStorage.getItem('user');
 
-        if (!localUser)
+        if (!localUser) {
             return null;
-
-        const sessionCheck = await fetch('http://localhost/api/auth/check-session');
-        if (sessionCheck.status != 200) {
-            localStorage.removeItem('user');
         }
 
+        const sessionCheck = await fetch('http://localhost/api/auth/check-session');
+        console.log("session check", sessionCheck.status);
+        if (sessionCheck.status != 200) {
+            localStorage.removeItem('user');
+            return null;
+        }
         const payload = await sessionCheck.json();
         const jsonUser: User = JSON.parse(localUser);
 
@@ -100,12 +102,23 @@ export class User {
     }
 
     static async saveToLocalStorage(user: User) {
+        user.socket = null;
         const userJson: string = JSON.stringify(user);
         localStorage.setItem('user', userJson);
+    }
+
+    static async getFromLocalStorage() {
+        //TODO: implement this
     }
 
     connectSocket() {
         this.socket = new Socket("http://localhost");
         this.socket.connect();
+    }
+
+    disconnectSocket() {
+        console.log("disc");
+        console.log(this.socket);
+        if (this.socket) this.socket.disconnect();
     }
 }

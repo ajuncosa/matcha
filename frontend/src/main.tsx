@@ -7,7 +7,7 @@ import './index.css';
 
 import Register from '@/pages/Register';
 import Login from '@/pages/Login';
-import { authGuard, noAuthGuard } from '@/components/auth-guard';
+import { authGuard, noAuthGuard } from '@/guards/auth-guard';
 import HomeLayout from '@/components/home-layout';
 import SearchPage from './pages/Search';
 import BrowsePage from './pages/Browse';
@@ -17,7 +17,6 @@ import Welcome from './pages/Welcome';
 
 import { User } from './entities/User';
 import { AuthContext } from './entities/AuthContext';
-import { SocketContext } from './entities/Socket';
 
 function Index() {
     return <>
@@ -49,15 +48,23 @@ function RootLayout() {
         }
     }
 
+    async function destroyApp() {
+        console.log("destroy app");
+        console.log(user);
+        if (user) user.disconnectSocket();
+    }
+
     useEffect(() => {
         initApp();
+
+        return () => {
+            destroyApp();
+        }
     }, []);
 
     return (
         <AuthContext value={{user, setUser}}>
-            <SocketContext value={{socket: null}}>
-                <Outlet />
-            </SocketContext>
+            <Outlet />
         </AuthContext>
     );
 }

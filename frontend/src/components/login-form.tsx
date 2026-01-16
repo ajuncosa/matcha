@@ -18,7 +18,6 @@ import { User } from "@/entities/User";
 import { Link, useNavigate } from "react-router";
 import { useContext, useState } from "react"
 import { AuthContext } from "@/entities/AuthContext"
-import { SocketContext } from "@/entities/Socket"
 
 interface LoginForm {
     email: string;
@@ -30,7 +29,6 @@ export function LoginForm({
     ...props
 }: React.ComponentProps<"div">) {
     const { setUser } = useContext(AuthContext);
-    const { socket } = useContext(SocketContext);
     let navigate = useNavigate();
 
     const [form, setForm] = useState<LoginForm>({
@@ -57,12 +55,12 @@ export function LoginForm({
         }
 
         const user: User | null = await User.login(form.email, form.password);
-
         if (!user) {
             setFormError("Invalid credentials");
         }
         else {
             if (setUser) setUser(user);
+            user.connectSocket();
             if (user.hasProfileCompleted()) {
                 navigate('/browser');
             }

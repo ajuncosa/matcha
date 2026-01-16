@@ -41,7 +41,9 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
     }
 
     onSocketConnection(socket: IOSocketWithSession) {
-        const userId = socket.data?.request?.session?.userId;
+        const userId = socket.request?.session?.userId;
+
+        //console.log(socket.request);
 
         console.log("[SOCKET]: CONNECTED", socket.id, "User:", userId);
 
