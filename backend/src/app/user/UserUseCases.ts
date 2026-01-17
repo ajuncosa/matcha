@@ -1,6 +1,6 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { Email, IncorrectPassword, User, UserEmailAlreadyExists, UserNotFound } from "@/core/user/User";
-import type { UserRegisterRequestDto, UserLoginRequestDto } from "@/app/user/UserDto";
+import { Email, getUserGenderFromString, getUserSexFromString, IncorrectPassword, MissingRequestFields, User, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex } from "@/core/user/User";
+import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequestDto } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 
 export class UserUseCases {
@@ -45,5 +45,57 @@ export class UserUseCases {
             throw new UserNotFound();
 
         return user;
+    }
+
+    async updateUserDetails(userId: number, dto: UpdateUserDetailsRequestDto): Promise<void>
+    {
+        const user: User | null = await this.userRepo.findUserById(userId);
+        if (!user)
+            throw new UserNotFound();
+
+        const userGender: UserGender | null | undefined = dto.gender ? getUserGenderFromString(dto.gender) : undefined;
+        const userSex: UserSex | null | undefined = dto.sex ? getUserSexFromString(dto.sex) : undefined;
+        const userPreferredGender: UserGender | null | undefined = dto.preferredGender ? getUserGenderFromString(dto.preferredGender) : undefined;
+        const userPreferredSex: UserSex | null | undefined = dto.preferredSex ? getUserSexFromString(dto.preferredSex) : undefined;
+
+        if (userGender == null)
+            throw new Error(`Cannot convert ${dto.gender} to UserGender`);
+        if (userSex == null)
+            throw new Error(`Cannot convert ${dto.sex} to UserSex`);
+        if (userPreferredGender == null)
+            throw new Error(`Cannot convert ${dto.preferredGender} to UserGender`);
+        if (userPreferredSex == null)
+            throw new Error(`Cannot convert ${dto.preferredSex} to UserSex`);
+        if (userGender == UserGender.Any)
+            throw new Error(`User cannot have \"${userGender}\" gender`);
+        if (userSex == UserSex.Any)
+            throw new Error(`User cannot have \"${userSex}\" sex`);
+
+        if (!user.details)
+        {
+            if (!userGender || !userSex || !dto.birthday || /*!dto.lat || !dto.lon || */!userPreferredGender
+                || !userPreferredSex || !dto.preferredMinAge || !dto.preferredMaxAge || !dto.biography)
+            {
+                throw new MissingRequestFields;
+            }
+            await this.userRepo.createUserDetails(userId, userGender, userSex,
+                dto.birthday, dto.lat!, dto.lon!, userPreferredGender, userPreferredSex,
+                dto.preferredMinAge, dto.preferredMaxAge, dto.biography);
+        }
+        else
+        {
+            await this.userRepo.updateUserDetails(userId, userGender, userSex,
+                dto.birthday, dto.lat, dto.lon, userPreferredGender, userPreferredSex,
+                dto.preferredMinAge, dto.preferredMaxAge, dto.biography, dto.fame_rating,
+                dto.last_connection);
+        }
+    }
+
+    async updateUserTags(): Promise<void> {
+        // TODO: implement
+    }
+
+    async updateUserPhotos(): Promise<void> {
+        // TODO: implement
     }
 }

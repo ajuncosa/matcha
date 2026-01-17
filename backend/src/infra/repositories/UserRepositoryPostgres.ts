@@ -41,7 +41,10 @@ export default class UserRepositoryPostgres implements IUserRepository {
             userPreferredGender,
             userPreferredSex,
             detailsQuery.rows[0].preferred_min_age,
-            detailsQuery.rows[0].preferred_max_age
+            detailsQuery.rows[0].preferred_max_age,
+            detailsQuery.rows[0].biography,
+            detailsQuery.rows[0].tags,
+            detailsQuery.rows[0].photos
         );
     }
 
@@ -91,5 +94,45 @@ export default class UserRepositoryPostgres implements IUserRepository {
         await this.pool.query("INSERT INTO users(name, lastname, email, password, created_at) \
                         VALUES($1, $2, $3, $4, CURRENT_TIMESTAMP)",
                     [name, lastname, email.value(), password]);
+    }
+
+    async createUserDetails(userId: UserId, gender: UserGender, sex: UserSex, birthday: Date,
+        lat: number, lon: number, preferredGender: UserGender, preferredSex: UserSex,
+        preferredMinAge: number, preferredMaxAge: number, biography: string): Promise<void>
+    {
+        await this.pool.query("INSERT INTO users_details(user_id, gender, sex, preferred_gender, \
+                preferred_sex, preferred_min_age, preferred_max_age, lat, lon, biography, fame_rating, \
+                birthday, last_connection) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+            [userId, gender, sex, preferredGender, preferredSex, preferredMinAge, preferredMaxAge,
+                lat, lon, biography, 0, birthday, null]
+        );
+    }
+
+    async updateUserDetails(userId: UserId, gender: UserGender | undefined, sex: UserSex | undefined,
+        birthday: Date | undefined, lat: number | undefined, lon: number | undefined, preferredGender: UserGender | undefined,
+        preferredSex: UserSex | undefined, preferredMinAge: number | undefined, preferredMaxAge: number | undefined,
+        biography: string | undefined, fame_rating: number | undefined, last_connection: Date | undefined): Promise<void>
+    {
+        // TODO: implement update only of defined values
+    }
+
+    async createUserTags(tags: string[]): Promise<void>
+    {
+        // TODO: implement
+    }
+
+    async createUserPhotos(photos: string[]): Promise<void>
+    {
+        // TODO: implement
+    }
+
+    async updateUserTags(tags: string[]): Promise<void>
+    {
+        // TODO: implement
+    }
+
+    async updateUserPhotos(photos: string[]): Promise<void>
+    {
+        // TODO: implement
     }
 }

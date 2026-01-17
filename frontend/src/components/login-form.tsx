@@ -59,7 +59,9 @@ export function LoginForm({
             setFormError("Invalid credentials");
         }
         else {
-            if (setUser) setUser(user);
+            if (setUser){
+                setUser(user);
+            }
             user.connectSocket();
             if (user.hasProfileCompleted()) {
                 navigate('/browser');

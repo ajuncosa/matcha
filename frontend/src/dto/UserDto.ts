@@ -9,3 +9,18 @@ export interface UserProfileResponseDto {
     sex: string;
     biography: string;
 }
+
+export interface UpdateUserDetailsRequestDto {
+    gender: string | undefined;
+    sex: string | undefined;
+    birthday: Date | undefined;
+    lat: number | undefined;
+    lon: number | undefined;
+    preferredGender: string | undefined;
+    preferredSex: string | undefined;
+    preferredMinAge: number | undefined;
+    preferredMaxAge: number | undefined;
+    biography: string | undefined;
+    fame_rating: number | undefined;
+    last_connection: Date | undefined;
+}

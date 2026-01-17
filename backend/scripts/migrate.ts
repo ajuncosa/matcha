@@ -71,7 +71,7 @@ async function run_migrations_up(client: Client, migrations_dir: string, migrati
         for (const filename of executed_migrations) {
             console.log(filename);
         }
-        console.log("Migration compelted.");
+        console.log("Migration completed.");
     }
     catch (e) {
         console.error("Error during migration, rolling back.");

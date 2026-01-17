@@ -76,7 +76,6 @@ export default function Welcome() {
 
     function nextStep() {
         setFormError("");
-        console.log(formState)
         if (currentStep == 'preferences') {
             if (!formState.preferredGender || !formState.preferredSex || !formState.preferredMinAge || !formState.preferredMaxAge) {
                 setFormError("Please fill all the required fields");
@@ -130,18 +129,32 @@ export default function Welcome() {
     async function submit(e: React.MouseEvent) {
         e.preventDefault();
         setFormError("");
+
+        if (!formState.gender || !formState.sex || !formState.birthday || !formState.biography
+            || !formState.preferredGender || !formState.preferredSex || !formState.preferredMinAge
+            || !formState.preferredMaxAge  /*|| !formState.lat || !formState.lon || !formState.tags
+            || !formState.photos*/)
+        {
+            setFormError("Missing fields");
+            return;
+        }
         
-        /*
-        const resp : Response = await fetch("http://localhost/api/auth/register", {
+        const resp : Response = await fetch("http://localhost/api/user/update-user-details", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                email: form.email,
-                name: form.firstname,
-                lastname: form.lastname,
-                password: form.password
+                gender: formState.gender,
+                sex: formState.sex,
+                birthday: formState.birthday,
+                lat: formState.lat,
+                lon: formState.lon,
+                preferredGender: formState.preferredGender,
+                preferredSex: formState.preferredSex,
+                preferredMinAge: formState.preferredMinAge,
+                preferredMaxAge: formState.preferredMaxAge,
+                biography: formState.biography
             })
         });
 
@@ -154,14 +167,14 @@ export default function Welcome() {
                 setFormError(`Server error (${resp.status})`);
             return;
         }
-        else {
-            navigate('/login');
-        }
-*/
+
+        // TODO: post to photos
+        // TODO: post to tags
+
+        navigate('/browser');
     }
 
     useEffect(() => {
-        console.log(user);
         if (user && user.hasProfileCompleted())
             navigate('/browser');
     }, []);

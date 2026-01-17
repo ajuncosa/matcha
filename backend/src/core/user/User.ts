@@ -22,6 +22,12 @@ export class UserEmailAlreadyExists extends Error {
     }
 }
 
+export class MissingRequestFields extends Error {
+    constructor() {
+        super("Some request fields are missing");
+    }
+}
+
 export class Email {
     private email: string;
 
@@ -41,14 +47,15 @@ export enum UserGender {
     Man = "man",
     Woman = "woman",
     NonBinary = "nonbinary",
-    Other = "other"
+    Other = "other",
+    Any = "any"
 };
 
 export enum UserSex {
     Male = "male",
     Female = "female",
-    Intersex = "intersex"
-    // FIXME: maybe add "prefer not to say" or something like that?
+    Intersex = "intersex",
+    Any = "any"
 };
 
 export class UserDetails {
@@ -62,13 +69,14 @@ export class UserDetails {
     preferredMinAge: number;
     preferredMaxAge: number;
     biography: string;
-    fameRating: number;
-    lastConnection: Date | null;
     tags: string[];
     photos: string[];
+    fameRating: number;
+    lastConnection: Date | null;
 
     constructor(gender: UserGender, sex: UserSex, birthday: Date, lat: number, lon: number,
-        preferredGender: UserGender, preferredSex: UserSex, preferredMinAge: number, preferredMaxAge: number)
+        preferredGender: UserGender, preferredSex: UserSex, preferredMinAge: number, preferredMaxAge: number,
+        biography: string, tags: string[], photos: string[])
     {
         this.gender = gender;
         this.sex = sex;
@@ -79,12 +87,12 @@ export class UserDetails {
         this.preferredSex = preferredSex;
         this.preferredMinAge = preferredMinAge;
         this.preferredMaxAge = preferredMaxAge;
+        this.biography = biography;
+        this.tags = tags;
+        this.photos =photos;
 
-        this.biography = "";
         this.fameRating = 0;
         this.lastConnection = null;
-        this.tags = [];
-        this.photos = [];
     }
 }
 
@@ -108,7 +116,6 @@ export class User {
         this.emailValidatedAt = null;
         this.details = null;
     }
-
 }
 
 export function getUserGenderFromString(genderString: string): UserGender | null {
@@ -125,6 +132,8 @@ export function getUserGenderFromString(genderString: string): UserGender | null
         case "other":
             return UserGender.Other;
             break;
+        case "any":
+            return UserGender.Any;
         default:
             return null;
             break;
@@ -144,6 +153,8 @@ export function getUserSexFromString(sexString: string): UserSex | null {
         case "intersex":
             return UserSex.Intersex;
             break;
+        case "any":
+            return UserSex.Any;
         default:
             return null;
             break;
