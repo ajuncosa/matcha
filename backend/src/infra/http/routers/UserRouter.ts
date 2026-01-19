@@ -50,6 +50,12 @@ export default class UserRouter extends MatchaRouter {
     async getProfile(req: Request, res: Response) {
         try {
             const user: User = await this.userUseCases.getUser(req.session.userId!);
+            if (!user.details)
+            {
+                console.log("AAAAA")
+                res.redirect("/welcome");
+                return;
+            }
             const responseDto: UserProfileResponseDto = {
                 id: user.id,
                 name: user.name,
@@ -57,9 +63,9 @@ export default class UserRouter extends MatchaRouter {
                 email: user.email.value(),
                 emailValidatedAt: user.emailValidatedAt,
                 createdAt: user.createdAt,
-                gender: user.details?.gender!, // FIXME: redirect to first-login form if user.details does not exist (instead of !)
-                sex: user.details?.sex!, // FIXME: redirect to first-login form if user.details does not exist (instead of !)
-                biography: user.details?.biography!, // FIXME: redirect to first-login form if user.details does not exist (instead of !)
+                gender: user.details.gender,
+                sex: user.details.sex,
+                biography: user.details.biography,
             }
             res.status(200).send(responseDto);
         }

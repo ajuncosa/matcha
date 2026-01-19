@@ -40,7 +40,6 @@ function RootLayout() {
         setUser(user);
 
         if (user.hasProfileCompleted()) {
-            navigate("/browser");
             return;
         }
         else {

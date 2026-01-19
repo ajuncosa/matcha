@@ -18,12 +18,14 @@ export class Socket {
 }
 
 export class User {
+    id: number;
     name: string;
     lastname: string;
     private profileCompleted = false;
     socket: Socket | null = null
     
-    private constructor(name: string, lastname: string, profileCompleted: boolean) {
+    private constructor(id: number, name: string, lastname: string, profileCompleted: boolean) {
+        this.id = id;
         this.name = name;
         this.lastname = lastname;
         this.profileCompleted = profileCompleted;
@@ -51,12 +53,11 @@ export class User {
         else {
             const respJson = await resp.json();
 
-            let profileCompleted = false;
-            if (respJson["profileCompleted"] == true) {
-                profileCompleted = true;
-            }
-
-            let user: User = new User("", "", profileCompleted);
+            let user: User = new User(
+                respJson.userId,
+                respJson.name,
+                respJson.lastname,
+                respJson.profileCompleted == true);
             this.saveToLocalStorage(user);
 
             user.connectSocket();
@@ -95,7 +96,7 @@ export class User {
         const payload = await sessionCheck.json();
         const jsonUser: User = JSON.parse(localUser);
 
-        let user = new User(jsonUser.name, jsonUser.lastname, payload["profileCompleted"]);
+        let user = new User(jsonUser.id, jsonUser.name, jsonUser.lastname, payload["profileCompleted"]);
         user.connectSocket();
 
         return user;
@@ -117,7 +118,6 @@ export class User {
     }
 
     disconnectSocket() {
-        console.log("disc");
         console.log(this.socket);
         if (this.socket) this.socket.disconnect();
     }

@@ -27,6 +27,9 @@ export default class AuthRouter extends MatchaRouter {
             const user: User = await this.userUseCases.loginUser(dto);
             req.session.userId = user.id;
             res.status(200).json({
+                userId: user.id,
+                name: user.name,
+                lastname: user.lastname,
                 profileCompleted: user.details != null
             });
         }

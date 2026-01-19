@@ -1,16 +1,18 @@
 import { AvatarFallback, AvatarImage, Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mars, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
+import { EditIcon, Mars, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
 import type { UserProfileResponseDto } from "@/dto/UserDto";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "@/entities/AuthContext";
 
 export default function ProfilePage() {
 
+    const { user } = useContext(AuthContext);
     const [userProfileData, setUserProfileData] = useState<UserProfileResponseDto>();
 
     async function getProfile() : Promise<void> {
@@ -40,7 +42,7 @@ export default function ProfilePage() {
     return (
         <div className="w-full">
             {/* Header */}
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex justify-between items-stretch gap-4 h-32">
                 <div className="flex flex-start gap-4">
                     {/* Avatar */}
                     <div>
@@ -59,22 +61,32 @@ export default function ProfilePage() {
                             <span className="text-4xl">{userProfileData?.name}</span>
                             <span className="text-4xl">{userProfileData?.lastname}</span>
                         </div>
-                        <div className="mt-2">
-                            <Mars width={32} height={32} />
+                        <div className="flex mt-2 items-center">
+                            {
+                                userProfileData?.sex == "male" ? <Mars width={32} height={32} />
+                                : userProfileData?.sex == "female" ? <Venus width={32} height={32} />
+                                : <VenusAndMars width={32} height={32} />
+                            }
+                            <span>{userProfileData?.gender}</span>
                         </div>
                     </div>
                 </div>
-                <div>
-                    <div className="flex justify-center flex-col">
-                        <span className="text-xs text-muted-foreground uppercase">rating</span>
-                        <div className="text-4xl font-bold">1.000</div>
-                    </div>
+                <div className="flex justify-center flex-col">
+                    <span className="text-xs text-muted-foreground uppercase">rating</span>
+                    <div className="text-4xl font-bold">1.000</div>
                 </div>
             </div>
             <div className="mt-2">
-                <Button variant="outline" size="lg" className="cursor-pointer">
-                    <ThumbsUpIcon /> Like User
-                </Button>
+                {
+                    user?.id == userProfileData?.id ? 
+                    <Button variant="outline" size="lg" className="cursor-pointer">
+                        <EditIcon/> Edit profile
+                    </Button>
+                    :
+                    <Button variant="outline" size="lg" className="cursor-pointer">
+                        <ThumbsUpIcon /> Like User
+                    </Button>
+                }
             </div>
 
             {/* Body */}
