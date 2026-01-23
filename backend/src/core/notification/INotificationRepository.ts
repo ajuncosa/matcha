@@ -3,7 +3,8 @@ import type { UserId } from "../user/User";
 
 export interface INotificationRespository {
     findById(id: NotificationId): Promise<Notification | null>;
-    findUnreadForUser(userId: UserId) : Promise<Notification[]>;
+    findUnreadForUser(userId: UserId) : Promise<Notification[]>
+    markNotificationsAsViewed(ids: NotificationId[]): Promise<void>;
     create(producer: UserId, target: UserId, type: NotificationType, payload: string): Promise<Notification>;
     update(notification: Notification): Promise<Notification>;
 }

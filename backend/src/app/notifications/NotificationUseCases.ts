@@ -10,11 +10,12 @@ export class NotificationUseCases {
         this.notificationsRepo = notificationsRepo;
     }
 
-    getNewNotifications(userId: UserId): Promise<Notification[]> {
-        
+    async getNewNotifications(userId: UserId): Promise<Notification[]> {
+        const unreadNotifications = await this.notificationsRepo.findUnreadForUser(userId);
+        return unreadNotifications;
     }
 
-    markNotificationsAsViewed(notificationsIds: NotificationId[]): Promise<Notification> {
-        
+    async markNotificationsAsViewed(notificationsIds: NotificationId[]): Promise<void> {
+        this.notificationsRepo.markNotificationsAsViewed(notificationsIds);
     }
 }

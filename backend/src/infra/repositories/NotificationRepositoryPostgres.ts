@@ -28,6 +28,16 @@ export class NotificationRepositoryPostgres implements INotificationRespository 
         return notification;
     }
 
+    async markNotificationsAsViewed(ids: NotificationId[]): Promise<void> {
+        await this.pool.query("\
+            UPDATE notifications\
+            SET viewed_at=CURRENT_TIMESTAMP \
+            WHERE id = ANY($1)\
+            RETURNING id",
+            [ids]
+        );
+    }
+
     async findUnreadForUser(userId: UserId) : Promise<Notification[]> {
         const notificationsQuery = await this.pool.query("SELECT * FROM notifications WHERE viewed_at=NULL AND target_user_id=$1", [userId]);
         if (notificationsQuery.rows.length == 0)
