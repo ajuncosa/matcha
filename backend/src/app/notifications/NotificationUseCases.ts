@@ -14,7 +14,7 @@ export class NotificationUseCases {
         
     }
 
-    markNotificationAsViewed(notificationId: NotificationId): Promise<Notification> {
+    markNotificationsAsViewed(notificationsIds: NotificationId[]): Promise<Notification> {
         
     }
 }

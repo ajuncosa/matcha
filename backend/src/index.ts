@@ -13,15 +13,29 @@ import { Server as SocketIOServer } from "socket.io";
 import { createServer, type Server as HTTPServer } from 'http';
 import { Pool } from "pg";
 import session, { MemoryStore } from "express-session";
-import { SocketRegistrySocketIO } from "./infra/socket/SocketRegistrySocketIO";
+import { SocketRegistrySocketIO } from "@/infra/socket/SocketRegistrySocketIO";
+import { NotificaitonRouter } from "@/infra/http/routers/NotificationRouter";
+import { NotificationUseCases } from "@/app/notifications/NotificationUseCases";
+import type { INotificationRespository } from "@/core/notification/INotificationRepository";
+import { NotificationRepositoryPostgres } from "@/infra/repositories/NotificationRepositoryPostgres";
 
 const pgPool: Pool = new Pool();
 
+// Services
 const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
+
+// Repositories
 const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
+const notificationRepository: INotificationRespository = new NotificationRepositoryPostgres(pgPool);
+
+// Use Cases
 const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher);
+const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
+
+// Routers
 const authRouter: AuthRouter = new AuthRouter(userUseCases);
 const userRouter: UserRouter = new UserRouter(userUseCases);
+const notificationsRouter: NotificaitonRouter = new NotificaitonRouter(notificationUserCases);
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -39,22 +53,23 @@ const expressSession: RequestHandler = session({
     }
 })
 
-expressApp.use(bodyParser.json());
-expressApp.use(expressSession);
-
-// Express routes
-expressApp.use("/auth", authRouter.getRouter());
-expressApp.use("/user", isAuthenticated, userRouter.getRouter());
-
 // Socket management
 const httpServer: HTTPServer = createServer(expressApp);
 const socketServer: SocketIOServer = new SocketIOServer(httpServer, {
   serveClient: false
 });
 
+const socketRegistry = new SocketRegistrySocketIO(socketServer);
+
+expressApp.use(bodyParser.json());
+expressApp.use(expressSession);
+
 socketServer.engine.use(expressSession);
 
-const socketRegistry = new SocketRegistrySocketIO(socketServer);
+// Express routes
+expressApp.use("/auth", authRouter.getRouter());
+expressApp.use("/user", isAuthenticated, userRouter.getRouter());
+expressApp.use("/notification", isAuthenticated, notificationsRouter.getRouter());
 
 httpServer.listen(3000, () => {
     console.log(`Server running on http://localhost:${3000}`);

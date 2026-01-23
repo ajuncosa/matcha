@@ -3,7 +3,7 @@ import { Notification, getNotificationStringFromType, getNotificationTypeFromStr
 import type { UserId } from "@/core/user/User";
 import type { Pool } from "pg";
 
-class NotificationRepositoryPostgres implements INotificationRespository {
+export class NotificationRepositoryPostgres implements INotificationRespository {
     private pool: Pool;
 
     constructor(pool: Pool) {
