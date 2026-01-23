@@ -14,10 +14,10 @@ import {
     FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { User } from "@/entities/User";
 import { Link, useNavigate } from "react-router";
 import { useContext, useState } from "react"
-import { AuthContext } from "@/entities/AuthContext"
+import AuthContext, { logInUser, type User } from "@/contexts/AuthContextProvider"
+import SocketContext from "@/contexts/SocketContextProvider"
 
 interface LoginForm {
     email: string;
@@ -28,8 +28,9 @@ export function LoginForm({
     className,
     ...props
 }: React.ComponentProps<"div">) {
-    const { setUser } = useContext(AuthContext);
     let navigate = useNavigate();
+    let { setUser } = useContext(AuthContext);
+    let userSocket = useContext(SocketContext);
 
     const [form, setForm] = useState<LoginForm>({
         email: "",
@@ -54,22 +55,20 @@ export function LoginForm({
             return;
         }
 
-        const user: User | null = await User.login(form.email, form.password);
-        if (!user) {
+        const loggedInUser: User | null = await logInUser(form.email, form.password);
+
+        if (!loggedInUser) {
             setFormError("Invalid credentials");
+            return;
         }
-        else {
-            if (setUser){
-                setUser(user);
-            }
-            user.connectSocket();
-            if (user.hasProfileCompleted()) {
-                navigate('/browser');
-            }
-            else {
-                navigate('/welcome');
-            }
-        }
+
+        setUser(loggedInUser);
+        userSocket.connect();
+
+        if (loggedInUser.profileCompleted)
+            navigate('/browser');
+        else
+            navigate('/welcome');
     }
 
     return (
@@ -107,7 +106,7 @@ export function LoginForm({
                                 <Input id="password" type="password" required onChange={onFormChange} value={form.password} />
                             </Field>
                             <Field>
-                                <span>{formError}</span>
+                                <span className="text-red-500">{formError}</span>
                                 <Button type="submit" onClick={submit}>Login</Button>
                                 <FieldDescription className="text-center">
                                     Don&apos;t have an account? <Link to="/register">Sign up</Link>

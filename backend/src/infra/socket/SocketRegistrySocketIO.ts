@@ -1,12 +1,7 @@
 import { type IUserSocketRegistry, type Socket, type SocketId } from "@/core/socket/IUserSocketRegistry"
 import { User, type UserId } from "@/core/user/User";
-import { Server as SocketIOServer, Socket as IORawSocket, type DisconnectReason, type DefaultEventsMap } from "socket.io";
+import { Server as SocketIOServer, Socket as IORawSocket, type DisconnectReason } from "socket.io";
 
-interface SocketSessionData {
-    request: {
-        session: null | { userId: UserId }
-    }
-}
 
 class IoSocket implements Socket {
     id: SocketId;
@@ -40,7 +35,7 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
     }
 
     onSocketConnection(socket: IORawSocket) {
-        const userId = socket.request?.session?.userId;
+        const userId = socket.request?.session?.userId; // No clue how to type this
 
         console.log("[SOCKET]: CONNECTED", socket.id, "User:", userId);
 
@@ -63,7 +58,7 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
     }
 
     onSocketDisconnection(socket: IORawSocket, reason: DisconnectReason) {
-        const userId = socket.request?.session?.userId;
+        const userId = socket.request?.session?.userId; // No clue how to type this
 
         console.log("[SOCKET]: DISCONNECTED", socket.id, "User:", userId, "reason:", reason);
 

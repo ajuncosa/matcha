@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"
-import { AuthContext } from "@/entities/AuthContext";
 import { useNavigate } from "react-router";
+import AuthContext from "@/contexts/AuthContextProvider";
 
 interface FormState {
     gender: string;
@@ -38,7 +38,7 @@ interface FormState {
 }
 
 export default function Welcome() {
-    const { user } = useContext(AuthContext);
+    let { user } = useContext(AuthContext);
     let navigate = useNavigate();
 
     const [currentStep, setCurrentStep] = useState<string>("preferences"); //preferences, about-you, location, photos, tags
@@ -175,8 +175,8 @@ export default function Welcome() {
     }
 
     useEffect(() => {
-        if (user && user.hasProfileCompleted())
-            navigate('/browser');
+       if (user.profileCompleted)
+            navigate('/browse');
     }, []);
 
     return (

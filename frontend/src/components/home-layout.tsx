@@ -36,19 +36,17 @@ import {
 } from "@/components/ui/item"
 import MobileNavigation from "./movile-navigation"
 import { useContext } from "react"
-import { AuthContext } from "@/entities/AuthContext"
+import AuthContext from "@/contexts/AuthContextProvider"
+import SocketContext from "@/contexts/SocketContextProvider"
 
 export default function HomeLayout() {
-    const { user, setUser } = useContext(AuthContext);
     let navigate = useNavigate();
+    let { deleteUser } = useContext(AuthContext);
+    let userSocket = useContext(SocketContext);
 
     async function handleLogoutClick() : Promise<void> {
-
-        if (user && setUser) {
-            await user.logout();
-            setUser(null);
-        }
-
+        userSocket.disconnect();
+        deleteUser();
         navigate('/login');
     }
 

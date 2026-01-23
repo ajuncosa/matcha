@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import type { UserProfileResponseDto } from "@/dto/UserDto";
 import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "@/entities/AuthContext";
+import AuthContext from "@/contexts/AuthContextProvider"
 
 export default function ProfilePage() {
 

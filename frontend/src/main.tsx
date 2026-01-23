@@ -1,68 +1,38 @@
-import {StrictMode, useEffect, useState } from 'react';
+import {StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, useNavigate } from 'react-router';
+import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { useRouteError, isRouteErrorResponse, Outlet } from 'react-router';
 import './index.css';
 
 import Register from '@/pages/Register';
 import Login from '@/pages/Login';
-import { authGuard, noAuthGuard } from '@/guards/auth-guard';
+import { ProtectedRoute } from '@/guards/ProtectedRoute';
 import HomeLayout from '@/components/home-layout';
-import SearchPage from './pages/Search';
-import BrowsePage from './pages/Browse';
-import ProfilePage from './pages/Profile';
-import ChatPage from './pages/Chat';
-import Welcome from './pages/Welcome';
+import SearchPage from '@/pages/Search';
+import BrowsePage from '@/pages/Browse';
+import ProfilePage from '@/pages/Profile';
+import ChatPage from '@/pages/Chat';
+import Welcome from '@/pages/Welcome';
+import { AuthContextProvider } from './contexts/AuthContextProvider';
+import { SocketContextProvider } from './contexts/SocketContextProvider';
 
-import { User } from './entities/User';
-import { AuthContext } from './entities/AuthContext';
 
 function Index() {
     return <>
-        Sup dude
+        <div>Sup dude</div>
+        <div><a className='text-blue-500' href="/register">register</a></div>
+        <div><a className='text-blue-500' href="/login">login</a></div>
     </>;
 }
 
 function RootLayout() {
-    let navigate = useNavigate();
-
-    const [user, setUser] = useState<User | null>(null);
-
-    async function initApp() {
-        const user: User | null = await User.checkSession();
-
-        if (!user) {
-            navigate('/login');
-            return;
-        }
-
-        setUser(user);
-
-        if (user.hasProfileCompleted()) {
-            return;
-        }
-        else {
-            navigate("/welcome");
-        }
-    }
-
-    async function destroyApp() {
-        //if (user) user.disconnectSocket();
-    }
-
-    useEffect(() => {
-        initApp();
-
-        return () => {
-            destroyApp();
-        }
-    }, []);
-
     return (
-        <AuthContext value={{user, setUser}}>
-            <Outlet />
-        </AuthContext>
+        <AuthContextProvider>
+            <SocketContextProvider>
+                <Outlet />
+            </SocketContextProvider>
+        </AuthContextProvider>
     );
 }
 
@@ -107,28 +77,37 @@ const router = createBrowserRouter([
         errorElement: <RootErrorBoundary />,
         children: [
             { index: true, element: <Index /> },
-            { path: 'login', middleware: [noAuthGuard], element: <Login /> },
-            { path: 'register', middleware: [noAuthGuard], element: <Register /> },
-            { path: 'welcome', middleware: [authGuard], element: <Welcome /> },
+            { path: 'login', element: <Login /> },
+            { path: 'register', element: <Register /> },
             {
-                element: <HomeLayout/>,
-                middleware: [authGuard],
+                element: <ProtectedRoute/>,
+                path: "",
                 children: [
                     {
-                        path: "/search",
-                        element: <SearchPage/>
+                        element: <HomeLayout/>,
+                        path: "",
+                        children: [
+                            {
+                                path: "/search",
+                                element: <SearchPage/>
+                            },
+                            {
+                                path: "/browser",
+                                element: <BrowsePage/>
+                            },
+                            {
+                                path: "/profile",
+                                element: <ProfilePage/>
+                            },
+                            {
+                                path: "/chat",
+                                element: <ChatPage/>
+                            }
+                        ]
                     },
                     {
-                        path: "/browser",
-                        element: <BrowsePage/>
-                    },
-                    {
-                        path: "/profile",
-                        element: <ProfilePage/>
-                    },
-                    {
-                        path: "/chat",
-                        element: <ChatPage/>
+                        path: "/welcome",
+                        element: <Welcome/>
                     }
                 ]
             },

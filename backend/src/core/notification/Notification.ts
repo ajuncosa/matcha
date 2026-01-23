@@ -9,27 +9,35 @@ export enum NotificationType {
     UNLIKE = 'unlike',
 }
 
-export abstract class Notification {
+export class Notification {
     id: NotificationId;
     producer: UserId;
     target: UserId;
     type: NotificationType;
     createdAt: Date;
-    viewdAt: Date | null;
+    viewedAt: Date | null;
     payload: string;
 
-    constructor(id: NotificationId, producer: UserId, target: UserId, type: NotificationType, payload: string) {
+    constructor(
+        id: NotificationId, 
+        producer: UserId, 
+        target: UserId, 
+        type: NotificationType, 
+        payload: string, 
+        createdAt: Date = new Date(),
+        viewedAt: Date | null = null
+    ) {
         this.id = id;
         this.producer = producer;
         this.target = target;
         this.type = type;
-        this.createdAt = new Date();
-        this.viewdAt = null;
         this.payload = payload;
+        this.createdAt = createdAt;
+        this.viewedAt = viewedAt;
     }
 
     markAsViewed(): void {
-        this.viewdAt = new Date();
+        this.viewedAt = new Date();
     }
 }
 
@@ -64,4 +72,27 @@ export class UnlikeNotification extends Notification {
         super(id, producer, target, NotificationType.UNLIKE, payload);
     }
 
+}
+
+export function getNotificationTypeFromString(str: string): NotificationType {
+    str = str.toLowerCase();
+    if (str == "message")
+        return NotificationType.MESSAGE;
+    else if (str == "like")
+        return NotificationType.LIKE;
+    else if (str == "profile_view")
+        return NotificationType.PROFILE_VIEW;
+    else
+        return NotificationType.UNLIKE;
+}
+
+export function getNotificationStringFromType(type: NotificationType): string {
+    if (type == NotificationType.MESSAGE)
+        return "message";
+    else if (type == NotificationType.LIKE)
+        return "like";
+    else if (type == NotificationType.PROFILE_VIEW)
+        return "profile_view";
+    else
+        return "unlike";
 }
