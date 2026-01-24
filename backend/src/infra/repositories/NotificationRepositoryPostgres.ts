@@ -20,7 +20,7 @@ export class NotificationRepositoryPostgres implements INotificationRespository 
             notificationQuery.rows[0].producer,
             notificationQuery.rows[0].target,
             getNotificationTypeFromString(notificationQuery.rows[0].type),
-            notificationQuery.rows[0].payload,
+            notificationQuery.rows[0].text,
             new Date(notificationQuery.rows[0].created_at),
             new Date(notificationQuery.rows[0].viewed_at)
         );
@@ -39,32 +39,32 @@ export class NotificationRepositoryPostgres implements INotificationRespository 
     }
 
     async findUnreadForUser(userId: UserId) : Promise<Notification[]> {
-        const notificationsQuery = await this.pool.query("SELECT * FROM notifications WHERE viewed_at=NULL AND target_user_id=$1", [userId]);
+        const notificationsQuery = await this.pool.query("SELECT * FROM notifications WHERE viewed_at IS NULL AND target_user_id=$1", [userId]);
         if (notificationsQuery.rows.length == 0)
             return [];
         
         const notifications: Notification[] = notificationsQuery.rows.map((row: any) => {
             return new Notification(
-                row.rows[0].id,
-                row.rows[0].producer,
-                row.rows[0].target,
-                getNotificationTypeFromString(row.rows[0].type),
-                row.rows[0].payload,
-                new Date(row.rows[0].created_at),
-                new Date(row.rows[0].viewed_at)
+                row.id,
+                row.producer,
+                row.target,
+                getNotificationTypeFromString(row.type),
+                row.text,
+                new Date(row.created_at),
+                null
             );
         });
 
         return notifications;
     }
 
-    async create(producer: UserId, target: UserId, type: NotificationType, payload: string): Promise<Notification> {
+    async create(producer: UserId, target: UserId, type: NotificationType, text: string): Promise<Notification> {
         const notificationType: string = getNotificationStringFromType(type);
         const query = await this.pool.query("\
-            INSERT INTO notifications(producer, target, type, createdAt, viewedAt, payload) \
+            INSERT INTO notifications(producer_user_id, target_user_id, type, created_at, viewed_at, text) \
             VALUES($1, $2, $3, CURRENT_TIMESTAMP, NULL, $4) \
             RETURNING id, created_at",
-            [producer, target, notificationType, payload]
+            [producer, target, notificationType, text]
         );
         
         return new Notification(
@@ -72,7 +72,7 @@ export class NotificationRepositoryPostgres implements INotificationRespository 
             producer,
             target,
             type,
-            payload,
+            text,
             query.rows[0].created_at,
             null
         );
@@ -81,14 +81,14 @@ export class NotificationRepositoryPostgres implements INotificationRespository 
     async update(notification: Notification): Promise<Notification> {
         await this.pool.query("\
             UPDATE notifications \
-            SET producer_user_id=$2, target_user_id=$3, type=$4, payload=$5, viewed_at=$6\
+            SET producer_user_id=$2, target_user_id=$3, type=$4, text=$5, viewed_at=$6\
             WHERE id = $1",
             [
                 notification.id,
                 notification.producer,
                 notification.target,
                 notification.type,
-                notification.payload,
+                notification.text,
                 notification.viewedAt
             ]
         );

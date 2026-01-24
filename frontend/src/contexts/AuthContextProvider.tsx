@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState, type ReactElement } from "react";
-import { useNavigate } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 
 export interface User {
     id: number;

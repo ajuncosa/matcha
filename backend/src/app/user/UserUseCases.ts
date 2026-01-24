@@ -1,15 +1,18 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { Email, getUserGenderFromString, getUserSexFromString, IncorrectPassword, MissingRequestFields, User, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex } from "@/core/user/User";
+import { Email, getUserGenderFromString, getUserSexFromString, IncorrectPassword, MissingRequestFields, User, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
 import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequestDto } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
+import type { INotificationService } from "@/core/notification/INotificationService";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
     private passwordHasher: IPasswordHasher;
+    private notificationService: INotificationService;
 
-    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher) {
+    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher, notificationService: INotificationService) {
         this.userRepo = userRepo;
         this.passwordHasher = passwordHasher;
+        this.notificationService = notificationService;
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
@@ -97,5 +100,14 @@ export class UserUseCases {
 
     async updateUserPhotos(): Promise<void> {
         // TODO: implement
+    }
+
+    async like(producerId: UserId, targetId: UserId): Promise<void> {
+        const producer: User | null = await this.userRepo.findUserById(producerId);
+        const target: User | null = await this.userRepo.findUserById(targetId);
+
+        if (!producer || !target) throw new UserNotFound();
+
+        this.notificationService.notifyUserLike(producer, target);
     }
 }

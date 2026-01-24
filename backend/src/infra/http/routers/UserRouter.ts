@@ -12,6 +12,7 @@ export default class UserRouter extends MatchaRouter {
         this.userUseCases = userUseCases;
         this.router.post("/update-user-details", (req, res) => this.updateUserDetails(req, res));
         this.router.get("/profile", (req, res) => this.getProfile(req, res));
+        this.router.post('/like/:userId', (req, res) => this.like(req, res));
     }
 
     async updateUserDetails(req: Request, res: Response) {
@@ -53,6 +54,9 @@ export default class UserRouter extends MatchaRouter {
             if (!user.details)
             {
                 console.log("AAAAA")
+                //FIXME: should this be a redirect? this should return the user profile,
+                // if user details are null, the redirect has to be done in the frontend.
+                // There is no way you can redirect from here. Website is renderend in the frontend
                 res.redirect("/welcome");
                 return;
             }
@@ -75,6 +79,32 @@ export default class UserRouter extends MatchaRouter {
             }
             else {
                 throw e;
+            }
+        }
+    }
+
+    async like(req: Request, res: Response) {
+        const producerId: number | undefined = req.session.userId;
+        const targetIdStr: string | undefined = req.params.userId;
+
+        if (!producerId || !targetIdStr) {
+            res.status(400).send("Missing parameters");
+            return;
+        }
+
+        const targetId: number | undefined = parseInt(targetIdStr);
+
+        if (!targetId) {
+            res.status(400).send("Invalid parameter format");
+        }
+
+        try {
+            this.userUseCases.like(producerId, targetId);
+            res.status(200).send();
+        }
+        catch(e) {
+            if (e instanceof UserNotFound) {
+                res.status(401).send(`User with ID \"${req.session.userId}\" was not found`);
             }
         }
     }

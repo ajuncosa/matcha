@@ -1,8 +1,8 @@
 import type { LikeNotification, MessageNotification, ProfileViewNotification, UnlikeNotification } from "@/core/notification/Notification";
-import type { UserId } from "@/core/user/User";
+import type { User, type UserId } from "@/core/user/User";
 
 export interface INotificationService {
-    notifyUserLike(from: UserId, to: UserId): Promise<LikeNotification>;
+    notifyUserLike(from: User, to: User): Promise<LikeNotification>;
     notifyUserMessage(from: UserId, to: UserId): Promise<MessageNotification>;
     notifiProfileView(from: UserId, to: UserId): Promise<ProfileViewNotification>;
     notifyUnlikeNotification(from: UserId, to: UserId): Promise<UnlikeNotification>;

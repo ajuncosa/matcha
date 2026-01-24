@@ -16,14 +16,14 @@ export class Notification {
     type: NotificationType;
     createdAt: Date;
     viewedAt: Date | null;
-    payload: string;
+    text: string;
 
     constructor(
         id: NotificationId, 
         producer: UserId, 
         target: UserId, 
         type: NotificationType, 
-        payload: string, 
+        text: string, 
         createdAt: Date = new Date(),
         viewedAt: Date | null = null
     ) {
@@ -31,7 +31,7 @@ export class Notification {
         this.producer = producer;
         this.target = target;
         this.type = type;
-        this.payload = payload;
+        this.text = text;
         this.createdAt = createdAt;
         this.viewedAt = viewedAt;
     }
@@ -41,18 +41,20 @@ export class Notification {
     }
 }
 
+//FIXME: ?? Are these types above useless? :(
+
 export class MessageNotification extends Notification {
 
-    constructor(id: NotificationId, producer: UserId, target: UserId, payload: string) {
-        super(id, producer, target, NotificationType.MESSAGE, payload);
+    constructor(id: NotificationId, producer: UserId, target: UserId, text: string) {
+        super(id, producer, target, NotificationType.MESSAGE, text);
     }
 
 }
 
 export class LikeNotification extends Notification {
 
-    constructor(id: NotificationId, producer: UserId, target: UserId, payload: string) {
-        super(id, producer, target, NotificationType.LIKE, payload);
+    constructor(id: NotificationId, producer: UserId, target: UserId, text: string) {
+        super(id, producer, target, NotificationType.LIKE, text);
     }
 
 }
@@ -60,16 +62,16 @@ export class LikeNotification extends Notification {
 
 export class ProfileViewNotification extends Notification {
 
-    constructor(id: NotificationId, producer: UserId, target: UserId, payload: string) {
-        super(id, producer, target, NotificationType.PROFILE_VIEW, payload);
+    constructor(id: NotificationId, producer: UserId, target: UserId, text: string) {
+        super(id, producer, target, NotificationType.PROFILE_VIEW, text);
     }
 
 }
 
 export class UnlikeNotification extends Notification {
 
-    constructor(id: NotificationId, producer: UserId, target: UserId, payload: string) {
-        super(id, producer, target, NotificationType.UNLIKE, payload);
+    constructor(id: NotificationId, producer: UserId, target: UserId, text: string) {
+        super(id, producer, target, NotificationType.UNLIKE, text);
     }
 
 }

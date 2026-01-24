@@ -18,24 +18,7 @@ import { NotificaitonRouter } from "@/infra/http/routers/NotificationRouter";
 import { NotificationUseCases } from "@/app/notifications/NotificationUseCases";
 import type { INotificationRespository } from "@/core/notification/INotificationRepository";
 import { NotificationRepositoryPostgres } from "@/infra/repositories/NotificationRepositoryPostgres";
-
-const pgPool: Pool = new Pool();
-
-// Services
-const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
-
-// Repositories
-const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
-const notificationRepository: INotificationRespository = new NotificationRepositoryPostgres(pgPool);
-
-// Use Cases
-const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher);
-const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
-
-// Routers
-const authRouter: AuthRouter = new AuthRouter(userUseCases);
-const userRouter: UserRouter = new UserRouter(userUseCases);
-const notificationsRouter: NotificaitonRouter = new NotificaitonRouter(notificationUserCases);
+import { NotificationService } from "./app/notifications/NotificationService";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -53,6 +36,8 @@ const expressSession: RequestHandler = session({
     }
 })
 
+const pgPool: Pool = new Pool();
+
 // Socket management
 const httpServer: HTTPServer = createServer(expressApp);
 const socketServer: SocketIOServer = new SocketIOServer(httpServer, {
@@ -60,6 +45,24 @@ const socketServer: SocketIOServer = new SocketIOServer(httpServer, {
 });
 
 const socketRegistry = new SocketRegistrySocketIO(socketServer);
+
+// Repositories
+const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
+const notificationRepository: INotificationRespository = new NotificationRepositoryPostgres(pgPool);
+
+// Services
+const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
+const notificationService: NotificationService = new NotificationService(socketRegistry, notificationRepository);
+
+// Use Cases
+const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService);
+const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
+
+// Routers
+const authRouter: AuthRouter = new AuthRouter(userUseCases);
+const userRouter: UserRouter = new UserRouter(userUseCases);
+const notificationsRouter: NotificaitonRouter = new NotificaitonRouter(notificationUserCases);
+
 
 expressApp.use(bodyParser.json());
 expressApp.use(expressSession);

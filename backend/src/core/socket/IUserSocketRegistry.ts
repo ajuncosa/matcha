@@ -1,14 +1,5 @@
-import type { User, UserId } from "@/core/user/User";
-
-export type SocketId = string;
-
-export interface Socket {
-    id: SocketId;
-    userId: UserId;
-
-    send(event: string, data: any): boolean;
-    disconnect(): void;
-}
+import type { UserId } from "@/core/user/User";
+import type { Socket } from "@/core/socket/Socket";
 
 export interface IUserSocketRegistry {
     getUserSocket(userId: UserId): Socket | null;

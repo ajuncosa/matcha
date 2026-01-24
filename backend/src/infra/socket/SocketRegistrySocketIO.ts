@@ -1,4 +1,5 @@
-import { type IUserSocketRegistry, type Socket, type SocketId } from "@/core/socket/IUserSocketRegistry"
+import { type IUserSocketRegistry } from "@/core/socket/IUserSocketRegistry";
+import { type Socket, type SocketId } from "@/core/socket/Socket";
 import { User, type UserId } from "@/core/user/User";
 import { Server as SocketIOServer, Socket as IORawSocket, type DisconnectReason } from "socket.io";
 

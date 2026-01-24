@@ -1,10 +1,11 @@
 import type { INotificationRespository } from "@/core/notification/INotificationRepository";
 import type { INotificationService } from "@/core/notification/INotificationService";
-import type { LikeNotification, MessageNotification, ProfileViewNotification, UnlikeNotification } from "@/core/notification/Notification";
+import { LikeNotification, NotificationType, type MessageNotification, type ProfileViewNotification, type UnlikeNotification } from "@/core/notification/Notification";
 import type { IUserSocketRegistry } from "@/core/socket/IUserSocketRegistry";
-import type { UserId } from "@/core/user/User";
+import type { Socket } from "@/core/socket/Socket";
+import type { User, UserId } from "@/core/user/User";
 
-class NotificationService implements INotificationService {
+export class NotificationService implements INotificationService {
 
     socketRegistry: IUserSocketRegistry;
     notificationRepo: INotificationRespository;
@@ -14,8 +15,18 @@ class NotificationService implements INotificationService {
         this.notificationRepo = notificationRepo;
     }
 
-    notifyUserLike(from: UserId, to: UserId): Promise<LikeNotification> {
-        
+    async notifyUserLike(producer: User, target: User): Promise<LikeNotification> {
+        //TODO: add notification to databse
+        const notificationMessage: string = `${producer.name} ${producer.lastname} liked you.`;
+        const notif: LikeNotification = await this.notificationRepo.create(producer.id, target.id, NotificationType.LIKE, notificationMessage);
+
+        const targetSocket: Socket | null = this.socketRegistry.getUserSocket(target.id);
+
+        if (targetSocket) {
+            targetSocket.send('notification-like', notif);
+        }
+
+        return notif;
     }
 
     notifyUserMessage(from: UserId, to: UserId): Promise<MessageNotification> {

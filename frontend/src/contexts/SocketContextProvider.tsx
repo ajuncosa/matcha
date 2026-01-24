@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef } from "react";
 import { io, type Socket as SocketIO } from "socket.io-client";
 import AuthContext from "./AuthContextProvider";
+import NotificationsContext from "./NotificationsContextProvider";
 
 class UserSocket {
     socket: SocketIO | null = null;
@@ -27,6 +28,7 @@ const SocketContext = createContext<UserSocket>(userSocket);
 
 export function SocketContextProvider({children}: {children: React.ReactElement}) {
     const { user } = useContext(AuthContext);
+    const { addNotification } = useContext(NotificationsContext);
     const socket = useRef<UserSocket>(userSocket);
 
     function checkSocketConnection() {
@@ -36,8 +38,13 @@ export function SocketContextProvider({children}: {children: React.ReactElement}
         }
     }
 
+    function onLikeNotification(payload: string) {
+        addNotification(payload);
+    }
+
     useEffect(() => {
         checkSocketConnection();
+        socket.current.socket?.on('notification-like', onLikeNotification);
     }, [user.loggedIn]);
 
     return (
