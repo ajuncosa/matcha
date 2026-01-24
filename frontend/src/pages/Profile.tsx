@@ -128,28 +128,28 @@ export default function ProfilePage() {
                 <h2 className="text-2xl">Visit History</h2>
                 <div className="mt-2 grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-2">
                     {
-                        [1, 2, 3, 4, 5, 6, 7, 9, 11, 11, 1, 1, 1, 1, 1].map(() => {
+                        [1, 2, 3, 4, 5, 6, 7, 9, 11].map((i) => {
                             return (
-                                <Card className="p-2">
-                                <CardContent className="flex items-center gap-4 p-2">
-                                    <Avatar className="rounded-lg w-12 h-12">
-                                        <AvatarImage
-                                            src="https://github.com/evilrabbit.png"
-                                            alt="@evilrabbit"
-                                        />
-                                        <AvatarFallback>ER</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="text-lg">
-                                            Juan manuel
-                                        </p>
-                                        <p className="text-gray-500 text-sm">
-                                            24-03-1999 13:69
-                                        </p>
-                                    </div>
-                                    
-                                </CardContent>
-                            </Card>
+                                <Card className="p-2" key={i}>
+                                    <CardContent className="flex items-center gap-4 p-2">
+                                        <Avatar className="rounded-lg w-12 h-12">
+                                            <AvatarImage
+                                                src="https://github.com/evilrabbit.png"
+                                                alt="@evilrabbit"
+                                            />
+                                            <AvatarFallback>ER</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="text-lg">
+                                                Juan manuel
+                                            </p>
+                                            <p className="text-gray-500 text-sm">
+                                                24-03-1999 13:69
+                                            </p>
+                                        </div>
+                                        
+                                    </CardContent>
+                                </Card>
                             );
                         })
                     }

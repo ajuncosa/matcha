@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"
 import { useNavigate } from "react-router";
 import AuthContext from "@/contexts/AuthContextProvider";
+import UploadAndDisplayImage from "@/components/upload-image";
 import LocationPicker from "@/components/location-picker";
 
 interface FormState {
@@ -35,14 +36,15 @@ interface FormState {
     preferredMaxAge: number;
     biography: string;
     tags: string[];
-    photos: string[];
+    profilePhoto: File | null;
+    photos: [File | null, File | null, File | null, File | null];
 }
 
 export default function Welcome() {
     let { user } = useContext(AuthContext);
     let navigate = useNavigate();
 
-    const [currentStep, setCurrentStep] = useState<string>("location"); //preferences, about-you, location, photos, tags
+    const [currentStep, setCurrentStep] = useState<string>("preferences"); //preferences, about-you, location, photos, tags
     const [openBirthdayCalendar, setOpenBirthdayCalendar] = useState(false);
     const [formState, setFormState] = useState<FormState>({
         gender: "",
@@ -56,7 +58,8 @@ export default function Welcome() {
         preferredMaxAge: 150,
         biography: "",
         tags: [],
-        photos: [],
+        profilePhoto: null,
+        photos: [null, null, null, null]
     });
     const [formError, setFormError] = useState<string>("")
 
@@ -101,12 +104,10 @@ export default function Welcome() {
             setCurrentStep('photos');
         }
         else if (currentStep == 'photos') {
-            /*
-            if (formState.photos.empty()) {
-                setFormError("You must upload at least one photo");
+            if (!formState.profilePhoto) {
+                setFormError("You must upload at least a profile photo.");
                 return;
             }
-            */
             setCurrentStep('tags');
         }
     }
@@ -142,8 +143,8 @@ export default function Welcome() {
 
         if (!formState.gender || !formState.sex || !formState.birthday || !formState.biography
             || !formState.preferredGender || !formState.preferredSex || !formState.preferredMinAge
-            || !formState.preferredMaxAge  /*|| !formState.lat || !formState.lon || !formState.tags
-            || !formState.photos*/)
+            || !formState.preferredMaxAge  /*|| !formState.lat || !formState.lon || !formState.tags*/
+            || !formState.profilePhoto)
         {
             setFormError("Missing fields");
             return;
@@ -185,9 +186,8 @@ export default function Welcome() {
     }
 
     useEffect(() => {
-        if (user.profileCompleted) {
-            navigate('/browse');
-        }
+       if (user.profileCompleted)
+            navigate('/browser');
     }, []);
 
     return (
@@ -267,8 +267,9 @@ export default function Welcome() {
 
                     </>}
 
+                    {/** About you */}
                     {(currentStep == 'about-you') && <>
-                        <h1 className="text-xl font-bold">Tell us about yourself</h1>
+                        <h1 className="text-xl font-bold">Introduce yourself!</h1>
                         <div className="flex flex-col gap-3 mt-4">
                             <Label htmlFor="date" className="px-1">
                                 Date of birth
@@ -344,18 +345,37 @@ export default function Welcome() {
                         </div>
                     </>}
 
+                    {/** Location */}
                     {(currentStep == 'location') && <>
                         <h1 className="text-xl font-bold">Where are you?</h1>
                         <LocationPicker setLocation={setLocation}/>
                     </>}
 
+                    {/** Photos */}
                     {(currentStep == 'photos') && <>
-                        <h1 className="text-xl font-bold">Qué llevas puesto? e.e</h1>
-                        photos
+                        <h1 className="text-xl font-bold">Let your pics talk...</h1>
+                        <div className="mt-4 flex flex-col gap-4">
+                            <UploadAndDisplayImage
+                                uploadedImage={formState.profilePhoto}
+                                onImageUpload={(file: File) => formState.profilePhoto = file}
+                                onImageRemove={() => formState.profilePhoto = null}
+                            />
+                            <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-4">
+                               {
+                                    [0, 1, 2, 3].map((i) =>
+                                    <UploadAndDisplayImage key={i}
+                                        uploadedImage={formState.photos[i]}
+                                        onImageUpload={(file: File) => formState.photos[i] = file}
+                                        onImageRemove={() => formState.photos[i] = null}
+                                    />)
+                                }
+                            </div>
+                        </div>
                     </>}
 
+                    {/** Tags */}
                     {(currentStep == 'tags') && <>
-                        <h1 className="text-xl font-bold">What are you interested in?</h1>
+                        <h1 className="text-xl font-bold">Pick your vibes</h1>
                         suggestions
                         or add your own tags
                     </>}
@@ -363,20 +383,20 @@ export default function Welcome() {
                 <div className="mt-6 w-full text-red-600">{formError}</div>
                 <div className="flex justify-between mt-6 w-full">
                     {(currentStep != 'preferences') &&
-                        <Button variant="outline" onClick={prevStep}>
+                        <Button className="cursor-pointer" variant="outline" onClick={prevStep}>
                             Go back
                         </Button>
                     }
                     {(currentStep == 'preferences') && <span></span> }
 
                     {(currentStep != 'tags') &&
-                        <Button variant="default" onClick={nextStep}>
+                        <Button className="cursor-pointer" variant="default" onClick={nextStep}>
                             Next
                         </Button>
                     }
 
                     {(currentStep == 'tags') &&
-                        <Button variant="default" onClick={submit}>
+                        <Button className="cursor-pointer" variant="default" onClick={submit}>
                             Save and find love!
                         </Button>
                     }

@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState, type ReactElement } from "react";
-import { Outlet, useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 export interface User {
     id: number;
@@ -69,6 +69,8 @@ export function AuthContextProvider({ children }: { children: ReactElement }) {
         return null;
     }
 
+    const location = useLocation();
+
     async function initAuth() {
         const userJSON: string | null = localStorage.getItem("user");
         if (userJSON) {
@@ -78,12 +80,12 @@ export function AuthContextProvider({ children }: { children: ReactElement }) {
                 user.profileCompleted = session.profileCompleted;
                 setUser(user);
                 if (user.profileCompleted) {
-                    navigate('/browser', {
+                    navigate(location, {
                         replace: true
                     });
                 }
                 else {
-                    navigate('/welcome', {
+                    navigate("/welcome", {
                         replace: true
                     });
                 }
