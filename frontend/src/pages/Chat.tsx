@@ -5,7 +5,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item";
-import { SendHorizonal } from "lucide-react";
+import { ArrowLeft, SendHorizonal } from "lucide-react";
 import { useState } from "react";
 
 // GET /connections
@@ -76,11 +76,11 @@ export default function ChatPage() {
                 }
             </div>
             <div className={`w-full lg:w-2/3 lg:block ${hiddenChat ? "hidden" : "block"}`}>
-                <Button className="mb-2 cursor-pointer lg:hidden" variant="outline" onClick={() => setHiddenChat(true)}>Back to chats</Button>
                 <Card className="w-full pt-0 rounded-md">
                     <CardHeader className="p-0 m-0">
                         <Item className="px-4">
-                            <ItemMedia>
+                            <ItemMedia className="flex items-center">
+                                <Button className="cursor-pointer lg:hidden" variant="outline" onClick={() => setHiddenChat(true)}><ArrowLeft/></Button>
                                 <Avatar className="rounded-lg size-10 cursor-pointer">
                                     <AvatarImage src="https://github.com/evilrabbit.png" />
                                     <AvatarFallback>ER</AvatarFallback>
