@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"
 import { useNavigate } from "react-router";
 import AuthContext from "@/contexts/AuthContextProvider";
+import LocationPicker from "@/components/location-picker";
 
 interface FormState {
     gender: string;
@@ -41,7 +42,7 @@ export default function Welcome() {
     let { user } = useContext(AuthContext);
     let navigate = useNavigate();
 
-    const [currentStep, setCurrentStep] = useState<string>("preferences"); //preferences, about-you, location, photos, tags
+    const [currentStep, setCurrentStep] = useState<string>("location"); //preferences, about-you, location, photos, tags
     const [openBirthdayCalendar, setOpenBirthdayCalendar] = useState(false);
     const [formState, setFormState] = useState<FormState>({
         gender: "",
@@ -126,6 +127,15 @@ export default function Welcome() {
         });
     }
 
+    function setLocation(lat: number, lon: number) {
+        setFormState({
+            ...formState,
+            lat: lat,
+            lon: lon
+        });
+        console.log(lat, lon);
+    }
+
     async function submit(e: React.MouseEvent) {
         e.preventDefault();
         setFormError("");
@@ -175,8 +185,9 @@ export default function Welcome() {
     }
 
     useEffect(() => {
-       if (user.profileCompleted)
+        if (user.profileCompleted) {
             navigate('/browse');
+        }
     }, []);
 
     return (
@@ -334,9 +345,8 @@ export default function Welcome() {
                     </>}
 
                     {(currentStep == 'location') && <>
-                        <h1 className="text-xl font-bold">Where are you? o_O</h1>
-                        TODO
-                        {/** TODO: mapa */}
+                        <h1 className="text-xl font-bold">Where are you?</h1>
+                        <LocationPicker setLocation={setLocation}/>
                     </>}
 
                     {(currentStep == 'photos') && <>
