@@ -149,7 +149,7 @@ async function migrate(direction: "up" | "down"): Promise<void>
     await create_migrations_table(client);
 
     if (direction === "up") {
-        await run_migrations_up(client, migrations_dir, migration_files);
+        await run_migrations_up(client, migrations_dir, migration_files.sort());
     }
     else if (direction == "down") {
         await run_migrations_down(client, migrations_dir);

@@ -1,6 +1,6 @@
 import type { ITagsRepository } from "@/core/tag/ITagsRepository";
 import type { Tag } from "@/core/tag/Tag";
-import type { ITagsService } from "@/core/tag/TagsService";
+import type { ITagsService } from "@/core/tag/ITagsService";
 
 export class TagService implements ITagsService {
     tagsRepo: ITagsRepository;

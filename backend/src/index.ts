@@ -20,7 +20,7 @@ import type { INotificationRespository } from "@/core/notification/INotification
 import { NotificationRepositoryPostgres } from "@/infra/repositories/NotificationRepositoryPostgres";
 import { NotificationService } from "./app/notifications/NotificationService";
 import type { ITagsRepository } from "./core/tag/ITagsRepository";
-import type { ITagsService } from "./core/tag/TagsService";
+import type { ITagsService } from "./core/tag/ITagsService";
 import { TagService } from "./app/tag/TagService";
 import { TagRepositoryPostgres } from "./infra/repositories/TagRepositoryPostgres";
 

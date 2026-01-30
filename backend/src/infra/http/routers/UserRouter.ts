@@ -13,6 +13,8 @@ export default class UserRouter extends MatchaRouter {
         this.router.post("/details", (req, res) => this.updateUserDetails(req, res));
         this.router.get("/profile", (req, res) => this.getProfile(req, res));
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
+        this.router.post("/photos", (req, res) => this.updateUserPhotos(req, res));
+        this.router.get("/photos", (req, res) => this.getUserPhotos(req, res));
     }
 
     async updateUserDetails(req: Request, res: Response) {
@@ -106,5 +108,14 @@ export default class UserRouter extends MatchaRouter {
                 res.status(401).send(`User with ID \"${req.session.userId}\" was not found`);
             }
         }
+    }
+
+    async updateUserPhotos(req: Request, res: Response) {
+          // TODO: 
+
+    }
+
+    async getUserPhotos(req: Request, res: Response) {
+        // TODO: 
     }
 }

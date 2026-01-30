@@ -4,8 +4,7 @@ import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequ
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
-import type { ITagsService } from "@/core/tag/TagsService";
-import type { ITagsRepository } from "@/core/tag/ITagsRepository";
+import type { ITagsService } from "@/core/tag/ITagsService";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
@@ -81,7 +80,6 @@ export class UserUseCases {
 
         if (!user.details)
         {
-
             if (!userGender || !userSex || !dto.birthday || dto.lat == undefined || dto.lon == undefined || !userPreferredGender
                 || !userPreferredSex || !dto.preferredMinAge || !dto.preferredMaxAge || !dto.biography)
             {

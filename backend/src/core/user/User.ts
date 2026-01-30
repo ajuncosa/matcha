@@ -1,4 +1,5 @@
 import type { Tag } from "@/core/tag/Tag";
+import type { Photo } from "@/core/photos/Photo";
 
 export class InvalidEmailFormatError extends Error {
     constructor() {
@@ -72,13 +73,13 @@ export class UserDetails {
     preferredMaxAge: number;
     biography: string;
     tags: Tag[];
-    photos: string[];
+    photos: Photo[];
     fameRating: number;
     lastConnection: Date | null;
 
     constructor(gender: UserGender, sex: UserSex, birthday: Date, lat: number, lon: number,
         preferredGender: UserGender, preferredSex: UserSex, preferredMinAge: number, preferredMaxAge: number,
-        biography: string, tags: Tag[], photos: string[])
+        biography: string, tags: Tag[], photos: Photo[])
     {
         this.gender = gender;
         this.sex = sex;
@@ -91,7 +92,7 @@ export class UserDetails {
         this.preferredMaxAge = preferredMaxAge;
         this.biography = biography;
         this.tags = tags;
-        this.photos =photos;
+        this.photos = photos;
 
         this.fameRating = 0;
         this.lastConnection = null;

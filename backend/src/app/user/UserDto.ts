@@ -27,7 +27,6 @@ export interface UserProfileResponseDto {
 type TagAction =
   | {
       action: "add";
-      id: undefined;
       value: string;
     }
   | {

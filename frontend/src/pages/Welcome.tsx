@@ -45,7 +45,8 @@ export default function Welcome() {
     let { user } = useContext(AuthContext);
     let navigate = useNavigate();
 
-    const [currentStep, setCurrentStep] = useState<string>("tags"); //preferences, about-you, location, photos, tags
+    const welcomeSteps : string[] = ["preferences", "about-you", "location", "photos", "tags"];
+    const [currentStep, setCurrentStep] = useState<number>(0);
     const [openBirthdayCalendar, setOpenBirthdayCalendar] = useState(false);
     const [formState, setFormState] = useState<FormState>({
         gender: "",
@@ -65,58 +66,60 @@ export default function Welcome() {
     const [formError, setFormError] = useState<string>("")
 
     function prevStep() {
-        if (currentStep == 'about-you') {
-            setCurrentStep('preferences');
-        }
-        else if (currentStep == 'location') {
-            setCurrentStep('about-you');
-        }
-        else if (currentStep == 'photos') {
-            setCurrentStep('location');
-        }
-        else if (currentStep == 'tags') {
-            setCurrentStep('photos');
-        }
+        if (currentStep == 0)
+            return;
+
+        setCurrentStep(currentStep - 1);
     }
 
-    function nextStep() {
+    function nextStep(e: React.MouseEvent) {
+        if (currentStep == welcomeSteps.length)
+            return;
+
         setFormError("");
-        if (currentStep == 'preferences') {
-            if (!formState.preferredGender || !formState.preferredSex || !formState.preferredMinAge || !formState.preferredMaxAge) {
-                setFormError("Please fill all the required fields");
-                return;
-            }
-            setCurrentStep('about-you');
+        switch (welcomeSteps[currentStep])
+        {
+            case "preferences":
+                if (!formState.preferredGender || !formState.preferredSex || !formState.preferredMinAge || !formState.preferredMaxAge) {
+                    setFormError("Please fill all the required fields");
+                    return;
+                }
+                break;
+            case "about-you":
+                if (!formState.gender || !formState.sex || !formState.birthday || !formState.biography) {
+                    setFormError("Please fill all the required fields");
+                    return;
+                }
+                break;
+            case "location":
+                // TODO:
+                /*
+                if (!formState.lat || !formState.lon) {
+                    setFormError("Please fill all the required fields");
+                    return;
+                }
+                */
+                break;
+            case "photos":
+                if (!formState.profilePhoto) {
+                    setFormError("You must upload at least a profile photo.");
+                    return;
+                }
+                break;
+            case "tags":
+                if (formState.tags.length < 3) {
+                    setFormError("You must fill at least 3 tags.");
+                    return;
+                }
+                break;
+            default:
+                throw new Error(`Invalid welcome page step: \"${welcomeSteps[currentStep]}\"`);
         }
-        else if (currentStep == 'about-you') {
-            if (!formState.gender || !formState.sex || !formState.birthday || !formState.biography) {
-                setFormError("Please fill all the required fields");
-                return;
-            }
-            setCurrentStep('location');
-        }
-        else if (currentStep == 'location') {
-            /*
-            if (!formState.lat || !formState.lon) {
-                setFormError("Please fill all the required fields");
-                return;
-            }
-            */
-            setCurrentStep('photos');
-        }
-        else if (currentStep == 'photos') {
-            if (!formState.profilePhoto) {
-                setFormError("You must upload at least a profile photo.");
-                return;
-            }
-            setCurrentStep('tags');
-        }
-        else if (currentStep == 'tags') {
-            if (formState.tags.length < 3) {
-                setFormError("You must fill at least 3 tags.");
-                return;
-            }
-        }
+
+        if (currentStep == welcomeSteps.length - 1)
+            submit(e);
+        else
+            setCurrentStep(currentStep + 1);
     }
 
     function setInputFormValue(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
@@ -168,14 +171,14 @@ export default function Welcome() {
 
         if (!formState.gender || !formState.sex || !formState.birthday || !formState.biography
             || !formState.preferredGender || !formState.preferredSex || !formState.preferredMinAge
-            || !formState.preferredMaxAge  /*|| !formState.lat || !formState.lon || !formState.tags*/
-            || !formState.profilePhoto)
+            || !formState.preferredMaxAge  /*|| !formState.lat || !formState.lon */
+            || !formState.tags || !formState.profilePhoto)
         {
             setFormError("Missing fields");
             return;
         }
         
-        const resp : Response = await fetch("http://localhost/api/user/update-user-details", {
+        const resp : Response = await fetch("http://localhost/api/user/details", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -221,7 +224,7 @@ export default function Welcome() {
             <div className="w-full max-w-sm">
                 <div>
                     {/** Preferences */}
-                    {(currentStep == 'preferences') && <>
+                    {(welcomeSteps[currentStep] == 'preferences') && <>
                         <h1 className="text-xl font-bold">What are you looking for?</h1>
 
                         {/** Gender / Sex */}
@@ -294,7 +297,7 @@ export default function Welcome() {
                     </>}
 
                     {/** About you */}
-                    {(currentStep == 'about-you') && <>
+                    {(welcomeSteps[currentStep] == 'about-you') && <>
                         <h1 className="text-xl font-bold">Introduce yourself!</h1>
                         <div className="flex flex-col gap-3 mt-4">
                             <Label htmlFor="date" className="px-1">
@@ -372,13 +375,13 @@ export default function Welcome() {
                     </>}
 
                     {/** Location */}
-                    {(currentStep == 'location') && <>
+                    {(welcomeSteps[currentStep] == 'location') && <>
                         <h1 className="text-xl font-bold">Where are you?</h1>
                         <LocationPicker setLocation={setLocation}/>
                     </>}
 
                     {/** Photos */}
-                    {(currentStep == 'photos') && <>
+                    {(welcomeSteps[currentStep] == 'photos') && <>
                         <h1 className="text-xl font-bold">Let your pics talk...</h1>
                         <div className="mt-4 flex flex-col gap-4">
                             <UploadAndDisplayImage
@@ -400,7 +403,7 @@ export default function Welcome() {
                     </>}
 
                     {/** Tags */}
-                    {(currentStep == 'tags') && <>
+                    {(welcomeSteps[currentStep] == 'tags') && <>
                         <h1 className="text-xl font-bold">Pick your vibes</h1>
                         <p>Tell us your interests:</p>
                         <TagsPicker tags={formState.tags} addTag={addTag} removeTag={removeTag}/>
@@ -408,21 +411,21 @@ export default function Welcome() {
                 </div>
                 <div className="mt-6 w-full text-red-600">{formError}</div>
                 <div className="flex justify-between mt-6 w-full">
-                    {(currentStep != 'preferences') &&
+                    {(currentStep != 0) &&
                         <Button className="cursor-pointer" variant="outline" onClick={prevStep}>
                             Go back
                         </Button>
                     }
-                    {(currentStep == 'preferences') && <span></span> }
+                    {(currentStep == 0) && <span></span> }
 
-                    {(currentStep != 'tags') &&
+                    {(currentStep != welcomeSteps.length - 1) &&
                         <Button className="cursor-pointer" variant="default" onClick={nextStep}>
                             Next
                         </Button>
                     }
 
-                    {(currentStep == 'tags') &&
-                        <Button className="cursor-pointer" variant="default" onClick={submit}>
+                    {(currentStep == welcomeSteps.length - 1) &&
+                        <Button className="cursor-pointer" variant="default" onClick={nextStep}>
                             Save and find love!
                         </Button>
                     }

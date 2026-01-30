@@ -1,3 +1,4 @@
+import { Photo } from "@/core/photos/Photo";
 import { Tag } from "@/core/tag/Tag";
 import { type IUserRepository } from "@/core/user/IUserRepository";
 import { Email, User, type UserId, UserDetails, UserGender, getUserGenderFromString, UserSex, getUserSexFromString } from "@/core/user/User";
@@ -103,7 +104,7 @@ export default class UserRepositoryPostgres implements IUserRepository {
     {
         await this.pool.query("INSERT INTO users_details(user_id, gender, sex, preferred_gender, \
                 preferred_sex, preferred_min_age, preferred_max_age, lat, lon, biography, fame_rating, \
-                birthday, last_connection, fame_rating) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 1000)",
+                birthday, last_connection) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
             [userId, gender, sex, preferredGender, preferredSex, preferredMinAge, preferredMaxAge,
                 lat, lon, biography, 0, birthday, null]
         );
@@ -137,15 +138,39 @@ export default class UserRepositoryPostgres implements IUserRepository {
         return this.constructUserDetails(query)!; // Case where this can return null?
     }
 
-
-    async createUserPhotos(photos: string[]): Promise<void>
+    async getUserPhotos(userId: UserId): Promise<Photo[]>
     {
-        // TODO: implement
+        const query = await this.pool.query("SELECT photo_id FROM users_photos WHERE user_id=$1", [userId]);
+
+        const photoIds: number[] = query.rows.map((row) => row.photo_id);
+
+        const photosQuery = await this.pool.query(`
+            SELECT * FROM photos
+            WHERE id=$1
+        `, photoIds);
+        
+        const photos: Photo[] = photosQuery.rows.map((row) => new Photo(row.id, row.file_path));
+
+        return photos;
     }
 
-    async updateUserPhotos(photos: string[]): Promise<void>
+    async addPhotosToUser(userId: UserId, photos: Photo[]): Promise<void>
     {
-        // TODO: implement
+        for (const photo of photos) {
+            await this.pool.query("\
+                INSERT INTO users_photos(user_id, photo_id) VALUES($1, $2)\
+            ", [userId, photo.id]);
+        }
+    }
+
+    async deletePhotosFromUser(userId: UserId, photos: Photo[]): Promise<void>
+    {
+        for (const photo of photos) {
+            await this.pool.query("\
+                DELETE FROM users_photos\
+                WHERE user_id=$1 AND photo_id=$2\
+            ", [userId, photo.id]);
+        }
     }
 
     async getUserTags(userId: UserId): Promise<Tag[]> {

@@ -1,4 +1,4 @@
-import type { User, UserId } from "@/core/user/User";
+import type { UserId } from "@/core/user/User";
 
 export type NotificationId = number;
 
