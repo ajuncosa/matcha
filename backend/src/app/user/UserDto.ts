@@ -1,3 +1,5 @@
+import type { TagId } from "@/core/tag/Tag";
+
 export interface UserRegisterRequestDto {
     email: string;
     name: string;
@@ -22,6 +24,18 @@ export interface UserProfileResponseDto {
     biography: string;
 }
 
+type TagAction =
+  | {
+      action: "add";
+      id: undefined;
+      value: string;
+    }
+  | {
+      action: "delete";
+      id: TagId;
+      value: string;
+    };
+
 export interface UpdateUserDetailsRequestDto {
     gender: string | undefined;
     sex: string | undefined;
@@ -33,6 +47,5 @@ export interface UpdateUserDetailsRequestDto {
     preferredMinAge: number | undefined;
     preferredMaxAge: number | undefined;
     biography: string | undefined;
-    fame_rating: number | undefined;
-    last_connection: Date | undefined;
+    tags: TagAction[];
 }

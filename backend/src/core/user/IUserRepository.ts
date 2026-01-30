@@ -1,4 +1,5 @@
-import { type UserId, User, Email, UserGender, UserSex } from "@/core/user/User";
+import { type UserId, User, Email, UserGender, UserSex, UserDetails } from "@/core/user/User";
+import type { Tag } from "@/core/tag/Tag";
 
 export interface IUserRepository {
     findUserById(user: UserId): Promise<User | null>;
@@ -7,12 +8,10 @@ export interface IUserRepository {
     createUserDetails(userId: UserId, gender: UserGender, sex: UserSex, birthday: Date,
         lat: number, lon: number, preferredGender: UserGender, preferredSex: UserSex,
         preferredMinAge: number, preferredMaxAge: number, biography: string): Promise<void>;
-    updateUserDetails(userId: UserId, gender: UserGender | undefined, sex: UserSex | undefined,
-        birthday: Date | undefined, lat: number | undefined, lon: number | undefined, preferredGender: UserGender | undefined,
-        preferredSex: UserSex | undefined, preferredMinAge: number | undefined, preferredMaxAge: number | undefined,
-        biography: string | undefined, fame_rating: number | undefined, last_connection: Date | undefined): Promise<void>;
-    createUserTags(tags: string[]): Promise<void>;
-    updateUserTags(tags: string[]): Promise<void>;
+    updateUserDetails(userId: UserId, details: UserDetails): Promise<UserDetails>;
     createUserPhotos(photos: string[]): Promise<void>;
     updateUserPhotos(photos: string[]): Promise<void>;
+    getUserTags(userId: UserId): Promise<Tag[]>;
+    addTagsToUser(userId: UserId, tags: Tag[]): Promise<void>;
+    deleteTagsFromUser(userId: UserId, tags: Tag[]): Promise<void>;
 }

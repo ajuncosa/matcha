@@ -19,6 +19,10 @@ import { NotificationUseCases } from "@/app/notifications/NotificationUseCases";
 import type { INotificationRespository } from "@/core/notification/INotificationRepository";
 import { NotificationRepositoryPostgres } from "@/infra/repositories/NotificationRepositoryPostgres";
 import { NotificationService } from "./app/notifications/NotificationService";
+import type { ITagsRepository } from "./core/tag/ITagsRepository";
+import type { ITagsService } from "./core/tag/TagsService";
+import { TagService } from "./app/tag/TagService";
+import { TagRepositoryPostgres } from "./infra/repositories/TagRepositoryPostgres";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -49,13 +53,15 @@ const socketRegistry = new SocketRegistrySocketIO(socketServer);
 // Repositories
 const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
 const notificationRepository: INotificationRespository = new NotificationRepositoryPostgres(pgPool);
+const tagRespository: ITagsRepository = new TagRepositoryPostgres(pgPool);
 
 // Services
 const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
 const notificationService: NotificationService = new NotificationService(socketRegistry, notificationRepository);
+const tagsService: ITagsService = new TagService(tagRespository);
 
 // Use Cases
-const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService);
+const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
 
 // Routers

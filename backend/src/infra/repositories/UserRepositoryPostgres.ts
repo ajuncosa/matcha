@@ -1,3 +1,4 @@
+import { Tag } from "@/core/tag/Tag";
 import { type IUserRepository } from "@/core/user/IUserRepository";
 import { Email, User, type UserId, UserDetails, UserGender, getUserGenderFromString, UserSex, getUserSexFromString } from "@/core/user/User";
 import type { Pool, QueryResult } from "pg";
@@ -102,31 +103,42 @@ export default class UserRepositoryPostgres implements IUserRepository {
     {
         await this.pool.query("INSERT INTO users_details(user_id, gender, sex, preferred_gender, \
                 preferred_sex, preferred_min_age, preferred_max_age, lat, lon, biography, fame_rating, \
-                birthday, last_connection) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+                birthday, last_connection, fame_rating) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 1000)",
             [userId, gender, sex, preferredGender, preferredSex, preferredMinAge, preferredMaxAge,
                 lat, lon, biography, 0, birthday, null]
         );
     }
 
-    async updateUserDetails(userId: UserId, gender: UserGender | undefined, sex: UserSex | undefined,
-        birthday: Date | undefined, lat: number | undefined, lon: number | undefined, preferredGender: UserGender | undefined,
-        preferredSex: UserSex | undefined, preferredMinAge: number | undefined, preferredMaxAge: number | undefined,
-        biography: string | undefined, fame_rating: number | undefined, last_connection: Date | undefined): Promise<void>
-    {
-        // TODO: implement update only of defined values
+    async updateUserDetails(userId: UserId, details: UserDetails): Promise<UserDetails> {
+        const query = await this.pool.query(`
+            UPDATE users_details 
+            SET gender=$2, sex=$3, biography=$4, lat=$5, lon=$6, 
+                preferred_gender=$7, preferred_sex=$8, preferred_min_age=$9, 
+                preferred_max_age=$10, fame_rating=$11, 
+                birthday=$12, last_connection=$13
+            WHERE user_id=$1
+            RETURNING gender, sex, biography, lat, lon, preferred_gender, preferred_sex, preferred_min_age, preferred_max_age, fame_rating, birthday, last_connection
+        `, [
+            userId,              // $1
+            details.gender,      // $2  
+            details.sex,         // $3
+            details.biography,   // $4
+            details.lat,         // $5
+            details.lon,         // $6
+            details.preferredGender, // $7
+            details.preferredSex,    // $8
+            details.preferredMinAge, // $9
+            details.preferredMaxAge, // $10
+            details.fameRating,  // $11
+            details.birthday,    // $12
+            details.lastConnection // $13
+        ]);
+
+        return this.constructUserDetails(query)!; // Case where this can return null?
     }
 
-    async createUserTags(tags: string[]): Promise<void>
-    {
-        // TODO: implement
-    }
 
     async createUserPhotos(photos: string[]): Promise<void>
-    {
-        // TODO: implement
-    }
-
-    async updateUserTags(tags: string[]): Promise<void>
     {
         // TODO: implement
     }
@@ -134,5 +146,40 @@ export default class UserRepositoryPostgres implements IUserRepository {
     async updateUserPhotos(photos: string[]): Promise<void>
     {
         // TODO: implement
+    }
+
+    async getUserTags(userId: UserId): Promise<Tag[]> {
+        const userTagsQuery = await this.pool.query(`
+            SELECT tag_id FROM users_interests_tags
+            WHERE user_id=$1
+        `, [userId]);
+
+        const userTagsIds: number[] = userTagsQuery.rows.map((row) => row.tag_id);
+
+        const tagsQuery = await this.pool.query(`
+            SELECT * FROM tags
+            WHERE tag_id=$1
+        `, userTagsIds);
+        
+        const tags: Tag[] = tagsQuery.rows.map((row) => new Tag(row.id, row.name));
+
+        return tags;
+    }
+
+    async addTagsToUser(userId: UserId, tags: Tag[]): Promise<void> {
+        for (const tag of tags) {
+            await this.pool.query("\
+                INSERT INTO users_interests_tags(user_id, tag_id) VALUES($1, $2)\
+            ", [userId, tag.id]);
+        }
+    }
+
+    async deleteTagsFromUser(userId: UserId, tags: Tag[]): Promise<void> {
+        for (const tag of tags) {
+            await this.pool.query("\
+                DELETE FROM users_interests_tags\
+                WHERE user_id=$1 AND tag_id=$2\
+            ", [userId, tag.id]);
+        }
     }
 }

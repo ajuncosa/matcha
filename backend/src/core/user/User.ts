@@ -1,3 +1,5 @@
+import type { Tag } from "@/core/tag/Tag";
+
 export class InvalidEmailFormatError extends Error {
     constructor() {
         super("Invalid email format");
@@ -69,14 +71,14 @@ export class UserDetails {
     preferredMinAge: number;
     preferredMaxAge: number;
     biography: string;
-    tags: string[];
+    tags: Tag[];
     photos: string[];
     fameRating: number;
     lastConnection: Date | null;
 
     constructor(gender: UserGender, sex: UserSex, birthday: Date, lat: number, lon: number,
         preferredGender: UserGender, preferredSex: UserSex, preferredMinAge: number, preferredMaxAge: number,
-        biography: string, tags: string[], photos: string[])
+        biography: string, tags: Tag[], photos: string[])
     {
         this.gender = gender;
         this.sex = sex;

@@ -10,7 +10,7 @@ export default class UserRouter extends MatchaRouter {
     constructor(userUseCases: UserUseCases) {
         super();
         this.userUseCases = userUseCases;
-        this.router.post("/update-user-details", (req, res) => this.updateUserDetails(req, res));
+        this.router.post("/details", (req, res) => this.updateUserDetails(req, res));
         this.router.get("/profile", (req, res) => this.getProfile(req, res));
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
     }
@@ -28,8 +28,7 @@ export default class UserRouter extends MatchaRouter {
             preferredMinAge: req.body.preferredMinAge,
             preferredMaxAge: req.body.preferredMaxAge,
             biography: req.body.biography,
-            fame_rating: req.body.userIfame_ratingd,
-            last_connection: req.body.last_connection
+            tags: req.body.tags
         }
         try {
             await this.userUseCases.updateUserDetails(req.session.userId!, dto);

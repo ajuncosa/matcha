@@ -23,6 +23,7 @@ import { useNavigate } from "react-router";
 import AuthContext from "@/contexts/AuthContextProvider";
 import UploadAndDisplayImage from "@/components/upload-image";
 import LocationPicker from "@/components/location-picker";
+import TagsPicker from "@/components/tags-picker";
 
 interface FormState {
     gender: string;
@@ -44,7 +45,7 @@ export default function Welcome() {
     let { user } = useContext(AuthContext);
     let navigate = useNavigate();
 
-    const [currentStep, setCurrentStep] = useState<string>("preferences"); //preferences, about-you, location, photos, tags
+    const [currentStep, setCurrentStep] = useState<string>("tags"); //preferences, about-you, location, photos, tags
     const [openBirthdayCalendar, setOpenBirthdayCalendar] = useState(false);
     const [formState, setFormState] = useState<FormState>({
         gender: "",
@@ -110,6 +111,12 @@ export default function Welcome() {
             }
             setCurrentStep('tags');
         }
+        else if (currentStep == 'tags') {
+            if (formState.tags.length < 3) {
+                setFormError("You must fill at least 3 tags.");
+                return;
+            }
+        }
     }
 
     function setInputFormValue(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
@@ -135,6 +142,24 @@ export default function Welcome() {
             lon: lon
         });
         console.log(lat, lon);
+    }
+
+    function addTag(tag: string) {
+        const newTags = [...formState.tags, tag];
+
+        setFormState({
+            ...formState,
+            tags: newTags
+        });
+    }
+
+    function removeTag(tag: string) {
+        const newTags = formState.tags.filter((t) => t != tag);
+
+        setFormState({
+            ...formState,
+            tags: newTags
+        });
     }
 
     async function submit(e: React.MouseEvent) {
@@ -165,7 +190,8 @@ export default function Welcome() {
                 preferredSex: formState.preferredSex,
                 preferredMinAge: formState.preferredMinAge,
                 preferredMaxAge: formState.preferredMaxAge,
-                biography: formState.biography
+                biography: formState.biography,
+                tags: formState.tags
             })
         });
 
@@ -376,8 +402,8 @@ export default function Welcome() {
                     {/** Tags */}
                     {(currentStep == 'tags') && <>
                         <h1 className="text-xl font-bold">Pick your vibes</h1>
-                        suggestions
-                        or add your own tags
+                        <p>Tell us your interests:</p>
+                        <TagsPicker tags={formState.tags} addTag={addTag} removeTag={removeTag}/>
                     </>}
                 </div>
                 <div className="mt-6 w-full text-red-600">{formError}</div>

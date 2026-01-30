@@ -3,16 +3,21 @@ import { Email, getUserGenderFromString, getUserSexFromString, IncorrectPassword
 import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequestDto } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
+import { Tag } from "@/core/tag/Tag";
+import type { ITagsService } from "@/core/tag/TagsService";
+import type { ITagsRepository } from "@/core/tag/ITagsRepository";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
     private passwordHasher: IPasswordHasher;
     private notificationService: INotificationService;
+    private tagService: ITagsService;
 
-    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher, notificationService: INotificationService) {
+    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher, notificationService: INotificationService, tagService: ITagsService) {
         this.userRepo = userRepo;
         this.passwordHasher = passwordHasher;
         this.notificationService = notificationService;
+        this.tagService = tagService;
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
@@ -76,26 +81,49 @@ export class UserUseCases {
 
         if (!user.details)
         {
-            if (!userGender || !userSex || !dto.birthday || /*!dto.lat || !dto.lon || */!userPreferredGender
+
+            if (!userGender || !userSex || !dto.birthday || dto.lat == undefined || dto.lon == undefined || !userPreferredGender
                 || !userPreferredSex || !dto.preferredMinAge || !dto.preferredMaxAge || !dto.biography)
             {
                 throw new MissingRequestFields;
             }
+
+            const tagsToCreate: string[] = dto.tags.filter(tag => tag.action == "add").map(tag => tag.value);
+            const normalizedTagsNames: string[] = this.tagService.normalizeTagsNames(tagsToCreate);
+            const createdTags: Tag[] = await this.tagService.upsertTags(normalizedTagsNames);
+
             await this.userRepo.createUserDetails(userId, userGender, userSex,
                 dto.birthday, dto.lat!, dto.lon!, userPreferredGender, userPreferredSex,
                 dto.preferredMinAge, dto.preferredMaxAge, dto.biography);
+
+            await this.userRepo.addTagsToUser(userId, createdTags);
         }
         else
         {
-            await this.userRepo.updateUserDetails(userId, userGender, userSex,
-                dto.birthday, dto.lat, dto.lon, userPreferredGender, userPreferredSex,
-                dto.preferredMinAge, dto.preferredMaxAge, dto.biography, dto.fame_rating,
-                dto.last_connection);
-        }
-    }
+            Object.assign(user.details, {
+                gender: dto.gender ?? user.details.gender,
+                sex: dto.sex ?? user.details.sex,
+                birthday: dto.birthday ?? user.details.birthday,
+                lat: dto.lat ?? user.details.lat,
+                lon: dto.lon ?? user.details.lon,
+                preferredGender: dto.preferredGender ?? user.details.preferredGender,
+                preferredSex: dto.preferredSex ?? user.details.preferredSex,
+                preferredMinAge: dto.preferredMinAge ?? user.details.preferredMinAge,
+                preferredMaxAge: dto.preferredMaxAge ?? user.details.preferredMaxAge,
+                biography: dto.biography ?? user.details.biography,
+            });
+            await this.userRepo.updateUserDetails(userId, user.details);
 
-    async updateUserTags(): Promise<void> {
-        // TODO: implement
+            const tagsToCreate: string[] = dto.tags.filter(tag => tag.action == "add").map(tag => tag.value);
+            const normalizedTagsNames: string[] = this.tagService.normalizeTagsNames(tagsToCreate);
+            const createdTags: Tag[] = await this.tagService.upsertTags(normalizedTagsNames);
+
+            //FIXME: Missing check for case when user already has the tag
+            await this.userRepo.addTagsToUser(userId, createdTags);
+
+            const tagsToRemoveFromUser: Tag[] = dto.tags.filter(tag => tag.action == "delete").map(t => new Tag(t.id, t.value));
+            await this.userRepo.deleteTagsFromUser(userId, tagsToRemoveFromUser);
+        }
     }
 
     async updateUserPhotos(): Promise<void> {
