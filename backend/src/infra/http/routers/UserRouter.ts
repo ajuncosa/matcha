@@ -16,7 +16,7 @@ export default class UserRouter extends MatchaRouter {
         this.router.post("/details", (req, res) => this.updateUserDetails(req, res));
         this.router.get("/profile", (req, res) => this.getProfile(req, res));
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
-        this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.updateUserPhotos(req, res));
+        this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.addUserPhotos(req, res));
         this.router.get("/photos", (req, res) => this.getUserPhotos(req, res));
     }
 
@@ -113,21 +113,20 @@ export default class UserRouter extends MatchaRouter {
         }
     }
 
-    async updateUserPhotos(req: Request, res: Response) {
-        console.log(req.files)
-
+    async addUserPhotos(req: Request, res: Response) {
         if (!req.files) {
-            return res.status(400).json({ message: "No files uploaded" });
+            return res.status(400).send("No files uploaded");
         }
+
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
         try {
             if (files['profile_photo'] && files['profile_photo'][0]) {
-                await this.userUseCases.updateUserProfilePhoto(req.session.userId!, files['profile_photo'][0].path);
+                await this.userUseCases.addUserProfilePhoto(req.session.userId!, files['profile_photo'][0].path);
             }
             if (files['photos']) {
                 let paths = files['photos'].map((file) => file.path);
-                await this.userUseCases.updateUserPhotos(req.session.userId!, paths);
+                await this.userUseCases.addUserPhotos(req.session.userId!, paths);
             }
             res.status(200).send("Success!");
         }

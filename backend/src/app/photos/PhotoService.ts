@@ -1,7 +1,7 @@
 import type { IPhotoRepository } from "@/core/photos/IPhotoRepository";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
 import { Photo } from "@/core/photos/Photo";
-import multer, { type FileFilterCallback, type Multer } from "multer";
+import multer, { type Multer } from "multer";
 import path from "path"
 
 export class PhotoService implements IPhotoService {
@@ -39,11 +39,13 @@ export class PhotoService implements IPhotoService {
         });
     }
 
+    // saves the image to disk
     uploadPhoto(fieldName: string)
     {
         return this.uploader.single(fieldName); // fieldName must match your form field name
     }
 
+    // saves the images to disk
     uploadPhotos(profilePhotoFieldName: string, photosFieldName: string)
     {
         return this.uploader.fields([
@@ -52,16 +54,19 @@ export class PhotoService implements IPhotoService {
         ]);
     }
 
-    /*
-
-    async uploadPhotos(photoFieldName: string): Promise<Photo[]>
+    // stores the photo in the database
+    async insertPhoto(path: string) : Promise<Photo>
     {
-        upload.single(photoFieldName) // "photo" must match your form field name
-        //TODO: save to somewhere
-        await this.repo.create("/images/user1_001");
-
+        return await this.repo.create(path);
     }
-        */
 
-
+    // stores the photos in the database
+    async insertPhotos(paths: string[]) : Promise<Photo[]>
+    {
+        let insertedPhotos : Photo[] = [];
+        for (var path of paths) {
+            insertedPhotos.push(await this.insertPhoto(path));
+        }
+        return insertedPhotos;
+    }
 }

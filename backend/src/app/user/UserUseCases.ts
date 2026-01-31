@@ -127,21 +127,25 @@ export class UserUseCases {
         }
     }
 
-    async updateUserProfilePhoto(userId: number, filePath: string): Promise<void> {
-        console.log("uploading profile photo ", filePath);
+    async addUserProfilePhoto(userId: number, filePath: string): Promise<void> {
+        const user: User | null = await this.userRepo.findUserById(userId);
+        if (!user)
+            throw new UserNotFound();
+        if (!user.details)
+            throw new Error(`User details have not yet been set. Cannot set profile photo.`);
 
+        const insertedPhoto = await this.photoService.insertPhoto(filePath);
+        await this.userRepo.addPhotosToUser(userId, [insertedPhoto]);
+        await this.userRepo.updateUserProfilePhoto(userId, insertedPhoto);
     }
 
-    async updateUserPhotos(userId: number, filePaths: string[]): Promise<void> {
-        console.log("uploading photos ", filePaths);
-        // const photosToCreate: string[] = dto.photos.filter(photo => photo.action == "add").map(photo => photo.value);
-        // const createdPhotos: Photo[] = await this.photoService.upsertPhotos(normalizedPhotosNames);
+    async addUserPhotos(userId: number, filePaths: string[]): Promise<void> {
+        const user: User | null = await this.userRepo.findUserById(userId);
+        if (!user)
+            throw new UserNotFound();
 
-        // await this.userRepo.addPhotosToUser(userId, createdPhotos);
-
-        // const photosToRemoveFromUser: Photo[] = dto.photos.filter(photo => photo.action == "delete").map(t => new Photo(t.id, t.value));
-        // await this.userRepo.deletePhotosFromUser(userId, tagsToRemoveFromUser);
-        // this.photoService.uploadPhoto();
+        const insertedPhotos = await this.photoService.insertPhotos(filePaths);
+        await this.userRepo.addPhotosToUser(userId, insertedPhotos);
     }
 
     async like(producerId: UserId, targetId: UserId): Promise<void> {

@@ -12,6 +12,7 @@ export interface IUserRepository {
     updateUserDetails(userId: UserId, details: UserDetails): Promise<UserDetails>;
 
     getUserPhotos(userId: UserId): Promise<Photo[]>;
+    updateUserProfilePhoto(userId: UserId, photo: Photo): Promise<void>;
     addPhotosToUser(userId: UserId, photos: Photo[]): Promise<void>;
     deletePhotosFromUser(userId: UserId, photos: Photo[]): Promise<void>;
 

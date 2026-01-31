@@ -45,8 +45,9 @@ export default class UserRepositoryPostgres implements IUserRepository {
             detailsQuery.rows[0].preferred_min_age,
             detailsQuery.rows[0].preferred_max_age,
             detailsQuery.rows[0].biography,
-            detailsQuery.rows[0].tags,
-            detailsQuery.rows[0].photos
+            detailsQuery.rows[0].tags, // FIXME: not a query field
+            detailsQuery.rows[0].photos, // FIXME: not a query field
+            detailsQuery.rows[0].profile_photo_id // FIXME: not a query field (find photo)
         );
     }
 
@@ -152,6 +153,15 @@ export default class UserRepositoryPostgres implements IUserRepository {
         const photos: Photo[] = photosQuery.rows.map((row) => new Photo(row.id, row.file_path));
 
         return photos;
+    }
+
+    async updateUserProfilePhoto(userId: UserId, photo: Photo): Promise<void>
+    {
+        await this.pool.query(`
+            UPDATE users_details
+            SET profile_photo_id=$2
+            WHERE user_id=$1
+        `, [userId, photo.id]);
     }
 
     async addPhotosToUser(userId: UserId, photos: Photo[]): Promise<void>
