@@ -1,22 +1,25 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
 import { Email, getUserGenderFromString, getUserSexFromString, IncorrectPassword, MissingRequestFields, User, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
-import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequestDto } from "@/app/user/UserDto";
+import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequestDto, UpdateUserPhotosRequestDto } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
 import type { ITagsService } from "@/core/tag/ITagsService";
+import type { IPhotoService } from "@/core/photos/IPhotoService";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
     private passwordHasher: IPasswordHasher;
     private notificationService: INotificationService;
     private tagService: ITagsService;
+    private photoService: IPhotoService;
 
-    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher, notificationService: INotificationService, tagService: ITagsService) {
+    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher, notificationService: INotificationService, tagService: ITagsService, photoService: IPhotoService) {
         this.userRepo = userRepo;
         this.passwordHasher = passwordHasher;
         this.notificationService = notificationService;
         this.tagService = tagService;
+        this.photoService = photoService;
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
@@ -124,8 +127,21 @@ export class UserUseCases {
         }
     }
 
-    async updateUserPhotos(): Promise<void> {
-        // TODO: implement
+    async updateUserProfilePhoto(userId: number, filePath: string): Promise<void> {
+        console.log("uploading profile photo ", filePath);
+
+    }
+
+    async updateUserPhotos(userId: number, filePaths: string[]): Promise<void> {
+        console.log("uploading photos ", filePaths);
+        // const photosToCreate: string[] = dto.photos.filter(photo => photo.action == "add").map(photo => photo.value);
+        // const createdPhotos: Photo[] = await this.photoService.upsertPhotos(normalizedPhotosNames);
+
+        // await this.userRepo.addPhotosToUser(userId, createdPhotos);
+
+        // const photosToRemoveFromUser: Photo[] = dto.photos.filter(photo => photo.action == "delete").map(t => new Photo(t.id, t.value));
+        // await this.userRepo.deletePhotosFromUser(userId, tagsToRemoveFromUser);
+        // this.photoService.uploadPhoto();
     }
 
     async like(producerId: UserId, targetId: UserId): Promise<void> {

@@ -3,17 +3,20 @@ import type { UserUseCases } from "@/app/user/UserUseCases";
 import { MissingRequestFields, User, UserNotFound } from "@/core/user/User";
 import { type Request, type Response } from "express";
 import MatchaRouter from "./MatchaRouter";
+import type { IPhotoService } from "@/core/photos/IPhotoService";
 
 export default class UserRouter extends MatchaRouter {
     private userUseCases: UserUseCases;
+    private photoService: IPhotoService;
 
-    constructor(userUseCases: UserUseCases) {
+    constructor(userUseCases: UserUseCases, photoService: IPhotoService) {
         super();
         this.userUseCases = userUseCases;
+        this.photoService = photoService;
         this.router.post("/details", (req, res) => this.updateUserDetails(req, res));
         this.router.get("/profile", (req, res) => this.getProfile(req, res));
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
-        this.router.post("/photos", (req, res) => this.updateUserPhotos(req, res));
+        this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.updateUserPhotos(req, res));
         this.router.get("/photos", (req, res) => this.getUserPhotos(req, res));
     }
 
@@ -111,8 +114,31 @@ export default class UserRouter extends MatchaRouter {
     }
 
     async updateUserPhotos(req: Request, res: Response) {
-          // TODO: 
+        console.log(req.files)
 
+        if (!req.files) {
+            return res.status(400).json({ message: "No files uploaded" });
+        }
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+        try {
+            if (files['profile_photo'] && files['profile_photo'][0]) {
+                await this.userUseCases.updateUserProfilePhoto(req.session.userId!, files['profile_photo'][0].path);
+            }
+            if (files['photos']) {
+                let paths = files['photos'].map((file) => file.path);
+                await this.userUseCases.updateUserPhotos(req.session.userId!, paths);
+            }
+            res.status(200).send("Success!");
+        }
+        catch (e) {
+            if (e instanceof UserNotFound) {
+                res.status(401).send(`User with ID \"${req.session.userId}\" was not found`);
+            }
+            else {
+                throw e;
+            }
+        }
     }
 
     async getUserPhotos(req: Request, res: Response) {

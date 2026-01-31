@@ -24,6 +24,7 @@ import AuthContext from "@/contexts/AuthContextProvider";
 import UploadAndDisplayImage from "@/components/upload-image";
 import LocationPicker from "@/components/location-picker";
 import TagsPicker from "@/components/tags-picker";
+import type { UpdateUserDetailsRequestDto } from "@/dto/UserDto";
 
 interface FormState {
     gender: string;
@@ -177,25 +178,27 @@ export default function Welcome() {
             setFormError("Missing fields");
             return;
         }
-        
+
+        const userDetailsDto : UpdateUserDetailsRequestDto = {
+            gender: formState.gender,
+            sex: formState.sex,
+            birthday: formState.birthday,
+            lat: formState.lat,
+            lon: formState.lon,
+            preferredGender: formState.preferredGender,
+            preferredSex: formState.preferredSex,
+            preferredMinAge: formState.preferredMinAge,
+            preferredMaxAge: formState.preferredMaxAge,
+            biography: formState.biography,
+            tags: formState.tags.map((tagName) => {return {action: "add", value: tagName}})
+        }
+
         const resp : Response = await fetch("http://localhost/api/user/details", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                gender: formState.gender,
-                sex: formState.sex,
-                birthday: formState.birthday,
-                lat: formState.lat,
-                lon: formState.lon,
-                preferredGender: formState.preferredGender,
-                preferredSex: formState.preferredSex,
-                preferredMinAge: formState.preferredMinAge,
-                preferredMaxAge: formState.preferredMaxAge,
-                biography: formState.biography,
-                tags: formState.tags
-            })
+            body: JSON.stringify(userDetailsDto)
         });
 
         if (resp.status != 200) {
@@ -208,8 +211,28 @@ export default function Welcome() {
             return;
         }
 
-        // TODO: post to photos
-        // TODO: post to tags
+        const photosFormData = new FormData();
+        photosFormData.append("profile_photo", formState.profilePhoto); // "profile_photo" must match backend multer field name
+        for (var p of formState.photos) {
+            if (p) {
+                photosFormData.append("photos", p);
+            }
+        }
+
+        const respPhotos : Response = await fetch("http://localhost/api/user/photos", {
+            method: "POST",
+            body: photosFormData
+        });
+
+        if (respPhotos.status != 200) {
+            if (respPhotos.body) {
+                const reqBody = await respPhotos.text();
+                setFormError(reqBody);
+            }
+            else
+                setFormError(`Server error (${respPhotos.status})`);
+            return;
+        }
 
         navigate('/browser');
     }
@@ -242,7 +265,7 @@ export default function Welcome() {
                                             <SelectLabel>Gender</SelectLabel>
                                             <SelectItem value="man">Man</SelectItem>
                                             <SelectItem value="woman">Woman</SelectItem>
-                                            <SelectItem value="non-binary">Non Binary</SelectItem>
+                                            <SelectItem value="non_binary">Non Binary</SelectItem>
                                             <SelectItem value="other">Other</SelectItem>
                                             <SelectItem value="any">Any</SelectItem>
                                         </SelectGroup>
@@ -341,7 +364,7 @@ export default function Welcome() {
                                             <SelectLabel>Gender</SelectLabel>
                                             <SelectItem value="man">Man</SelectItem>
                                             <SelectItem value="woman">Woman</SelectItem>
-                                            <SelectItem value="non-binary">Non Binary</SelectItem>
+                                            <SelectItem value="non_binary">Non Binary</SelectItem>
                                             <SelectItem value="other">Other</SelectItem>
                                         </SelectGroup>
                                     </SelectContent>

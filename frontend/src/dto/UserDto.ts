@@ -10,6 +10,17 @@ export interface UserProfileResponseDto {
     biography: string;
 }
 
+type TagAction =
+  | {
+      action: "add";
+      value: string;
+    }
+  | {
+      action: "delete";
+      id: number;
+      value: string;
+    };
+
 export interface UpdateUserDetailsRequestDto {
     gender: string | undefined;
     sex: string | undefined;
@@ -21,6 +32,5 @@ export interface UpdateUserDetailsRequestDto {
     preferredMinAge: number | undefined;
     preferredMaxAge: number | undefined;
     biography: string | undefined;
-    fame_rating: number | undefined;
-    last_connection: Date | undefined;
+    tags: TagAction[];
 }

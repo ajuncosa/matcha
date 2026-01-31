@@ -49,7 +49,7 @@ export type UserId = number;
 export enum UserGender {
     Man = "man",
     Woman = "woman",
-    NonBinary = "nonbinary",
+    NonBinary = "non_binary",
     Other = "other",
     Any = "any"
 };
@@ -129,7 +129,7 @@ export function getUserGenderFromString(genderString: string): UserGender | null
         case "woman":
             return UserGender.Woman;
             break;
-        case "nonbinary":
+        case "non_binary":
             return UserGender.NonBinary;
             break;
         case "other":

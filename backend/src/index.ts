@@ -23,6 +23,10 @@ import type { ITagsRepository } from "./core/tag/ITagsRepository";
 import type { ITagsService } from "./core/tag/ITagsService";
 import { TagService } from "./app/tag/TagService";
 import { TagRepositoryPostgres } from "./infra/repositories/TagRepositoryPostgres";
+import type { IPhotoService } from "./core/photos/IPhotoService";
+import { PhotoService } from "./app/photos/PhotoService";
+import PhotoRepositoryPostgres from "./infra/repositories/PhotoRepository";
+import type { IPhotoRepository } from "./core/photos/IPhotoRepository";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -54,19 +58,21 @@ const socketRegistry = new SocketRegistrySocketIO(socketServer);
 const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
 const notificationRepository: INotificationRespository = new NotificationRepositoryPostgres(pgPool);
 const tagRespository: ITagsRepository = new TagRepositoryPostgres(pgPool);
+const photoRespository: IPhotoRepository = new PhotoRepositoryPostgres(pgPool);
 
 // Services
 const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
 const notificationService: NotificationService = new NotificationService(socketRegistry, notificationRepository);
 const tagsService: ITagsService = new TagService(tagRespository);
+const photosService: IPhotoService = new PhotoService(photoRespository);
 
 // Use Cases
-const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService);
+const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService, photosService);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
 
 // Routers
 const authRouter: AuthRouter = new AuthRouter(userUseCases);
-const userRouter: UserRouter = new UserRouter(userUseCases);
+const userRouter: UserRouter = new UserRouter(userUseCases, photosService);
 const notificationsRouter: NotificaitonRouter = new NotificaitonRouter(notificationUserCases);
 
 
