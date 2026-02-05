@@ -80,7 +80,7 @@ export class UserDetails {
 
     constructor(gender: UserGender, sex: UserSex, birthday: Date, lat: number, lon: number,
         preferredGender: UserGender, preferredSex: UserSex, preferredMinAge: number, preferredMaxAge: number,
-        biography: string, tags: Tag[], photos: Photo[], profilePhoto: Photo)
+        biography: string, tags: Tag[], photos: Photo[], profilePhoto: Photo | null)
     {
         this.gender = gender;
         this.sex = sex;

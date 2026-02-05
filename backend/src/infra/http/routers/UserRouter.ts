@@ -17,7 +17,6 @@ export default class UserRouter extends MatchaRouter {
         this.router.get("/profile", (req, res) => this.getProfile(req, res));
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
         this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.addUserPhotos(req, res));
-        this.router.get("/photos", (req, res) => this.getUserPhotos(req, res));
     }
 
     async updateUserDetails(req: Request, res: Response) {
@@ -55,9 +54,8 @@ export default class UserRouter extends MatchaRouter {
     async getProfile(req: Request, res: Response) {
         try {
             const user: User = await this.userUseCases.getUser(req.session.userId!);
-            if (!user.details)
+            if (!user.details || !user.details.profilePhoto)
             {
-                console.log("AAAAA")
                 //FIXME: should this be a redirect? this should return the user profile,
                 // if user details are null, the redirect has to be done in the frontend.
                 // There is no way you can redirect from here. Website is renderend in the frontend
@@ -74,6 +72,18 @@ export default class UserRouter extends MatchaRouter {
                 gender: user.details.gender,
                 sex: user.details.sex,
                 biography: user.details.biography,
+                profilePhoto: user.details.profilePhoto,
+                photos: user.details.photos,
+                tags: user.details.tags,
+                birthday: user.details.birthday,
+                lat: user.details.lat,
+                lon: user.details.lon,
+                preferredGender: user.details.preferredGender,
+                preferredSex: user.details.preferredSex,
+                preferredMinAge: user.details.preferredMinAge,
+                preferredMaxAge: user.details.preferredMaxAge,
+                fameRating: user.details.fameRating,
+                lastConnection: user.details.lastConnection
             }
             res.status(200).send(responseDto);
         }
@@ -138,9 +148,5 @@ export default class UserRouter extends MatchaRouter {
                 throw e;
             }
         }
-    }
-
-    async getUserPhotos(req: Request, res: Response) {
-        // TODO: 
     }
 }

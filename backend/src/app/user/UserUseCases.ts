@@ -1,6 +1,6 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
 import { Email, getUserGenderFromString, getUserSexFromString, IncorrectPassword, MissingRequestFields, User, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
-import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequestDto, UpdateUserPhotosRequestDto } from "@/app/user/UserDto";
+import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequestDto } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";

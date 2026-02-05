@@ -31,7 +31,6 @@ export default function ProfilePage() {
         }
 
         const respBody : UserProfileResponseDto = await resp.json();
-
         setUserProfileData(respBody);
     }
 
@@ -48,10 +47,10 @@ export default function ProfilePage() {
                     <div>
                         <Avatar className="rounded-lg w-32 h-32">
                             <AvatarImage
-                                src="https://github.com/evilrabbit.png" // FIXME: change
-                                alt="@evilrabbit" // FIXME: change
+                                src={`http://localhost/api/images/${userProfileData?.profilePhoto.filePath}`}
+                                alt={`${userProfileData?.name} ${userProfileData?.lastname}`}
                             />
-                            <AvatarFallback>ER</AvatarFallback> {/* FIXME: change */}
+                            <AvatarFallback>{userProfileData?.name}</AvatarFallback>
                         </Avatar>
                     </div>
                     {/* User info */}
@@ -73,7 +72,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex justify-center flex-col">
                     <span className="text-xs text-muted-foreground uppercase">rating</span>
-                    <div className="text-4xl font-bold">1.000</div>
+                    <div className="text-4xl font-bold">{userProfileData?.fameRating}</div>
                 </div>
             </div>
             <div className="mt-2">
@@ -94,14 +93,11 @@ export default function ProfilePage() {
             <div className="w-full mt-4">
                 <h2 className="text-2xl">Interests</h2>
                 <div className="w-full mt-2 flex flex-wrap gap-1">
-                    <Badge variant="outline" className="text-md">#Cars</Badge>
-                    <Badge variant="outline" className="text-md">#Keyboards</Badge>
-                    <Badge variant="outline" className="text-md">#Planes</Badge>
-                    <Badge variant="outline" className="text-md">#Trains</Badge>
-                    <Badge variant="outline" className="text-md">#Takumi</Badge>
-                    <Badge variant="outline" className="text-md">#Games</Badge>
-                    <Badge variant="outline" className="text-md">#Computers</Badge>
-                    <Badge variant="outline" className="text-md">#C++</Badge>
+                    {
+                        userProfileData?.tags.map((tag) => {
+                            return <Badge variant="outline" className="text-md">#{`${tag.name}`}</Badge>
+                        })
+                    }
                 </div>
             </div>
             
@@ -115,12 +111,13 @@ export default function ProfilePage() {
             <div className="w-full mt-4">
                 <h2 className="text-2xl">Photos</h2>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                    <div className="object-cover w-full">
-                        <img className="rounded-lg" src="https://lipsum.app/random/680x420?seed=1" alt="#" />
-                    </div>
-                    <div className="object-cover w-full">
-                        <img className="rounded-lg" src="https://lipsum.app/random/680x420?seed=2" alt="#" />
-                    </div>
+                    {
+                        userProfileData?.photos.map((photo) => {
+                            return <div className="object-cover w-full">
+                                <img className="rounded-lg" src={`http://localhost/api/images/${photo.filePath}`} alt="#" />
+                            </div>
+                        })
+                    }
                 </div>
             </div>
 

@@ -9,7 +9,7 @@ export interface IUserRepository {
     createUserDetails(userId: UserId, gender: UserGender, sex: UserSex, birthday: Date,
         lat: number, lon: number, preferredGender: UserGender, preferredSex: UserSex,
         preferredMinAge: number, preferredMaxAge: number, biography: string): Promise<void>;
-    updateUserDetails(userId: UserId, details: UserDetails): Promise<UserDetails>;
+    updateUserDetails(userId: UserId, details: UserDetails): Promise<void>;
 
     getUserPhotos(userId: UserId): Promise<Photo[]>;
     updateUserProfilePhoto(userId: UserId, photo: Photo): Promise<void>;

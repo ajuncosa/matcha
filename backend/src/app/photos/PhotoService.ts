@@ -2,7 +2,7 @@ import type { IPhotoRepository } from "@/core/photos/IPhotoRepository";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
 import { Photo } from "@/core/photos/Photo";
 import multer, { type Multer } from "multer";
-import path from "path"
+import PlatformPath from "path"
 
 export class PhotoService implements IPhotoService {
     private repo: IPhotoRepository;
@@ -16,8 +16,8 @@ export class PhotoService implements IPhotoService {
                 cb(null, "/home/bun/app/images/");
             },
             filename: (_req, file, cb) => {
-                const ext = path.extname(file.originalname);
-                const name = path.basename(file.originalname, ext);
+                const ext = PlatformPath.extname(file.originalname);
+                const name = PlatformPath.basename(file.originalname, ext);
                 cb(null, `${name}-${Date.now()}${ext}`);
             },
         });
@@ -57,7 +57,7 @@ export class PhotoService implements IPhotoService {
     // stores the photo in the database
     async insertPhoto(path: string) : Promise<Photo>
     {
-        return await this.repo.create(path);
+        return await this.repo.create(PlatformPath.basename(path));
     }
 
     // stores the photos in the database

@@ -86,6 +86,8 @@ expressApp.use("/auth", authRouter.getRouter());
 expressApp.use("/user", isAuthenticated, userRouter.getRouter());
 expressApp.use("/notification", isAuthenticated, notificationsRouter.getRouter());
 
+expressApp.use('/images', express.static('images'));
+
 httpServer.listen(3000, () => {
     console.log(`Server running on http://localhost:${3000}`);
 });

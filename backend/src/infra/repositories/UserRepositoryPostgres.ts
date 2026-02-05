@@ -12,7 +12,9 @@ export default class UserRepositoryPostgres implements IUserRepository {
         this.pool = pool;
     }
 
-    private constructUserDetails(detailsQuery: QueryResult<any>): UserDetails | null {
+    private constructUserDetails(detailsQuery: QueryResult<any>,
+        tags: Tag[], photos: Photo[]
+    ): UserDetails | null {
         if (detailsQuery.rows.length == 0)
             return null;
 
@@ -33,11 +35,11 @@ export default class UserRepositoryPostgres implements IUserRepository {
         if (!userPreferredSex)
             throw Error(`Cannot convert ${detailsQuery.rows[0].preferred_sex} to UserSex`);
 
-
+        const profilePhoto = photos.find((p) => p.id == detailsQuery.rows[0].profile_photo_id);
         return new UserDetails(
             userGender,
             userSex,
-            new Date(detailsQuery.rows[0].date),
+            new Date(detailsQuery.rows[0].birthday),
             detailsQuery.rows[0].lat,
             detailsQuery.rows[0].lon,
             userPreferredGender,
@@ -45,9 +47,9 @@ export default class UserRepositoryPostgres implements IUserRepository {
             detailsQuery.rows[0].preferred_min_age,
             detailsQuery.rows[0].preferred_max_age,
             detailsQuery.rows[0].biography,
-            detailsQuery.rows[0].tags, // FIXME: not a query field
-            detailsQuery.rows[0].photos, // FIXME: not a query field
-            detailsQuery.rows[0].profile_photo_id // FIXME: not a query field (find photo)
+            tags,
+            photos,
+            profilePhoto ?? null
         );
     }
 
@@ -67,7 +69,11 @@ export default class UserRepositoryPostgres implements IUserRepository {
 
         const detailsQuery = await this.pool.query("SELECT * FROM users_details WHERE user_id=$1", [userId]);
         if (detailsQuery.rows.length != 0)
-            user.details = this.constructUserDetails(detailsQuery);
+        {
+            const tags = await this.getUserTags(userId);
+            const photos = await this.getUserPhotos(userId);
+            user.details = this.constructUserDetails(detailsQuery, tags, photos);
+        }
 
         return user;
     }
@@ -88,7 +94,11 @@ export default class UserRepositoryPostgres implements IUserRepository {
 
         const detailsQuery = await this.pool.query("SELECT * FROM users_details WHERE user_id=$1", [user.id]);
         if (detailsQuery.rows.length != 0)
-            user.details = this.constructUserDetails(detailsQuery);
+        {
+            const tags = await this.getUserTags(user.id);
+            const photos = await this.getUserPhotos(user.id);
+            user.details = this.constructUserDetails(detailsQuery, tags, photos);
+        }
 
         return user;
     }
@@ -111,7 +121,7 @@ export default class UserRepositoryPostgres implements IUserRepository {
         );
     }
 
-    async updateUserDetails(userId: UserId, details: UserDetails): Promise<UserDetails> {
+    async updateUserDetails(userId: UserId, details: UserDetails): Promise<void> {
         const query = await this.pool.query(`
             UPDATE users_details 
             SET gender=$2, sex=$3, biography=$4, lat=$5, lon=$6, 
@@ -135,8 +145,6 @@ export default class UserRepositoryPostgres implements IUserRepository {
             details.birthday,    // $12
             details.lastConnection // $13
         ]);
-
-        return this.constructUserDetails(query)!; // Case where this can return null?
     }
 
     async getUserPhotos(userId: UserId): Promise<Photo[]>
@@ -147,8 +155,8 @@ export default class UserRepositoryPostgres implements IUserRepository {
 
         const photosQuery = await this.pool.query(`
             SELECT * FROM photos
-            WHERE id=$1
-        `, photoIds);
+            WHERE id = ANY($1)
+        `, [photoIds]);
         
         const photos: Photo[] = photosQuery.rows.map((row) => new Photo(row.id, row.file_path));
 
@@ -193,8 +201,8 @@ export default class UserRepositoryPostgres implements IUserRepository {
 
         const tagsQuery = await this.pool.query(`
             SELECT * FROM tags
-            WHERE tag_id=$1
-        `, userTagsIds);
+            WHERE id = ANY($1)
+        `, [userTagsIds]);
         
         const tags: Tag[] = tagsQuery.rows.map((row) => new Tag(row.id, row.name));
 

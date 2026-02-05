@@ -31,7 +31,6 @@ const UploadAndDisplayImage = (
                         const file: File | undefined = event.target.files?.[0];
                         if (!file)
                             return;
-                        console.log(file);
                         setSelectedImage(file);
                         onImageUpload(file);
                     }} />
