@@ -1,7 +1,7 @@
 import { AvatarFallback, AvatarImage, Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EditIcon, Mars, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
+import { Mars, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,11 +9,15 @@ import {
 import type { UserProfileResponseDto } from "@/dto/UserDto";
 import { useContext, useEffect, useState } from "react";
 import AuthContext from "@/contexts/AuthContextProvider"
+import 'leaflet/dist/leaflet.css';
+import LocationDisplayMap from "@/components/location-display-map";
+import ProfileEditDialog from "@/components/profile-edit-dialogs";
 
 export default function ProfilePage() {
 
     const { user } = useContext(AuthContext);
     const [userProfileData, setUserProfileData] = useState<UserProfileResponseDto>();
+    const [location, setLocation] = useState<{lat: number, lon: number}>({lat: 40.4168, lon: -3.7038});
 
     async function getProfile() : Promise<void> {
 
@@ -32,7 +36,33 @@ export default function ProfilePage() {
 
         const respBody : UserProfileResponseDto = await resp.json();
         setUserProfileData(respBody);
+        if (respBody?.lat && respBody?.lon)
+            setLocation({lat: respBody.lat, lon: respBody.lon});
     }
+
+    function calculateAge() : number
+    {
+        if (!userProfileData)
+            return 999;
+
+        const today = new Date();
+        const birthday = new Date(userProfileData.birthday);
+        const age = today.getFullYear() - birthday.getFullYear();
+        const monthDiff = today.getMonth() - birthday.getMonth();
+        if (monthDiff < 0
+            || (monthDiff == 0 && today.getDate() < birthday.getDate()))
+        {
+            return age - 1;
+        }
+        return age;
+    }
+
+    const SexIcon = ({ sex }: { sex: string | undefined }) => {
+        if (!sex)
+            return <></>;
+        const Icon = sex == "male" ? Mars : sex == "female" ? Venus : VenusAndMars;
+        return <Icon size={20} />;
+    };
 
     useEffect(() => {
         getProfile();
@@ -46,7 +76,7 @@ export default function ProfilePage() {
                     {/* Avatar */}
                     <div>
                         <Avatar className="rounded-lg w-32 h-32">
-                            <AvatarImage
+                            <AvatarImage className="object-cover"
                                 src={`http://localhost/api/images/${userProfileData?.profilePhoto.filePath}`}
                                 alt={`${userProfileData?.name} ${userProfileData?.lastname}`}
                             />
@@ -55,18 +85,20 @@ export default function ProfilePage() {
                     </div>
                     {/* User info */}
                     <div className="flex flex-col justify-center">
-                        <Badge className="bg-emerald-600">Online</Badge>  {/* FIXME: change */}
+                        {
+                            user?.id != userProfileData?.id ? 
+                            <Badge className="bg-emerald-600">Online</Badge>  /* FIXME: change */
+                            : <></>
+                        }
                         <div className="flex gap-2 mt-2">
                             <span className="text-4xl">{userProfileData?.name}</span>
                             <span className="text-4xl">{userProfileData?.lastname}</span>
+                            <ProfileEditDialog type="name" profileData={userProfileData}/>
                         </div>
-                        <div className="flex mt-2 items-center">
-                            {
-                                userProfileData?.sex == "male" ? <Mars width={32} height={32} />
-                                : userProfileData?.sex == "female" ? <Venus width={32} height={32} />
-                                : <VenusAndMars width={32} height={32} />
-                            }
-                            <span>{userProfileData?.gender}</span>
+                        <div className="flex mt-2 items-center gap-1 text-lg">
+                            <SexIcon sex={userProfileData?.sex}/>
+                            <span className="mr-1">| {userProfileData?.gender} | {calculateAge()}</span>
+                            <ProfileEditDialog type="identity" profileData={userProfileData}/>
                         </div>
                     </div>
                 </div>
@@ -77,14 +109,11 @@ export default function ProfilePage() {
             </div>
             <div className="mt-2">
                 {
-                    user?.id == userProfileData?.id ? 
-                    <Button variant="outline" size="lg" className="cursor-pointer">
-                        <EditIcon/> Edit profile
-                    </Button>
-                    :
+                    user?.id != userProfileData?.id ? 
                     <Button variant="outline" size="lg" className="cursor-pointer">
                         <ThumbsUpIcon /> Like User
                     </Button>
+                    : <></>
                 }
             </div>
 
@@ -100,6 +129,14 @@ export default function ProfilePage() {
                     }
                 </div>
             </div>
+
+            <div className="w-full mt-4">
+                <h2 className="text-2xl">Preferences</h2>
+                <div className="flex mt-2 items-center gap-1">
+                    <SexIcon sex={userProfileData?.preferredSex}/>
+                    <span>| {userProfileData?.preferredGender} | {userProfileData?.preferredMinAge}-{userProfileData?.preferredMaxAge}</span>
+                </div>
+            </div>
             
             <div className="w-full mt-4">
                 <h2 className="text-2xl">Biography</h2>
@@ -112,12 +149,21 @@ export default function ProfilePage() {
                 <h2 className="text-2xl">Photos</h2>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                     {
-                        userProfileData?.photos.map((photo) => {
-                            return <div className="object-cover w-full">
-                                <img className="rounded-lg" src={`http://localhost/api/images/${photo.filePath}`} alt="#" />
-                            </div>
-                        })
+                        userProfileData?.photos
+                            .filter((photo) => photo.id != userProfileData.profilePhoto.id)
+                            .map((photo) => {
+                                return <div className="object-cover w-full">
+                                    <img className="rounded-lg" src={`http://localhost/api/images/${photo.filePath}`} alt="#" />
+                                </div>
+                            })
                     }
+                </div>
+            </div>
+            
+            <div className="w-full mt-4">
+                <h2 className="text-2xl">Location</h2>
+                <div className="mt-4 h-96"> {/* fixed height needed */}
+                    <LocationDisplayMap location={location}/>
                 </div>
             </div>
 
@@ -144,7 +190,6 @@ export default function ProfilePage() {
                                                 24-03-1999 13:69
                                             </p>
                                         </div>
-                                        
                                     </CardContent>
                                 </Card>
                             );
@@ -152,7 +197,6 @@ export default function ProfilePage() {
                     }
                 </div>
             </div>
-
         </div>
     )
 }
