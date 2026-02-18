@@ -23,6 +23,13 @@ import type { ITagsRepository } from "./core/tag/ITagsRepository";
 import type { ITagsService } from "./core/tag/ITagsService";
 import { TagService } from "./app/tag/TagService";
 import { TagRepositoryPostgres } from "./infra/repositories/TagRepositoryPostgres";
+import ChatRouter from "./infra/http/routers/ChatRouter";
+import ChatUseCases from "./app/chat/ChatUseCases";
+import type IMessageRepository from "./core/chat/IMessageRepository";
+import MessageRepositoryPosgres from "./infra/repositories/MessageRepositoryPostgres";
+import ChatService from "./app/chat/ChatService";
+import type { ILikeRepository } from "./core/like/ILikeRepository";
+import { LikeRepositoryPostgres } from "./infra/repositories/LikeRepositoryPostgres";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -42,33 +49,37 @@ const expressSession: RequestHandler = session({
 
 const pgPool: Pool = new Pool();
 
+// Repositories
+const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
+const notificationRepository: INotificationRespository = new NotificationRepositoryPostgres(pgPool);
+const tagRespository: ITagsRepository = new TagRepositoryPostgres(pgPool);
+const messageRepository: IMessageRepository = new MessageRepositoryPosgres(pgPool);
+const likeRepository: ILikeRepository = new LikeRepositoryPostgres(pgPool);
+
 // Socket management
 const httpServer: HTTPServer = createServer(expressApp);
 const socketServer: SocketIOServer = new SocketIOServer(httpServer, {
   serveClient: false
 });
 
-const socketRegistry = new SocketRegistrySocketIO(socketServer);
-
-// Repositories
-const userRepository: IUserRepository = new UserRepositoryPostgres(pgPool);
-const notificationRepository: INotificationRespository = new NotificationRepositoryPostgres(pgPool);
-const tagRespository: ITagsRepository = new TagRepositoryPostgres(pgPool);
+const socketRegistry = new SocketRegistrySocketIO(socketServer, userRepository);
 
 // Services
 const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
 const notificationService: NotificationService = new NotificationService(socketRegistry, notificationRepository);
 const tagsService: ITagsService = new TagService(tagRespository);
+const chatService: ChatService = new ChatService(socketRegistry, messageRepository);
 
 // Use Cases
 const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
+const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository);
 
 // Routers
 const authRouter: AuthRouter = new AuthRouter(userUseCases);
 const userRouter: UserRouter = new UserRouter(userUseCases);
 const notificationsRouter: NotificaitonRouter = new NotificaitonRouter(notificationUserCases);
-
+const chatRouter: ChatRouter = new ChatRouter(chatUseCases);
 
 expressApp.use(bodyParser.json());
 expressApp.use(expressSession);
@@ -79,6 +90,7 @@ socketServer.engine.use(expressSession);
 expressApp.use("/auth", authRouter.getRouter());
 expressApp.use("/user", isAuthenticated, userRouter.getRouter());
 expressApp.use("/notification", isAuthenticated, notificationsRouter.getRouter());
+expressApp.use("/chat", isAuthenticated, chatRouter.getRouter());
 
 httpServer.listen(3000, () => {
     console.log(`Server running on http://localhost:${3000}`);

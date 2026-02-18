@@ -19,6 +19,7 @@ import {
 import { Button } from "./ui/button";
 import { useContext } from "react";
 import NotificationsContext from "@/contexts/NotificationsContextProvider";
+import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 
 export function NotificationsPanel() {
     const { notifications, markAsViewed, markAllAsViewed } = useContext(NotificationsContext);
@@ -35,27 +36,33 @@ export function NotificationsPanel() {
                 </SheetHeader>
 
                 <div className="px-4">
-                    <div className="flex w-full max-w-lg flex-col gap-6">
-                        {notifications.map(notification =>{
-                            return (
-                                <Item variant="outline">
-                                    <ItemMedia variant="icon">
-                                        {notification.type == "like" && <ThumbsUp />}
-                                        {notification.type == "message" && <MessageCircle />}
-                                        {notification.type == "profile_view" && <Eye />}
-                                        {notification.type == "unlike" && <ThumbsDown />}
-                                    </ItemMedia>
-                                    <ItemContent>
-                                        <ItemTitle>{notification.text}</ItemTitle>
-                                    </ItemContent>
-                                    <ItemActions>
-                                        <Button size="sm" variant="outline" className="cursor-pointer" onClick={() => markAsViewed(notification.id)}>
-                                            <Check/>
-                                        </Button>
-                                    </ItemActions>
-                                </Item>
-                            )
-                        })}
+                    <div className="flex w-full max-w-lg flex-col gap-2 scroll-auto">
+                        <ScrollArea className="h-[calc(100vh-12rem)] w-full">
+                            <div className="flex w-full max-w-lg flex-col gap-2">
+                                {notifications.map((notification, index) =>{
+                                    return (
+                                        <Item key={index} variant="outline">
+                                            <ItemMedia variant="icon">
+                                                {notification.type == "like" && <ThumbsUp />}
+                                                {notification.type == "message" && <MessageCircle />}
+                                                {notification.type == "profile_view" && <Eye />}
+                                                {notification.type == "unlike" && <ThumbsDown />}
+                                            </ItemMedia>
+                                            <ItemContent>
+                                                <ItemTitle>{notification.text}</ItemTitle>
+                                            </ItemContent>
+                                            <ItemActions>
+                                                <Button size="sm" variant="outline" className="cursor-pointer" onClick={() => markAsViewed(notification.id)}>
+                                                    <Check/>
+                                                </Button>
+                                            </ItemActions>
+                                        </Item>
+                                        )
+                                    })}
+                            </div>
+                            <ScrollBar />
+                        </ScrollArea>
+                        
                     </div>
                 </div>
 

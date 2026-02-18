@@ -17,6 +17,8 @@ import Welcome from '@/pages/Welcome';
 import { AuthContextProvider } from './contexts/AuthContextProvider';
 import { SocketContextProvider } from './contexts/SocketContextProvider';
 import { NotificationsContextProvider } from './contexts/NotificationsContextProvider';
+import { Toaster } from 'sonner';
+import { ChatContextProvider } from './contexts/ChatContextProvider';
 
 function Index() {
     return <>
@@ -29,11 +31,16 @@ function Index() {
 function RootLayout() {
     return (
         <AuthContextProvider>
-            <NotificationsContextProvider>
-                <SocketContextProvider>
-                    <Outlet />
-                </SocketContextProvider>
-            </NotificationsContextProvider>
+            <SocketContextProvider>
+                <NotificationsContextProvider>
+                    <ChatContextProvider>
+                        <>
+                            <Outlet />
+                            <Toaster mobileOffset={{ bottom: '56px' }}/>
+                        </>
+                    </ChatContextProvider>
+                </NotificationsContextProvider>
+            </SocketContextProvider>
         </AuthContextProvider>
     );
 }

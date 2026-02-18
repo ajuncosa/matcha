@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactElement } from "react";
 import AuthContext from "./AuthContextProvider";
 import { Notebook } from "lucide-react";
+import SocketContext from "./SocketContextProvider";
+import { toast } from "sonner";
 
 export type NotificationType = 'message' | 'like' | 'profile_view' | 'unlike';
 
@@ -32,10 +34,13 @@ const NotificationsContext = createContext<NotificationsContextType>(defaultValu
 
 export function NotificationsContextProvider({children}: {children: ReactElement}) {
     const { user } = useContext(AuthContext);
+    const socket = useContext(SocketContext);
     const [notifications, setNotifications] = useState<Notification[]>([]);
+
 
     function addNotification(notification: Notification) {
         setNotifications(prev => [...prev, notification]);
+        toast(notification.text);
     }
 
     async function fetchNotificationsAsViewed(notificationsIds: number[]): Promise<number> {
@@ -76,6 +81,8 @@ export function NotificationsContextProvider({children}: {children: ReactElement
             console.error("Cannot mark all notifications as viewed");
             return;
         }
+
+        setNotifications([]);
     }
 
     async function fetchUnreadNotifications() {
@@ -86,8 +93,18 @@ export function NotificationsContextProvider({children}: {children: ReactElement
     }
 
     useEffect(() => {
-        if (user.loggedIn)
+        if (user.loggedIn) {
             fetchUnreadNotifications();
+            const subscriberId: number = socket.subscribeToEvent(
+                'notification:like', 
+                "NotificationsContextProvider", 
+                (notification) => addNotification(notification)
+            );
+
+            return () => {
+                socket.unsubscribeFromEvent(subscriberId, 'notification:like', "NotificationsContextProvider");
+            }
+        }
     }, [user.loggedIn]);
 
     return (

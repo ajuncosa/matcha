@@ -38,6 +38,6 @@ export class NotificationService implements INotificationService {
     }
 
     notifyUnlikeNotification(from: UserId, to: UserId): Promise<UnlikeNotification> {
-        
+
     }
 }

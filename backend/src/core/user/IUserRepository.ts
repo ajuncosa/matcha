@@ -18,4 +18,6 @@ export interface IUserRepository {
     getUserTags(userId: UserId): Promise<Tag[]>;
     addTagsToUser(userId: UserId, tags: Tag[]): Promise<void>;
     deleteTagsFromUser(userId: UserId, tags: Tag[]): Promise<void>;
+
+    setUserLastConnection(userId: UserId): Promise<void>;
 }

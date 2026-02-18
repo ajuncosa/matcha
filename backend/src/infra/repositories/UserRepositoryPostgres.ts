@@ -207,4 +207,12 @@ export default class UserRepositoryPostgres implements IUserRepository {
             ", [userId, tag.id]);
         }
     }
+
+    async setUserLastConnection(userId: UserId): Promise<void> {
+        await this.pool.query(`
+            UPDATE users_details 
+            SET last_connection=NOW()
+            WHERE user_id=$1
+        `, [userId]);
+    }
 }
