@@ -49,7 +49,7 @@ export type UserId = number;
 export enum UserGender {
     Man = "man",
     Woman = "woman",
-    NonBinary = "nonbinary",
+    NonBinary = "non_binary",
     Other = "other",
     Any = "any"
 };
@@ -74,12 +74,13 @@ export class UserDetails {
     biography: string;
     tags: Tag[];
     photos: Photo[];
+    profilePhoto: Photo | null;
     fameRating: number;
     lastConnection: Date | null;
 
     constructor(gender: UserGender, sex: UserSex, birthday: Date, lat: number, lon: number,
         preferredGender: UserGender, preferredSex: UserSex, preferredMinAge: number, preferredMaxAge: number,
-        biography: string, tags: Tag[], photos: Photo[])
+        biography: string, tags: Tag[], photos: Photo[], profilePhoto: Photo | null)
     {
         this.gender = gender;
         this.sex = sex;
@@ -93,6 +94,7 @@ export class UserDetails {
         this.biography = biography;
         this.tags = tags;
         this.photos = photos;
+        this.profilePhoto = profilePhoto;
 
         this.fameRating = 0;
         this.lastConnection = null;
@@ -129,7 +131,7 @@ export function getUserGenderFromString(genderString: string): UserGender | null
         case "woman":
             return UserGender.Woman;
             break;
-        case "nonbinary":
+        case "non_binary":
             return UserGender.NonBinary;
             break;
         case "other":

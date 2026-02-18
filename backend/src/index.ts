@@ -30,6 +30,10 @@ import MessageRepositoryPosgres from "./infra/repositories/MessageRepositoryPost
 import ChatService from "./app/chat/ChatService";
 import type { ILikeRepository } from "./core/like/ILikeRepository";
 import { LikeRepositoryPostgres } from "./infra/repositories/LikeRepositoryPostgres";
+import type { IPhotoService } from "./core/photos/IPhotoService";
+import { PhotoService } from "./app/photos/PhotoService";
+import PhotoRepositoryPostgres from "./infra/repositories/PhotoRepository";
+import type { IPhotoRepository } from "./core/photos/IPhotoRepository";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -55,6 +59,7 @@ const notificationRepository: INotificationRespository = new NotificationReposit
 const tagRespository: ITagsRepository = new TagRepositoryPostgres(pgPool);
 const messageRepository: IMessageRepository = new MessageRepositoryPosgres(pgPool);
 const likeRepository: ILikeRepository = new LikeRepositoryPostgres(pgPool);
+const photoRespository: IPhotoRepository = new PhotoRepositoryPostgres(pgPool);
 
 // Socket management
 const httpServer: HTTPServer = createServer(expressApp);
@@ -69,15 +74,16 @@ const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
 const notificationService: NotificationService = new NotificationService(socketRegistry, notificationRepository);
 const tagsService: ITagsService = new TagService(tagRespository);
 const chatService: ChatService = new ChatService(socketRegistry, messageRepository);
+const photosService: IPhotoService = new PhotoService(photoRespository);
 
 // Use Cases
-const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService);
+const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService, photosService);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
 const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository);
 
 // Routers
 const authRouter: AuthRouter = new AuthRouter(userUseCases);
-const userRouter: UserRouter = new UserRouter(userUseCases);
+const userRouter: UserRouter = new UserRouter(userUseCases, photosService);
 const notificationsRouter: NotificaitonRouter = new NotificaitonRouter(notificationUserCases);
 const chatRouter: ChatRouter = new ChatRouter(chatUseCases);
 
@@ -91,6 +97,8 @@ expressApp.use("/auth", authRouter.getRouter());
 expressApp.use("/user", isAuthenticated, userRouter.getRouter());
 expressApp.use("/notification", isAuthenticated, notificationsRouter.getRouter());
 expressApp.use("/chat", isAuthenticated, chatRouter.getRouter());
+
+expressApp.use('/images', express.static('images'));
 
 httpServer.listen(3000, () => {
     console.log(`Server running on http://localhost:${3000}`);

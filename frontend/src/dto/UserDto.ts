@@ -1,3 +1,14 @@
+
+export interface PhotoDto {
+    id: number;
+    filePath: string;
+}
+
+export interface TagDto {
+    id: number;
+    name: string;
+}
+
 export interface UserProfileResponseDto {
     id: number;
     name: string;
@@ -8,7 +19,30 @@ export interface UserProfileResponseDto {
     gender: string;
     sex: string;
     biography: string;
+    profilePhoto: PhotoDto;
+    photos: PhotoDto[];
+    tags: TagDto[];
+    birthday: Date;
+    lat: number;
+    lon: number;
+    preferredGender: string;
+    preferredSex: string;
+    preferredMinAge: number;
+    preferredMaxAge: number;
+    fameRating: number;
+    lastConnection: Date | null;
 }
+
+type TagAction =
+  | {
+      action: "add";
+      value: string;
+    }
+  | {
+      action: "delete";
+      id: number;
+      value: string;
+    };
 
 export interface UpdateUserDetailsRequestDto {
     gender: string | undefined;
@@ -21,6 +55,5 @@ export interface UpdateUserDetailsRequestDto {
     preferredMinAge: number | undefined;
     preferredMaxAge: number | undefined;
     biography: string | undefined;
-    fame_rating: number | undefined;
-    last_connection: Date | undefined;
+    tags: TagAction[];
 }

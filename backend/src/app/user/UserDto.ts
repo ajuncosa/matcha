@@ -1,5 +1,3 @@
-import type { TagId } from "@/core/tag/Tag";
-
 export interface UserRegisterRequestDto {
     email: string;
     name: string;
@@ -12,6 +10,16 @@ export interface UserLoginRequestDto {
     password: string;
 }
 
+export interface PhotoDto {
+    id: number;
+    filePath: string;
+}
+
+export interface TagDto {
+    id: number;
+    name: string;
+}
+
 export interface UserProfileResponseDto {
     id: number;
     name: string;
@@ -22,6 +30,18 @@ export interface UserProfileResponseDto {
     gender: string;
     sex: string;
     biography: string;
+    profilePhoto: PhotoDto;
+    photos: PhotoDto[];
+    tags: TagDto[];
+    birthday: Date;
+    lat: number;
+    lon: number;
+    preferredGender: string;
+    preferredSex: string;
+    preferredMinAge: number;
+    preferredMaxAge: number;
+    fameRating: number;
+    lastConnection: Date | null;
 }
 
 type TagAction =

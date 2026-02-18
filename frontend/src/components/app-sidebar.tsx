@@ -20,13 +20,10 @@ import {
 	SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { NavLink } from "react-router"
+import { useContext } from "react"
+import AuthContext from "@/contexts/AuthContextProvider"
 
 const data = {
-	user: {
-		name: "shadcn",
-		email: "m@example.com",
-		avatar: "/avatars/shadcn.jpg",
-	},
 	navMain: [
 		{
 			title: "Browser",
@@ -47,6 +44,13 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const { user } = useContext(AuthContext);
+	const navUser = {
+		name: `${user.name} ${user.lastname}`,
+		// TODO: fill this in
+		email: "m@example.com",
+		avatar: "/avatars/shadcn.jpg"
+	};
 	return (
 		<Sidebar variant="inset" {...props}>
 			<SidebarHeader>
@@ -70,7 +74,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<NavMain items={data.navMain} />
 			</SidebarContent>
 			<SidebarFooter>
-				<NavUser user={data.user} />
+				<NavUser user={navUser} />
 			</SidebarFooter>
 		</Sidebar>
 	)

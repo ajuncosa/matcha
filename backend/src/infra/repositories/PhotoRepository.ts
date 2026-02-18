@@ -13,18 +13,21 @@ export default class PhotoRepositoryPostgres implements IPhotoRespository {
         const query = await this.pool.query("SELECT * FROM photos WHERE id=$1", [id]);
         if (query.rows.length == 0)
             return null;
-        
-        const photo = new Photo(
+
+        return new Photo(
             query.rows[0].id,
             query.rows[0].file_path
         );
-        
-        return photo;
     }
 
-    async create(filePath: string): Promise<void> {
-        await this.pool.query("\
-            INSERT INTO photos(file_path) VALUES($1)", [filePath]
+    async create(filePath: string): Promise<Photo> {
+        const query = await this.pool.query("\
+            INSERT INTO photos(file_path) VALUES($1) RETURNING id", [filePath]
+        );
+
+        return new Photo(
+            query.rows[0].id,
+            query.rows[0].file_path
         );
     }
 

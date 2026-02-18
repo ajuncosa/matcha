@@ -5,18 +5,21 @@ import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
 import type { ITagsService } from "@/core/tag/ITagsService";
+import type { IPhotoService } from "@/core/photos/IPhotoService";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
     private passwordHasher: IPasswordHasher;
     private notificationService: INotificationService;
     private tagService: ITagsService;
+    private photoService: IPhotoService;
 
-    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher, notificationService: INotificationService, tagService: ITagsService) {
+    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher, notificationService: INotificationService, tagService: ITagsService, photoService: IPhotoService) {
         this.userRepo = userRepo;
         this.passwordHasher = passwordHasher;
         this.notificationService = notificationService;
         this.tagService = tagService;
+        this.photoService = photoService;
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
@@ -124,8 +127,25 @@ export class UserUseCases {
         }
     }
 
-    async updateUserPhotos(): Promise<void> {
-        // TODO: implement
+    async addUserProfilePhoto(userId: number, filePath: string): Promise<void> {
+        const user: User | null = await this.userRepo.findUserById(userId);
+        if (!user)
+            throw new UserNotFound();
+        if (!user.details)
+            throw new Error(`User details have not yet been set. Cannot set profile photo.`);
+
+        const insertedPhoto = await this.photoService.insertPhoto(filePath);
+        await this.userRepo.addPhotosToUser(userId, [insertedPhoto]);
+        await this.userRepo.updateUserProfilePhoto(userId, insertedPhoto);
+    }
+
+    async addUserPhotos(userId: number, filePaths: string[]): Promise<void> {
+        const user: User | null = await this.userRepo.findUserById(userId);
+        if (!user)
+            throw new UserNotFound();
+
+        const insertedPhotos = await this.photoService.insertPhotos(filePaths);
+        await this.userRepo.addPhotosToUser(userId, insertedPhotos);
     }
 
     async like(producerId: UserId, targetId: UserId): Promise<void> {
