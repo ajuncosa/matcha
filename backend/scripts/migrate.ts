@@ -31,6 +31,8 @@ async function run_migrations_up(client: Client, migrations_dir: string, migrati
     let executed_migrations = []
     const create_migrations_result = await client.query("SELECT * FROM migrations");
     const prev_migrations: Migration[] = create_migrations_result.rows;
+    let current_migration_file: string = "";
+    let current_migration_query: string = "";
 
     try {
         await client.query("BEGIN");
@@ -43,8 +45,12 @@ async function run_migrations_up(client: Client, migrations_dir: string, migrati
             {
                 const filepath: string = join(migrations_dir, filename);
                 const file: string = await Bun.file(filepath).text();
+                current_migration_query = file;
+                current_migration_file = filename;
                 await client.query(file);
                 executed_migrations.push(filename);
+                current_migration_file = "";
+                current_migration_query = "";
             }
         }
 
@@ -74,7 +80,8 @@ async function run_migrations_up(client: Client, migrations_dir: string, migrati
         console.log("Migration completed.");
     }
     catch (e) {
-        console.error("Error during migration, rolling back.");
+        console.error(`Error during migration, rolling back.`);
+        console.error(`Error on file "${current_migration_file}". Query was: '${current_migration_query}'`);
         await client.query("ROLLBACK");
         throw e;
     }
