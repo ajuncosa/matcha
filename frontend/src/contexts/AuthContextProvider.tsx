@@ -29,7 +29,7 @@ const defaultUserValue: AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>(defaultUserValue);
 
-export async function logInUser(email: string, password: string): Promise<User | null> {
+export async function logInUser(email: string, password: string): Promise<User> {
      const resp : Response = await fetch("http://localhost/api/auth/login", {
             method: "POST",
             headers: {
@@ -41,8 +41,11 @@ export async function logInUser(email: string, password: string): Promise<User |
             })
         });
 
-        if (resp.status != 200) {
-            return null;
+        if (resp.status == 403) {
+            throw Error("Account is not verified");
+        }
+        else if (resp.status != 200) {
+            throw Error("Invalid credentials");
         }
         else {
             const respJson = await resp.json();

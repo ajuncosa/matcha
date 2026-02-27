@@ -1,11 +1,12 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { Email, getUserGenderFromString, getUserSexFromString, IncorrectPassword, MissingRequestFields, User, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
+import { EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
 import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequestDto } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
 import type { ITagsService } from "@/core/tag/ITagsService";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
+import type EmailVerificationService from "../email/EmailVerificationService";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
@@ -13,17 +14,27 @@ export class UserUseCases {
     private notificationService: INotificationService;
     private tagService: ITagsService;
     private photoService: IPhotoService;
+    private emailVerificationService: EmailVerificationService;
 
-    constructor(userRepo: IUserRepository, passwordHasher: IPasswordHasher, notificationService: INotificationService, tagService: ITagsService, photoService: IPhotoService) {
+    constructor(
+        userRepo: IUserRepository, 
+        passwordHasher: IPasswordHasher, 
+        notificationService: INotificationService, 
+        tagService: ITagsService, 
+        photoService: IPhotoService,
+        emailVerificationService: EmailVerificationService
+    ) 
+    {
         this.userRepo = userRepo;
         this.passwordHasher = passwordHasher;
         this.notificationService = notificationService;
         this.tagService = tagService;
         this.photoService = photoService;
+        this.emailVerificationService = emailVerificationService
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
-        const userEmail = new Email(dto.email);
+        const userEmail = new EmailAddress(dto.email);
         const userExists: User | null = await this.userRepo.findUserByEmail(userEmail);
         if (userExists)
             throw new UserEmailAlreadyExists();
@@ -31,12 +42,16 @@ export class UserUseCases {
         //TODO: check if password format and length is valid
 
         const hashedPassword: string = await this.passwordHasher.hash(dto.password);
+        const createdUser: User = await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
 
-        await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
+        console.log(createdUser);
+
+        //TODO: send confirmation email
+        this.emailVerificationService.sendVerificationEmail(createdUser);
     }
 
     async loginUser(dto: UserLoginRequestDto): Promise<User> {
-        const userEmail = new Email(dto.email);
+        const userEmail = new EmailAddress(dto.email);
         const user: User | null = await this.userRepo.findUserByEmail(userEmail);
         if (!user)
             throw new UserNotFound();
@@ -45,6 +60,9 @@ export class UserUseCases {
         
         if (!passwordIsValid)
             throw new IncorrectPassword();
+
+        if (!user.emailValidatedAt)
+            throw new UserAccountNotVerified();
 
         return user;        
     }
@@ -155,5 +173,17 @@ export class UserUseCases {
         if (!producer || !target) throw new UserNotFound();
 
         this.notificationService.notifyUserLike(producer, target);
+    }
+
+    async verifyUserEmail(verifyToken: string): Promise<void> {
+        const user: User | null = await this.userRepo.getUserByEmailValidationToken(verifyToken);
+
+        if (!user)
+            throw new InvalidUserValidationToken();
+
+        if (user.emailValidatedAt != null)
+            throw new InvalidUserValidationToken();
+
+        this.userRepo.setEmailValidated(user.id);
     }
 }

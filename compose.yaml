@@ -46,6 +46,21 @@ services:
         ports:
             - 8080:8080
 
+    # Email testing
+    mailpit:
+        image: axllent/mailpit
+        container_name: mailpit
+        restart: unless-stopped
+        ports:
+            - 8025:8025
+        environment:
+            MP_MAX_MESSAGES: 5000
+            MP_DATABASE: /data/mailpit.db
+            MP_SMTP_AUTH_ACCEPT_ANY: 1
+            MP_SMTP_AUTH_ALLOW_INSECURE: 1
+        networks:
+            - "matcha-net"
+
 networks:
     matcha-net:
         driver: bridge

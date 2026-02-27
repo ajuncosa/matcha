@@ -55,20 +55,25 @@ export function LoginForm({
             return;
         }
 
-        const loggedInUser: User | null = await logInUser(form.email, form.password);
+        try {
+            const loggedInUser: User = await logInUser(form.email, form.password);
+            if (!loggedInUser) {
+                return;
+            }
 
-        if (!loggedInUser) {
-            setFormError("Invalid credentials");
-            return;
+            setUser(loggedInUser);
+            userSocket.connect();
+
+            if (loggedInUser.profileCompleted)
+                navigate('/browser');
+            else
+                navigate('/welcome');
         }
-
-        setUser(loggedInUser);
-        userSocket.connect();
-
-        if (loggedInUser.profileCompleted)
-            navigate('/browser');
-        else
-            navigate('/welcome');
+        catch (e) {
+            if (e instanceof Error)
+                setFormError(e.message);
+        }
+        
     }
 
     return (

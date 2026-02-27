@@ -34,6 +34,10 @@ import type { IPhotoService } from "./core/photos/IPhotoService";
 import { PhotoService } from "./app/photos/PhotoService";
 import PhotoRepositoryPostgres from "./infra/repositories/PhotoRepository";
 import type { IPhotoRepository } from "./core/photos/IPhotoRepository";
+import NodeMailerEmailSender from "./infra/email/NodeMailerEmailService";
+import type { EmailSenderConfiguration } from "./core/email/IEmailSender";
+import { EmailAddress } from "./core/user/User";
+import EmailVerificationService from "./app/email/EmailVerificationService";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -61,6 +65,14 @@ const messageRepository: IMessageRepository = new MessageRepositoryPosgres(pgPoo
 const likeRepository: ILikeRepository = new LikeRepositoryPostgres(pgPool);
 const photoRespository: IPhotoRepository = new PhotoRepositoryPostgres(pgPool);
 
+//Email Senders
+const nodeMailerConfig: EmailSenderConfiguration = {
+    host: 'mailpit',
+    port: 1025,
+    secure: false,
+};
+const nodeMailerEmailSender: NodeMailerEmailSender = new NodeMailerEmailSender(nodeMailerConfig);
+
 // Socket management
 const httpServer: HTTPServer = createServer(expressApp);
 const socketServer: SocketIOServer = new SocketIOServer(httpServer, {
@@ -75,9 +87,10 @@ const notificationService: NotificationService = new NotificationService(socketR
 const tagsService: ITagsService = new TagService(tagRespository);
 const chatService: ChatService = new ChatService(socketRegistry, messageRepository);
 const photosService: IPhotoService = new PhotoService(photoRespository);
+const emailVerificationService: EmailVerificationService = new EmailVerificationService(nodeMailerEmailSender, userRepository);
 
 // Use Cases
-const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService, photosService);
+const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService, photosService, emailVerificationService);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
 const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository);
 

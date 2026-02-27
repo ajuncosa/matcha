@@ -19,6 +19,7 @@ import { SocketContextProvider } from './contexts/SocketContextProvider';
 import { NotificationsContextProvider } from './contexts/NotificationsContextProvider';
 import { Toaster } from 'sonner';
 import { ChatContextProvider } from './contexts/ChatContextProvider';
+import VerifyUser from './pages/VerifyUser';
 
 function Index() {
     return <>
@@ -88,6 +89,7 @@ const router = createBrowserRouter([
             { index: true, element: <Index /> },
             { path: 'login', element: <Login /> },
             { path: 'register', element: <Register /> },
+            { path: 'verify/:id', element: <VerifyUser /> },
             {
                 element: <ProtectedRoute/>,
                 path: "",

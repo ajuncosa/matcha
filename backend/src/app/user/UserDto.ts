@@ -1,3 +1,5 @@
+import type { TagId } from "@/core/tag/Tag";
+
 export interface UserRegisterRequestDto {
     email: string;
     name: string;

@@ -2,7 +2,7 @@ import { type Request, type Response } from "express";
 import type { UserUseCases } from "@/app/user/UserUseCases";
 import MatchaRouter from "./MatchaRouter";
 import type { UserLoginRequestDto, UserRegisterRequestDto } from "@/app/user/UserDto";
-import { IncorrectPassword, InvalidEmailFormatError, UserEmailAlreadyExists, UserNotFound, type User } from "@/core/user/User";
+import { IncorrectPassword, InvalidEmailFormatError, InvalidUserValidationToken, UserAccountNotVerified, UserEmailAlreadyExists, UserNotFound, type User } from "@/core/user/User";
 
 export default class AuthRouter extends MatchaRouter {
     private userUseCases: UserUseCases;
@@ -14,6 +14,7 @@ export default class AuthRouter extends MatchaRouter {
         this.router.post("/login", (req, res) => this.login(req, res));
         this.router.post("/logout", (req, res) => this.logout(req, res));
         this.router.get('/check-session', (req, res) => this.checkSession(req, res));
+        this.router.get("/verify/:token", (req, res) => this.verifyUser(req, res));
     }
 
     async login(req: Request, res: Response) {
@@ -39,6 +40,9 @@ export default class AuthRouter extends MatchaRouter {
             }
             else if (e instanceof IncorrectPassword) {
                 res.status(401).send(e.message);   //TODO: easier for frontend to parse if JSON
+            }
+            else if (e instanceof UserAccountNotVerified) {
+                res.status(403).send(e.message);
             }
             else {
                 throw e;
@@ -94,4 +98,22 @@ export default class AuthRouter extends MatchaRouter {
         }
     }
 
+    async verifyUser(req: Request, res: Response) {
+        if (!req.params.token) {
+            res.status(400).json({
+                message: "Invalid token"
+            });
+            return ;
+        }
+
+        try {
+            await this.userUseCases.verifyUserEmail(req.params.token);
+            res.status(200).send();
+        }
+        catch (e) {
+            if (e instanceof InvalidUserValidationToken) {
+                res.status(400).send();
+            }
+        }
+    }
 }

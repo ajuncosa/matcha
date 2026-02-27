@@ -31,7 +31,19 @@ export class MissingRequestFields extends Error {
     }
 }
 
-export class Email {
+export class UserAccountNotVerified extends Error {
+    constructor() {
+        super("User account is not verified");
+    }
+}
+
+export class InvalidUserValidationToken extends Error {
+    constructor() {
+        super("Invalid user validation token");
+    }
+}
+
+export class EmailAddress {
     private email: string;
 
     constructor(email: string) {
@@ -105,13 +117,13 @@ export class User {
     id: UserId;
     name: string;
     lastname: string;
-    email: Email;
+    email: EmailAddress;
     password: string;
     createdAt: Date;
     emailValidatedAt: Date | null;
     details: UserDetails | null;
 
-    constructor(id: UserId, name: string, lastname: string, email: Email, password: string, createdAt: Date) {
+    constructor(id: UserId, name: string, lastname: string, email: EmailAddress, password: string, createdAt: Date, emailValidatedAt?: Date) {
         this.id = id;
         this.name = name;
         this.lastname = lastname;
@@ -120,6 +132,7 @@ export class User {
         this.createdAt = createdAt;
         this.emailValidatedAt = null;
         this.details = null;
+        this.emailValidatedAt = emailValidatedAt || null;
     }
 }
 

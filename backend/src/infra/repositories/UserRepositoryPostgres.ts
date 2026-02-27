@@ -1,7 +1,7 @@
 import { Photo } from "@/core/photos/Photo";
 import { Tag } from "@/core/tag/Tag";
 import { type IUserRepository } from "@/core/user/IUserRepository";
-import { Email, User, type UserId, UserDetails, UserGender, getUserGenderFromString, UserSex, getUserSexFromString } from "@/core/user/User";
+import { EmailAddress, User, type UserId, UserDetails, UserGender, getUserGenderFromString, UserSex, getUserSexFromString } from "@/core/user/User";
 import type { Pool, QueryResult } from "pg";
 
 
@@ -58,13 +58,18 @@ export default class UserRepositoryPostgres implements IUserRepository {
         if (userQuery.rows.length == 0)
             return null;
 
+        let emailValidatedAt = undefined;
+        if (userQuery.rows[0].email_validated_at)
+            emailValidatedAt = new Date(userQuery.rows[0].email_validated_at);
+
         const user = new User(
             userQuery.rows[0].id,
             userQuery.rows[0].name,
             userQuery.rows[0].lastname,
-            new Email(userQuery.rows[0].email),
+            new EmailAddress(userQuery.rows[0].email),
             userQuery.rows[0].password,
-            new Date(userQuery.rows[0].created_at)
+            new Date(userQuery.rows[0].created_at),
+            emailValidatedAt
         );
 
         const detailsQuery = await this.pool.query("SELECT * FROM users_details WHERE user_id=$1", [userId]);
@@ -78,18 +83,23 @@ export default class UserRepositoryPostgres implements IUserRepository {
         return user;
     }
 
-    async findUserByEmail(email: Email): Promise<User | null> {
+    async findUserByEmail(email: EmailAddress): Promise<User | null> {
         const query = await this.pool.query("SELECT * FROM users WHERE email=$1", [email.value()]);
         if (query.rows.length == 0)
             return null;
+
+        let emailValidatedAt = undefined;
+        if (query.rows[0].email_validated_at)
+            emailValidatedAt = new Date(query.rows[0].email_validated_at);
 
         const user = new User(
             query.rows[0].id,
             query.rows[0].name,
             query.rows[0].lastname,
-            new Email(query.rows[0].email),
+            new EmailAddress(query.rows[0].email),
             query.rows[0].password,
-            new Date(query.rows[0].created_at)
+            new Date(query.rows[0].created_at),
+            emailValidatedAt
         );
 
         const detailsQuery = await this.pool.query("SELECT * FROM users_details WHERE user_id=$1", [user.id]);
@@ -103,10 +113,22 @@ export default class UserRepositoryPostgres implements IUserRepository {
         return user;
     }
 
-    async createUser(name: string, lastname: string, email: Email, password: string): Promise<void> {
-        await this.pool.query("INSERT INTO users(name, lastname, email, password, created_at) \
-                        VALUES($1, $2, $3, $4, CURRENT_TIMESTAMP)",
+    async createUser(name: string, lastname: string, email: EmailAddress, password: string): Promise<User> {
+        const query = await this.pool.query(`INSERT INTO users(name, lastname, email, password, created_at)
+                        VALUES($1, $2, $3, $4, CURRENT_TIMESTAMP)
+                        RETURNING id, name, lastname, email, password, created_at`,
                     [name, lastname, email.value(), password]);
+
+        const user = new User(
+            query.rows[0].id,
+            query.rows[0].name,
+            query.rows[0].lastname,
+            new EmailAddress(query.rows[0].email),
+            query.rows[0].password,
+            new Date(query.rows[0].created_at)
+        );
+
+        return user;
     }
 
     async createUserDetails(userId: UserId, gender: UserGender, sex: UserSex, birthday: Date,
@@ -233,4 +255,44 @@ export default class UserRepositoryPostgres implements IUserRepository {
             WHERE user_id=$1
         `, [userId]);
     }
+
+    async setEmailToken(userId: UserId, token: string): Promise<void> {
+        await this.pool.query(`
+            UPDATE users
+            SET email_token=$2
+            WHERE id=$1
+        `, [userId, token]);
+    }
+
+    async setEmailValidated(userId: UserId): Promise<void> {
+        await this.pool.query(`
+            UPDATE users 
+            SET email_validated_at=NOW()
+            WHERE id=$1
+        `, [userId]);
+    }
+
+    async getUserByEmailValidationToken(token: string): Promise<User | null> {
+        const userQuery = await this.pool.query("SELECT * FROM users WHERE email_token=$1", [token]);
+        if (userQuery.rows.length == 0)
+            return null;
+
+        let emailValidatedAt = undefined;
+        if (userQuery.rows[0].email_validated_at)
+            emailValidatedAt = new Date(userQuery.rows[0].email_validated_at);
+
+        const user = new User(
+            userQuery.rows[0].id,
+            userQuery.rows[0].name,
+            userQuery.rows[0].lastname,
+            new EmailAddress(userQuery.rows[0].email),
+            userQuery.rows[0].password,
+            new Date(userQuery.rows[0].created_at),
+            emailValidatedAt
+        );
+
+        return user;
+    }
+
+    
 }
