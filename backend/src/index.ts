@@ -97,7 +97,7 @@ const emailVerificationService: EmailVerificationService = new EmailVerification
 // Use Cases
 const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService, photosService, emailVerificationService);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
-const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository);
+    const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository, userRepository);
 const searchUseCases: SearchUseCases = new SearchUseCases(searchRepository, userRepository);
 
 // Routers

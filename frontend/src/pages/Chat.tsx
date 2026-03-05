@@ -21,9 +21,15 @@ export interface Message {
     viewed_at: Date | null;
 }
 
+export interface ChatUser {
+    id: number;
+    name: string;
+    lastname: string;
+}
+
 export interface Chat {
     myId: number;
-    otherId: number;
+    otherUser: ChatUser;
     messages: Message[];
     unreadMessages: number;
 }
@@ -56,10 +62,17 @@ export default function ChatPage() {
         setInputMessage(e.target.value);
     }
 
+    async function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+        if (e.key === "Enter") {
+            onSendMessageClick();
+        }
+    }
+
     async function onSendMessageClick() {
         if (inputMessage.length == 0) return;
         
-        sendMessage(chats[currentChat].otherId, inputMessage);
+        sendMessage(chats[currentChat].otherUser.id, inputMessage);
+        setInputMessage("");
     }
 
     useEffect(() => {
@@ -82,7 +95,7 @@ export default function ChatPage() {
                                 </Avatar>
                             </ItemMedia>
                             <ItemContent>
-                                <ItemTitle>{chat.otherId}</ItemTitle>
+                                <ItemTitle>{chat.otherUser.name} {chat.otherUser.lastname}</ItemTitle>
                                 <ItemDescription>Last seen 5 months ago</ItemDescription>
                             </ItemContent>
                             {(chat.unreadMessages > 0) && 
@@ -107,7 +120,7 @@ export default function ChatPage() {
                                     </Avatar>
                                 </ItemMedia>
                                 <ItemContent>
-                                    <ItemTitle className="cursor-pointer">{chats[currentChat] ? chats[currentChat].otherId : null}</ItemTitle>
+                                    <ItemTitle className="cursor-pointer">{chats[currentChat] ? `${chats[currentChat].otherUser.name} ${chats[currentChat].otherUser.lastname}` : null}</ItemTitle>
                                 </ItemContent>
                             </Item>
                         </CardHeader>
@@ -127,7 +140,7 @@ export default function ChatPage() {
                         </CardContent>
                         <CardFooter className="flex-col gap-2">
                             <ButtonGroup className="w-full">
-                                <Input value={inputMessage} onChange={handleInputChange} placeholder="Type message..." />
+                                <Input value={inputMessage} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Type message..." />
                                 <Button className="cursor-pointer" variant="outline" aria-label="Type" onClick={onSendMessageClick}>
                                     <SendHorizonal />
                                 </Button>

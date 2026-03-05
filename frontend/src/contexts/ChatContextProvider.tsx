@@ -12,9 +12,15 @@ export interface Message {
     viewed_at: Date | null;
 }
 
+export interface ChatUser {
+    id: number;
+    name: string;
+    lastname: string;
+}
+
 export interface Chat {
     myId: number;
-    otherId: number;
+    otherUser: ChatUser;
     messages: Message[];
     unreadMessages: number;
 }
@@ -89,7 +95,7 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
     async function receiveMessage(payload: Message) {
         setChats((prevChats) => {
             return prevChats.map((chat) => {
-                if (chat.otherId == payload.sender) {
+                if (chat.otherUser.id == payload.sender) {
                     return {
                         ...chat,
                         messages: [...chat.messages, payload]
@@ -112,7 +118,7 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
 
         setChats((prevChats) => {
             return prevChats.map((chat) => {
-                if (chat.otherId == receiver) {
+                if (chat.otherUser.id == receiver) {
                     return {
                         ...chat,
                         messages: [...chat.messages, {

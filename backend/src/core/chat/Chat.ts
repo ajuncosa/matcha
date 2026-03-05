@@ -11,8 +11,14 @@ export interface Message {
     viewed_at: Date | null;
 }
 
+export interface ChatUser {
+    id: UserId;
+    name: string;
+    lastname: string;
+}
+
 export interface Chat {
     myId: UserId;
-    otherId: UserId;
+    otherUser: ChatUser;
     messages: Message[];
 }

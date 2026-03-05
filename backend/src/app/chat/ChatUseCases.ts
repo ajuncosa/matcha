@@ -1,16 +1,19 @@
-import type { Message, Chat, MessageId } from "@/core/chat/Chat";
+import type { Message, Chat, ChatUser, MessageId } from "@/core/chat/Chat";
 import type IMessageRepository from "@/core/chat/IMessageRepository";
 import type { ILikeRepository } from "@/core/like/ILikeRepository";
 import type { Like } from "@/core/like/Like";
 import type { UserId } from "@/core/user/User";
+import type { IUserRepository } from "@/core/user/IUserRepository";
 
 export default class ChatUseCases {
     private messageRepo;
     private likeRepo;
+    private userRepo;
 
-    constructor(messageRepository: IMessageRepository, likeRepo: ILikeRepository) {
+    constructor(messageRepository: IMessageRepository, likeRepo: ILikeRepository, userRepo: IUserRepository) {
         this.messageRepo = messageRepository;
         this.likeRepo = likeRepo;
+        this.userRepo = userRepo;
     }
 
     async getUserChats(userId: UserId): Promise<Chat[]> {
@@ -30,11 +33,18 @@ export default class ChatUseCases {
 
         let chats: Chat[] = [];
         for (let [key, value] of messagesByUser.entries()) {
-            chats.push({
-                myId: userId,
-                otherId: key,
-                messages: value
-            });
+            const otherUser = await this.userRepo.findUserById(key);
+            if (otherUser) {
+                chats.push({
+                    myId: userId,
+                    otherUser: {
+                        id: otherUser.id,
+                        name: otherUser.name,
+                        lastname: otherUser.lastname
+                    },
+                    messages: value
+                });
+            }
         }
 
         const chatsWithoutMessages: UserId[] = otherUsersIds.filter((id => {
@@ -45,13 +55,20 @@ export default class ChatUseCases {
             return true;
         }));
         
-        chatsWithoutMessages.forEach((id) => {
-            chats.push({
-                myId: userId,
-                otherId: id,
-                messages: []
-            });
-        })
+        for (const id of chatsWithoutMessages) {
+            const otherUser = await this.userRepo.findUserById(id);
+            if (otherUser) {
+                chats.push({
+                    myId: userId,
+                    otherUser: {
+                        id: otherUser.id,
+                        name: otherUser.name,
+                        lastname: otherUser.lastname
+                    },
+                    messages: []
+                });
+            }
+        }
         
         return chats;
     }
