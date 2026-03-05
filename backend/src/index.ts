@@ -38,6 +38,10 @@ import NodeMailerEmailSender from "./infra/email/NodeMailerEmailService";
 import type { EmailSenderConfiguration } from "./core/email/IEmailSender";
 import { EmailAddress } from "./core/user/User";
 import EmailVerificationService from "./app/email/EmailVerificationService";
+import type { ISearchRepository } from "./core/search/ISearchRepository";
+import { SearchUseCases } from "./app/search/SearchUseCases";
+import SearchRepositoryPostgres from "./infra/repositories/SearchRepositoryPostgres";
+import SearchRouter from "./infra/http/routers/SearchRouter";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -64,6 +68,7 @@ const tagRespository: ITagsRepository = new TagRepositoryPostgres(pgPool);
 const messageRepository: IMessageRepository = new MessageRepositoryPosgres(pgPool);
 const likeRepository: ILikeRepository = new LikeRepositoryPostgres(pgPool);
 const photoRespository: IPhotoRepository = new PhotoRepositoryPostgres(pgPool);
+const searchRepository: ISearchRepository = new SearchRepositoryPostgres(pgPool);
 
 //Email Senders
 const nodeMailerConfig: EmailSenderConfiguration = {
@@ -93,12 +98,14 @@ const emailVerificationService: EmailVerificationService = new EmailVerification
 const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, notificationService, tagsService, photosService, emailVerificationService);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
 const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository);
+const searchUseCases: SearchUseCases = new SearchUseCases(searchRepository, userRepository);
 
 // Routers
 const authRouter: AuthRouter = new AuthRouter(userUseCases);
 const userRouter: UserRouter = new UserRouter(userUseCases, photosService);
 const notificationsRouter: NotificaitonRouter = new NotificaitonRouter(notificationUserCases);
 const chatRouter: ChatRouter = new ChatRouter(chatUseCases);
+const searchRouter: SearchRouter = new SearchRouter(searchUseCases);
 
 expressApp.use(bodyParser.json());
 expressApp.use(expressSession);
@@ -110,6 +117,7 @@ expressApp.use("/auth", authRouter.getRouter());
 expressApp.use("/user", isAuthenticated, userRouter.getRouter());
 expressApp.use("/notification", isAuthenticated, notificationsRouter.getRouter());
 expressApp.use("/chat", isAuthenticated, chatRouter.getRouter());
+expressApp.use("/search", isAuthenticated, searchRouter.getRouter());
 
 expressApp.use('/images', express.static('images'));
 

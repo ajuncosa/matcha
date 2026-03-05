@@ -11,4 +11,17 @@ export default defineConfig({
     },
   },
   plugins: [tailwindcss(), react(), tsconfigPaths()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/images': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
 });

@@ -30,6 +30,8 @@
   "scripts": {
     "dev": "bun --hot run src/index.ts --host 0.0.0.0",
     "migrate": "bun run ./scripts/migrate.ts",
-    "migrate:rollback": "bun run ./scripts/migrate.ts --rollback"
+    "migrate:rollback": "bun run ./scripts/migrate.ts --rollback",
+    "seed": "bun run ./scripts/seed.ts",
+    "seed:users": "bun run ./scripts/seed.ts"
   }
 }

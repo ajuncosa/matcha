@@ -1,8 +1,8 @@
-import type { IPhotoRespository } from "@/core/photos/IPhotoRepository";
+import type { IPhotoRepository } from "@/core/photos/IPhotoRepository";
 import { Photo } from "@/core/photos/Photo";
 import type { Pool } from "pg";
 
-export default class PhotoRepositoryPostgres implements IPhotoRespository {
+export default class PhotoRepositoryPostgres implements IPhotoRepository {
     private pool: Pool;
 
     constructor(pool: Pool) {
