@@ -411,6 +411,7 @@ export default function Welcome() {
                                 uploadedImage={formState.profilePhoto}
                                 onImageUpload={(file: File) => formState.profilePhoto = file}
                                 onImageRemove={() => formState.profilePhoto = null}
+                                deletable={true}
                             />
                             <div className="grid grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))] gap-4">
                                {
@@ -419,6 +420,7 @@ export default function Welcome() {
                                         uploadedImage={formState.photos[i]}
                                         onImageUpload={(file: File) => formState.photos[i] = file}
                                         onImageRemove={() => formState.photos[i] = null}
+                                        deletable={true}
                                     />)
                                 }
                             </div>

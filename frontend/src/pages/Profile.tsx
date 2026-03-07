@@ -35,7 +35,7 @@ export default function ProfilePage() {
         }
 
         const respBody : UserProfileResponseDto = await resp.json();
-        setUserProfileData(respBody);
+        setUserProfileData({...respBody, photos: respBody.photos.filter((photo) => photo.id != respBody.profilePhoto.id)});
         if (respBody?.lat && respBody?.lon)
             setLocation({lat: respBody.lat, lon: respBody.lon});
     }
@@ -93,12 +93,10 @@ export default function ProfilePage() {
                         <div className="flex gap-2 mt-2">
                             <span className="text-4xl">{userProfileData?.name}</span>
                             <span className="text-4xl">{userProfileData?.lastname}</span>
-                            <ProfileEditDialog type="name" profileData={userProfileData}/>
                         </div>
                         <div className="flex mt-2 items-center gap-1 text-lg">
                             <SexIcon sex={userProfileData?.sex}/>
                             <span className="mr-1">| {userProfileData?.gender} | {calculateAge()}</span>
-                            <ProfileEditDialog type="identity" profileData={userProfileData}/>
                         </div>
                     </div>
                 </div>
@@ -113,7 +111,8 @@ export default function ProfilePage() {
                     <Button variant="outline" size="lg" className="cursor-pointer">
                         <ThumbsUpIcon /> Like User
                     </Button>
-                    : <></>
+                    :
+                    <ProfileEditDialog profileData={userProfileData}/>
                 }
             </div>
 
@@ -149,13 +148,11 @@ export default function ProfilePage() {
                 <h2 className="text-2xl">Photos</h2>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                     {
-                        userProfileData?.photos
-                            .filter((photo) => photo.id != userProfileData.profilePhoto.id)
-                            .map((photo) => {
-                                return <div className="object-cover w-full">
-                                    <img className="rounded-lg" src={`http://localhost/api/images/${photo.filePath}`} alt="#" />
-                                </div>
-                            })
+                        userProfileData?.photos.map((photo) => {
+                            return <div className="object-cover w-full">
+                                <img className="rounded-lg" src={`http://localhost/api/images/${photo.filePath}`} alt="#" />
+                            </div>
+                        })
                     }
                 </div>
             </div>

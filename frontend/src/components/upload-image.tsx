@@ -4,12 +4,13 @@ import { Button } from "./ui/button";
 import { CirclePlus, Trash2 } from "lucide-react";
 
 const UploadAndDisplayImage = (
-    { uploadedImage, onImageUpload, onImageRemove }: {
-        uploadedImage: File | null,
+    { uploadedImage, onImageUpload, onImageRemove, deletable}: {
+        uploadedImage: string | null,
         onImageUpload: CallableFunction,
-        onImageRemove: CallableFunction
+        onImageRemove: CallableFunction,
+        deletable: boolean
     }) => {
-    const [selectedImage, setSelectedImage] = useState<File | null>(uploadedImage);
+    const [selectedImage, setSelectedImage] = useState<string | null>(uploadedImage);
 
     return (
 
@@ -17,26 +18,25 @@ const UploadAndDisplayImage = (
             <Button className="size-full relative p-0" variant="secondary">
                 {
                     selectedImage ?
-                        <div className="relative">
-                            <img className="w-full aspect-square object-cover rounded-md"
-                                alt="not found"
-                                src={URL.createObjectURL(selectedImage)}
-                            />
-                        </div>
-                        :
-                        <CirclePlus className="size-sm" />
+                    <div className="relative">
+                        <img className="w-full aspect-square object-cover rounded-md"
+                            src={selectedImage}
+                        />
+                    </div>
+                    :
+                    <CirclePlus className="size-sm" />
                 }
                 <input type="file" id="picture" className="cursor-pointer absolute inset-0 opacity-0"
                     onChange={(event) => {
                         const file: File | undefined = event.target.files?.[0];
                         if (!file)
                             return;
-                        setSelectedImage(file);
-                        onImageUpload(file);
+                        setSelectedImage(URL.createObjectURL(file));
+                        onImageUpload(selectedImage);
                     }} />
             </Button>
             {
-                selectedImage &&
+                deletable && (selectedImage) &&
                 <Button className="absolute cursor-pointer w-fit top-2 right-2 hidden group-hover:block"
                     variant="destructive"
                     onClick={() => {

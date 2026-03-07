@@ -44,6 +44,21 @@ type TagAction =
       value: string;
     };
 
+export type PhotoAction =
+    | {
+        action: "add";
+        file: string;
+      }
+    | {
+        action: "delete";
+        id: number;
+        file: string;
+      }
+    | {
+        action: "none";
+        file: string;
+    };
+
 export interface UpdateUserDetailsRequestDto {
     gender: string | undefined;
     sex: string | undefined;
