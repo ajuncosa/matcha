@@ -5,12 +5,12 @@ import { CirclePlus, Trash2 } from "lucide-react";
 
 const UploadAndDisplayImage = (
     { uploadedImage, onImageUpload, onImageRemove, deletable}: {
-        uploadedImage: string | null,
+        uploadedImage: File | null,
         onImageUpload: CallableFunction,
         onImageRemove: CallableFunction,
         deletable: boolean
     }) => {
-    const [selectedImage, setSelectedImage] = useState<string | null>(uploadedImage);
+    const [selectedImage, setSelectedImage] = useState<File | null>(uploadedImage);
 
     return (
 
@@ -20,7 +20,8 @@ const UploadAndDisplayImage = (
                     selectedImage ?
                     <div className="relative">
                         <img className="w-full aspect-square object-cover rounded-md"
-                            src={selectedImage}
+                            //src={selectedImage}
+                            src={URL.createObjectURL(selectedImage)}
                         />
                     </div>
                     :
@@ -31,12 +32,15 @@ const UploadAndDisplayImage = (
                         const file: File | undefined = event.target.files?.[0];
                         if (!file)
                             return;
-                        setSelectedImage(URL.createObjectURL(file));
-                        onImageUpload(selectedImage);
+                        setSelectedImage(file);
+                        onImageUpload(file);
+                        //setSelectedImage(URL.createObjectURL(file));
+                        //onImageUpload(selectedImage);
                     }} />
             </Button>
             {
-                deletable && (selectedImage) &&
+                //deletable && (selectedImage) &&
+                selectedImage &&
                 <Button className="absolute cursor-pointer w-fit top-2 right-2 hidden group-hover:block"
                     variant="destructive"
                     onClick={() => {

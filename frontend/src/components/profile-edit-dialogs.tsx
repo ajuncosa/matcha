@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import AuthContext from "@/contexts/AuthContextProvider"
 import type { PhotoAction, UserProfileResponseDto } from "@/dto/UserDto"
 import { ChevronDownIcon, EditIcon } from "lucide-react"
-import { useContext, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -45,14 +45,21 @@ interface UserDetailsForm {
     preferredMaxAge: number;
     biography: string;
     tags: string[];
-    profilePhoto: File | null;
-    photos: PhotoAction[];
+    profilePhoto: PhotoAction;
+    photos: [PhotoAction, PhotoAction, PhotoAction, PhotoAction];
 };
 
 export default function ProfileEditDialog({ profileData }: { profileData: UserProfileResponseDto | undefined }) {
     const { user } = useContext(AuthContext);
     if (!profileData || user.id != profileData.id)
         return;
+
+    async function createFile(path: string, name: string): Promise<File> {
+        let response = await fetch(path);
+        let data = await response.blob();
+        let metadata = { type: data.type };
+        return new File([data], name, metadata);
+    }
 
     const [basicUserInfoForm, setBasicUserInfoForm] = useState<BasicUserInfoForm>({
         firstname: profileData.name,
@@ -74,9 +81,38 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
         preferredMaxAge: profileData.preferredMaxAge,
         biography: profileData.biography,
         tags: profileData.tags.map((t) => t.name),
-        profilePhoto: null,
-        photos: profileData.photos.map((i) => { return {action: "none", file: i.filePath} });
+        profilePhoto: { action: "none", file: null },
+        photos: [{ action: "none", file: null }, { action: "none", file: null }, { action: "none", file: null }, { action: "none", file: null }]
     });
+
+    useEffect(() => {
+        const loadPhotos = async () => {
+            const loadedProfilePhoto : PhotoAction = {
+                action: "none",
+                file: await createFile(`http://localhost/api/images/${profileData.profilePhoto.filePath}`, profileData.profilePhoto.filePath)
+            }
+            const loadedPhotos : PhotoAction[] = await Promise.all(
+                profileData.photos.map(async (p) => {
+                    return {
+                        action: "none",
+                        file: await createFile(`http://localhost/api/images/${p.filePath}`, p.filePath)
+                    }
+                })
+            )
+            setUserDetailsForm({
+                ...userDetailsForm,
+                profilePhoto: loadedProfilePhoto,
+                photos: [
+                    loadedPhotos[0] ?? { action: "none", file: null },
+                    loadedPhotos[1] ?? { action: "none", file: null },
+                    loadedPhotos[2] ?? { action: "none", file: null },
+                    loadedPhotos[3] ?? { action: "none", file: null },
+                ]
+            })
+        }
+        loadPhotos();
+    }, [])
+
     const [formError, setFormError] = useState<string>("")
 
     function setInputFormValue(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
@@ -401,9 +437,9 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                         <div className="w-32">
                                             {
                                                 <UploadAndDisplayImage
-                                                    uploadedImage={userDetailsForm.profilePhoto ? URL.createObjectURL(userDetailsForm.profilePhoto) : null}
-                                                    onImageUpload={(file: File) => userDetailsForm.profilePhoto = file}
-                                                    onImageRemove={() => userDetailsForm.profilePhoto = null}
+                                                    uploadedImage={userDetailsForm.profilePhoto.file}
+                                                    onImageUpload={(file: File) => userDetailsForm.profilePhoto = {action: "add", file: file}}
+                                                    onImageRemove={() => userDetailsForm.profilePhoto = {action: "delete", id: profileData.profilePhoto.id, file: null}}
                                                     deletable={false}
                                                 />
                                             }
@@ -412,12 +448,11 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                         {
                                             [0, 1, 2, 3].map((i) =>
                                                 <UploadAndDisplayImage key={i}
-                                                    uploadedImage={newPhotos[i]}
-                                                    onImageUpload={(file: File) => newPhotos[i] = file}
+                                                    uploadedImage={userDetailsForm.photos[i].file}
+                                                    onImageUpload={(file: File) => userDetailsForm.photos[i] = {action: "add", file: file}}
                                                     onImageRemove={() => {
                                                         if (profileData.photos[i])
-                                                            photosToDelete.push(profileData.photos[i].id);
-                                                        newPhotos[i] = null;
+                                                            userDetailsForm.photos[i] = {action: "delete", id: profileData.photos[i].id, file: null}
                                                     }}
                                                     deletable={true}
                                                 />)

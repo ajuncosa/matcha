@@ -47,16 +47,16 @@ type TagAction =
 export type PhotoAction =
     | {
         action: "add";
-        file: string;
+        file: File;
       }
     | {
         action: "delete";
         id: number;
-        file: string;
+        file: null;
       }
     | {
         action: "none";
-        file: string;
+        file: File | null;
     };
 
 export interface UpdateUserDetailsRequestDto {
