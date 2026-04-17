@@ -159,7 +159,7 @@ export default function ProfilePage() {
             
             <div className="w-full mt-4">
                 <h2 className="text-2xl">Location</h2>
-                <div className="mt-4 h-96"> {/* fixed height needed */}
+                <div className="mt-4 h-96">
                     <LocationDisplayMap location={location}/>
                 </div>
             </div>

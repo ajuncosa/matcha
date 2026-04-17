@@ -24,7 +24,7 @@ export default function LocationDisplayMap({ location }: { location: { lat: numb
       center={center} 
       zoom={13} 
       scrollWheelZoom={false}
-      className="h-full w-full"
+      className="h-full w-full relative z-0"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
