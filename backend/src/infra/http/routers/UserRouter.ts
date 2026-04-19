@@ -1,6 +1,6 @@
-import { LikeStatus, type UpdateUserDetailsRequestDto, type UserProfileResponseDto } from "@/app/user/UserDto";
+import { type UpdateUserDetailsRequestDto, type UserProfileResponseDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
-import { MissingRequestFields, User, UserNotFound } from "@/core/user/User";
+import { MissingRequestFields, UserNotFound } from "@/core/user/User";
 import { type Request, type Response } from "express";
 import MatchaRouter from "./MatchaRouter";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
@@ -55,41 +55,12 @@ export default class UserRouter extends MatchaRouter {
 
     async getProfile(req: Request, res: Response) {
         try {
-            const user: User = await this.userUseCases.getUser(req.session.userId!);
-            if (!user.details || !user.details.profilePhoto)
-            {
-                res.status(404).send(`User with ID \"${req.session.userId}\" was not found`);
-                return;
-            }
-            const responseDto: UserProfileResponseDto = {
-                id: user.id,
-                name: user.name,
-                lastname: user.lastname,
-                email: user.email.value(),
-                emailValidatedAt: user.emailValidatedAt,
-                createdAt: user.createdAt,
-                gender: user.details.gender,
-                sex: user.details.sex,
-                biography: user.details.biography,
-                profilePhoto: user.details.profilePhoto,
-                photos: user.details.photos,
-                tags: user.details.tags,
-                birthday: user.details.birthday,
-                lat: user.details.lat,
-                lon: user.details.lon,
-                preferredGender: user.details.preferredGender,
-                preferredSex: user.details.preferredSex,
-                preferredMinAge: user.details.preferredMinAge,
-                preferredMaxAge: user.details.preferredMaxAge,
-                fameRating: user.details.fameRating,
-                lastConnection: user.details.lastConnection,
-                likeStatus: LikeStatus.NOT_LIKED
-            }
+            const responseDto: UserProfileResponseDto = await this.userUseCases.getUser(req.session.userId!);
             res.status(200).send(responseDto);
         }
         catch (e) {
             if (e instanceof UserNotFound) {
-                res.status(401).send(`User with ID \"${req.session.userId}\" was not found`);
+                res.status(401).send(`User with ID "${req.session.userId}" was not found`);
             }
             else {
                 throw e;
@@ -104,38 +75,9 @@ export default class UserRouter extends MatchaRouter {
                 return;
             }
 
-            const user: User = await this.userUseCases.getUser(Number(req.params.userId));
-            if (!user.details)
-                throw new UserNotFound();
-            
-            const producerId: number | undefined = Number(req.session.userId);
-            const targetId: number | undefined = Number(req.params.userId);
-            const likeStatus: LikeStatus = await this.userUseCases.getLikeStatus(producerId, targetId);
-            
-            const responseDto: UserProfileResponseDto = {
-                id: user.id,
-                name: user.name,
-                lastname: user.lastname,
-                email: user.email.value(),
-                emailValidatedAt: user.emailValidatedAt,
-                createdAt: user.createdAt,
-                gender: user.details.gender,
-                sex: user.details.sex,
-                biography: user.details.biography,
-                profilePhoto: user.details.profilePhoto ?? null,
-                photos: user.details.photos,
-                tags: user.details.tags,
-                birthday: user.details.birthday,
-                lat: user.details.lat,
-                lon: user.details.lon,
-                preferredGender: user.details.preferredGender,
-                preferredSex: user.details.preferredSex,
-                preferredMinAge: user.details.preferredMinAge,
-                preferredMaxAge: user.details.preferredMaxAge,
-                fameRating: user.details.fameRating,
-                lastConnection: user.details.lastConnection,
-                likeStatus: likeStatus
-            }
+            const viewerId: number | undefined = Number(req.session.userId);
+            const targetId: number = Number(req.params.userId);
+            const responseDto: UserProfileResponseDto = await this.userUseCases.getUser(targetId, viewerId);
             res.status(200).send(responseDto);
         }
         catch (e) {

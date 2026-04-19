@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import type { UserUseCases } from "@/app/user/UserUseCases";
 import MatchaRouter from "./MatchaRouter";
-import type { UserLoginRequestDto, UserRegisterRequestDto } from "@/app/user/UserDto";
+import type { UserLoginRequestDto, UserRegisterRequestDto, UserProfileResponseDto } from "@/app/user/UserDto";
 import { IncorrectPassword, InvalidEmailFormatError, InvalidUserValidationToken, UserAccountNotVerified, UserEmailAlreadyExists, UserNotFound, type User } from "@/core/user/User";
 
 export default class AuthRouter extends MatchaRouter {
@@ -87,10 +87,10 @@ export default class AuthRouter extends MatchaRouter {
 
     async checkSession(req: Request, res: Response) {
         if (req.session && req.session.userId) {
-            const user: User = await this.userUseCases.getUser(req.session.userId);
+            const userProfile: UserProfileResponseDto = await this.userUseCases.getUser(req.session.userId);
 
             res.status(200).json({
-                profileCompleted: user.details != null
+                profileCompleted: userProfile.biography != null
             });
         }
         else {

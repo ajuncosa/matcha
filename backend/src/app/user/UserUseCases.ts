@@ -1,6 +1,6 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
 import { EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
-import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserDetailsRequestDto, LikeStatus } from "@/app/user/UserDto";
+import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserDetailsRequestDto, type UserProfileResponseDto, LikeStatus } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
@@ -9,6 +9,8 @@ import type { IPhotoService } from "@/core/photos/IPhotoService";
 import type EmailVerificationService from "../email/EmailVerificationService";
 import type { ILikeRepository } from "@/core/like/ILikeRepository";
 import type { Like, LikePair } from "@/core/like/Like";
+import type { IUserSocketRegistry } from "@/core/socket/IUserSocketRegistry";
+import type { Socket } from "@/core/socket/Socket";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
@@ -18,6 +20,7 @@ export class UserUseCases {
     private tagService: ITagsService;
     private photoService: IPhotoService;
     private emailVerificationService: EmailVerificationService;
+    private socketRegistry: IUserSocketRegistry;
 
     constructor(
         userRepo: IUserRepository, 
@@ -26,7 +29,8 @@ export class UserUseCases {
         notificationService: INotificationService, 
         tagService: ITagsService, 
         photoService: IPhotoService,
-        emailVerificationService: EmailVerificationService
+        emailVerificationService: EmailVerificationService,
+        socketRegistry: IUserSocketRegistry
     ) 
     {
         this.userRepo = userRepo;
@@ -35,7 +39,8 @@ export class UserUseCases {
         this.notificationService = notificationService;
         this.tagService = tagService;
         this.photoService = photoService;
-        this.emailVerificationService = emailVerificationService
+        this.emailVerificationService = emailVerificationService,
+        this.socketRegistry = socketRegistry
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
@@ -69,12 +74,46 @@ export class UserUseCases {
         return user;        
     }
 
-    async getUser(userId: number): Promise<User> {
+    async getUser(userId: number, viewerId?: number): Promise<UserProfileResponseDto> {
         const user: User | null = await this.userRepo.findUserById(userId);
         if (!user)
             throw new UserNotFound();
 
-        return user;
+        if (!user.details)
+            throw new UserNotFound();
+
+        let likeStatus: LikeStatus = LikeStatus.NOT_LIKED;
+        if (viewerId !== undefined) {
+            likeStatus = await this.getLikeStatus(viewerId, userId);
+        }
+
+        const isOnline: boolean = this.socketRegistry.getUserSocket(userId) ? true : false;
+
+        return {
+            id: user.id,
+            name: user.name,
+            lastname: user.lastname,
+            email: user.email.value(),
+            emailValidatedAt: user.emailValidatedAt,
+            createdAt: user.createdAt,
+            gender: user.details.gender,
+            sex: user.details.sex,
+            biography: user.details.biography,
+            profilePhoto: user.details.profilePhoto ?? null,
+            photos: user.details.photos,
+            tags: user.details.tags,
+            birthday: user.details.birthday,
+            lat: user.details.lat,
+            lon: user.details.lon,
+            preferredGender: user.details.preferredGender,
+            preferredSex: user.details.preferredSex,
+            preferredMinAge: user.details.preferredMinAge,
+            preferredMaxAge: user.details.preferredMaxAge,
+            fameRating: user.details.fameRating,
+            lastConnection: user.details.lastConnection,
+            likeStatus: likeStatus,
+            isOnline: isOnline,
+        };
     }
 
     async updateUserDetails(userId: number, dto: UpdateUserDetailsRequestDto): Promise<void>

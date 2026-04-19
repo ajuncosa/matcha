@@ -36,7 +36,6 @@ import PhotoRepositoryPostgres from "./infra/repositories/PhotoRepository";
 import type { IPhotoRepository } from "./core/photos/IPhotoRepository";
 import NodeMailerEmailSender from "./infra/email/NodeMailerEmailService";
 import type { EmailSenderConfiguration } from "./core/email/IEmailSender";
-import { EmailAddress } from "./core/user/User";
 import EmailVerificationService from "./app/email/EmailVerificationService";
 import type { ISearchRepository } from "./core/search/ISearchRepository";
 import { SearchUseCases } from "./app/search/SearchUseCases";
@@ -95,7 +94,7 @@ const photosService: IPhotoService = new PhotoService(photoRespository);
 const emailVerificationService: EmailVerificationService = new EmailVerificationService(nodeMailerEmailSender, userRepository);
 
 // Use Cases
-const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, likeRepository, notificationService, tagsService, photosService, emailVerificationService);
+const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, likeRepository, notificationService, tagsService, photosService, emailVerificationService, socketRegistry);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
 const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository, userRepository);
 const searchUseCases: SearchUseCases = new SearchUseCases(searchRepository, userRepository);

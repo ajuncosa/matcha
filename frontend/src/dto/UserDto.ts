@@ -67,6 +67,7 @@ export interface UserProfileResponseDto {
     fameRating: number;
     lastConnection: Date | null;
     likeStatus: LikeStatus;
+    isOnline: boolean;
 }
 
 export interface UpdateUserDetailsRequestDto {

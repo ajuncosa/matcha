@@ -178,7 +178,7 @@ export default function ProfilePage() {
                     <div className="relative">
                         {
                             user?.id != userProfileData?.id ? 
-                                <Badge className="bg-emerald-600 h-6 w-6 absolute top-[-12px] right-[-12px] z-1"></Badge>
+                                <Badge className={`${userProfileData?.isOnline ? 'bg-emerald-600' : 'bg-red-600'}  h-6 w-6 absolute top-[-12px] right-[-12px] z-1`}></Badge>
                             : <></>
                         }
                         <Avatar className="rounded-lg w-32 h-32">
