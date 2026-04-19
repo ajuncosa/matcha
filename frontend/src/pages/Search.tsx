@@ -18,6 +18,7 @@ import {
     InputGroupInput,
 } from "@/components/ui/input-group"
 import { useState, useEffect, useCallback, useRef } from "react";
+import { NavLink } from "react-router";
 
 interface SearchResultItem {
     id: number;
@@ -302,39 +303,41 @@ export default function SearchPage() {
 
             <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4 mt-4">
                 {results.map((item) => (
-                    <Card key={item.id} className="w-full rounded-md py-4 gap-3">
-                        <CardContent className="px-4">
-                            <div className="object-cover w-full">
-                                <img 
-                                    className="rounded-lg w-full h-48 object-cover" 
-                                    src={getImageUrl(item)} 
-                                    alt={`${item.name} ${item.lastname}`}
-                                />
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex flex-col items-start px-4">
-                            <div className="text-xl">
-                                <span className="font-bold">
-                                    {item.name} {item.lastname}
-                                </span>
-                                <span>
-                                    , {item.age}
-                                </span>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                                Fame: {item.fameRating}
-                                {item.distance !== null && ` • ${item.distance} km`}
-                                {item.commonTagsCount > 0 && ` • ${item.commonTagsCount} common tags`}
-                            </div>
-                            <div className="w-full mt-2 flex flex-wrap gap-1">
-                                {item.tags.map(tag => (
-                                    <Badge key={tag.id} variant="outline" className="text-md">
-                                        {tag.name}
-                                    </Badge>
-                                ))}
-                            </div>
-                        </CardFooter>
-                    </Card>
+                    <NavLink to={`/user/${item.id}`}>
+                        <Card key={item.id} className="w-full rounded-md py-4 gap-3">
+                            <CardContent className="px-4">
+                                <div className="object-cover w-full">
+                                    <img 
+                                        className="rounded-lg w-full h-48 object-cover" 
+                                        src={getImageUrl(item)} 
+                                        alt={`${item.name} ${item.lastname}`}
+                                    />
+                                </div>
+                            </CardContent>
+                            <CardFooter className="flex flex-col items-start px-4">
+                                <div className="text-xl">
+                                    <span className="font-bold">
+                                        {item.name} {item.lastname}
+                                    </span>
+                                    <span>
+                                        , {item.age}
+                                    </span>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    Fame: {item.fameRating}
+                                    {item.distance !== null && ` • ${item.distance} km`}
+                                    {item.commonTagsCount > 0 && ` • ${item.commonTagsCount} common tags`}
+                                </div>
+                                <div className="w-full mt-2 flex flex-wrap gap-1">
+                                    {item.tags.map(tag => (
+                                        <Badge key={tag.id} variant="outline" className="text-md">
+                                            {tag.name}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </CardFooter>
+                        </Card>
+                    </NavLink>
                 ))}
                 
                 {loading && (

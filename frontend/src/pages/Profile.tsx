@@ -1,43 +1,62 @@
 import { AvatarFallback, AvatarImage, Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mars, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import type { UserProfileResponseDto } from "@/dto/UserDto";
-import { useContext, useEffect, useState } from "react";
 import AuthContext from "@/contexts/AuthContextProvider"
-import 'leaflet/dist/leaflet.css';
 import LocationDisplayMap from "@/components/location-display-map";
 import ProfileEditDialog from "@/components/profile-edit-dialogs";
+import type { LikeStatus, UserProfileResponseDto } from "@/dto/UserDto";
+import 'leaflet/dist/leaflet.css';
+import { toast } from "sonner";
+import { Mars, ThumbsDown, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router";
 
 export default function ProfilePage() {
-
+    const { id } = useParams();
     const { user } = useContext(AuthContext);
     const [userProfileData, setUserProfileData] = useState<UserProfileResponseDto>();
     const [location, setLocation] = useState<{lat: number, lon: number}>({lat: 40.4168, lon: -3.7038});
+    const navigate = useNavigate();
 
-    async function getProfile() : Promise<void> {
+    async function fetchUserData(url: string, onError?: () => void): Promise<void> {
+        const resp: Response = await fetch(url);
 
-        const resp : Response = await fetch("http://localhost/api/user/profile", {
-            method: "GET"
-        });
-
-        if (resp.status != 200)
-        {
-            // TODO: logout? redirect to error page?
-        }
-        if (!resp.body)
-        {
-            // TODO: manage error
+        if (resp.status !== 200) {
+            onError?.();
+            return;
         }
 
-        const respBody : UserProfileResponseDto = await resp.json();
-        setUserProfileData({...respBody, photos: respBody.photos.filter((photo) => photo.id != respBody.profilePhoto.id)});
-        if (respBody?.lat && respBody?.lon)
+        if (!resp.body) {
+            console.error("Empty response body");
+            return;
+        }
+
+        const respBody: UserProfileResponseDto = await resp.json();
+        
+        const filteredPhotos = respBody.profilePhoto
+            ? respBody.photos.filter((photo) => photo.id !== respBody.profilePhoto.id)
+            : respBody.photos;
+        
+        setUserProfileData({...respBody, photos: filteredPhotos});
+        
+        if (respBody?.lat && respBody?.lon) {
             setLocation({lat: respBody.lat, lon: respBody.lon});
+        }
+    }
+
+    async function getProfile(): Promise<void> {
+        await fetchUserData("http://localhost/api/user/profile");
+    }
+
+    async function getUser(id: number): Promise<void> {
+        await fetchUserData(
+            `http://localhost/api/user/${id}`,
+            () => navigate('/search')
+        );
     }
 
     function calculateAge() : number
@@ -64,8 +83,68 @@ export default function ProfilePage() {
         return <Icon size={20} />;
     };
 
+    async function likeUser(id: number) {
+        const resp : Response = await fetch(`http://localhost/api/user/like/${id}`, {
+            method: "POST"
+        });
+
+        if (resp.status == 200) {
+            setUserProfileData({...userProfileData, likeStatus: "LIKED"} as UserProfileResponseDto);
+            toast.success(`You liked ${userProfileData!.name}`);
+        }
+        else {
+            toast.error(`Error liking ${userProfileData!.name}`);
+        }
+    }
+
+    async function unLikeUser(id: number) {
+        const resp : Response = await fetch(`http://localhost/api/user/unlike/${id}`, {
+            method: "POST"
+        });
+
+        if (resp.status == 200) {
+            setUserProfileData({...userProfileData, likeStatus: "NOT_LIKED"} as UserProfileResponseDto);
+            toast.success(`You unliked ${userProfileData!.name}`);
+        }
+        else {
+            toast.error(`Error un-liking ${userProfileData!.name}`);
+        }
+    }
+
+    function UserActionButton({ likeStatus, userId, onLike, onUnlike } : {likeStatus: LikeStatus, userId: string, onLike: CallableFunction, onUnlike: CallableFunction}) {
+        return (
+            <>
+            {likeStatus === "NOT_LIKED" && (
+                <Button 
+                variant="outline" 
+                size="lg" 
+                className="cursor-pointer" 
+                onClick={() => onLike(Number(userId))}
+                >
+                <ThumbsUpIcon /> Like User
+                </Button>
+            )}
+            {likeStatus === "LIKED" && (
+                <Button 
+                variant="outline" 
+                size="lg" 
+                className="cursor-pointer" 
+                onClick={() => onUnlike(Number(userId))}
+                >
+                <ThumbsDown /> Unlike User
+                </Button>
+            )}
+            </>
+        );
+        }
+
     useEffect(() => {
-        getProfile();
+        if (id) {
+            getUser(Number(id));
+        }
+        else {
+            getProfile();
+        }
     }, []);
 
     return (
@@ -76,11 +155,13 @@ export default function ProfilePage() {
                     {/* Avatar */}
                     <div>
                         <Avatar className="rounded-lg w-32 h-32">
-                            <AvatarImage className="object-cover"
-                                src={`http://localhost/api/images/${userProfileData?.profilePhoto.filePath}`}
-                                alt={`${userProfileData?.name} ${userProfileData?.lastname}`}
-                            />
-                            <AvatarFallback>{userProfileData?.name}</AvatarFallback>
+                            {userProfileData?.profilePhoto &&
+                                <AvatarImage className="object-cover"
+                                    src={`http://localhost/api/images/${userProfileData?.profilePhoto.filePath}`}
+                                    alt={`${userProfileData?.name} ${userProfileData?.lastname}`}
+                                />
+                            }
+                            <AvatarFallback>No photo</AvatarFallback>
                         </Avatar>
                     </div>
                     {/* User info */}
@@ -107,12 +188,16 @@ export default function ProfilePage() {
             </div>
             <div className="mt-2">
                 {
-                    user?.id != userProfileData?.id ? 
-                    <Button variant="outline" size="lg" className="cursor-pointer">
-                        <ThumbsUpIcon /> Like User
-                    </Button>
-                    :
-                    <ProfileEditDialog profileData={userProfileData}/>
+                    user?.id !== userProfileData?.id && userProfileData?.profilePhoto && id ? (
+                        <UserActionButton 
+                        likeStatus={userProfileData?.likeStatus}
+                        userId={id}
+                        onLike={likeUser}
+                        onUnlike={unLikeUser}
+                        />
+                    ) : (
+                        <ProfileEditDialog profileData={userProfileData} />
+                    )
                 }
             </div>
 

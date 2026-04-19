@@ -69,8 +69,6 @@ export default class SearchRepositoryPostgres implements ISearchRepository {
 
         const result = await this.pool.query(query, params);
 
-        console.log(result);
-
         const users: IUserSearchData[] = [];
         for (const row of result.rows) {
             const tags = await this.getUserTags(row.id);

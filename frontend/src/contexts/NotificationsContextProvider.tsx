@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactElement } from "react";
 import AuthContext from "./AuthContextProvider";
-import { Notebook } from "lucide-react";
 import SocketContext from "./SocketContextProvider";
 import { toast } from "sonner";
 

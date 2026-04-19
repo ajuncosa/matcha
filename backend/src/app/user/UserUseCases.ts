@@ -1,16 +1,19 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
 import { EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
-import type { UserRegisterRequestDto, UserLoginRequestDto, UpdateUserDetailsRequestDto } from "@/app/user/UserDto";
+import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserDetailsRequestDto, LikeStatus } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
 import type { ITagsService } from "@/core/tag/ITagsService";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
 import type EmailVerificationService from "../email/EmailVerificationService";
+import type { ILikeRepository } from "@/core/like/ILikeRepository";
+import type { Like, LikePair } from "@/core/like/Like";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
     private passwordHasher: IPasswordHasher;
+    private likeRepository: ILikeRepository;
     private notificationService: INotificationService;
     private tagService: ITagsService;
     private photoService: IPhotoService;
@@ -18,7 +21,8 @@ export class UserUseCases {
 
     constructor(
         userRepo: IUserRepository, 
-        passwordHasher: IPasswordHasher, 
+        passwordHasher: IPasswordHasher,
+        likeRepository: ILikeRepository,
         notificationService: INotificationService, 
         tagService: ITagsService, 
         photoService: IPhotoService,
@@ -27,6 +31,7 @@ export class UserUseCases {
     {
         this.userRepo = userRepo;
         this.passwordHasher = passwordHasher;
+        this.likeRepository = likeRepository;
         this.notificationService = notificationService;
         this.tagService = tagService;
         this.photoService = photoService;
@@ -44,9 +49,6 @@ export class UserUseCases {
         const hashedPassword: string = await this.passwordHasher.hash(dto.password);
         const createdUser: User = await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
 
-        console.log(createdUser);
-
-        //TODO: send confirmation email
         this.emailVerificationService.sendVerificationEmail(createdUser);
     }
 
@@ -171,8 +173,46 @@ export class UserUseCases {
         const target: User | null = await this.userRepo.findUserById(targetId);
 
         if (!producer || !target) throw new UserNotFound();
+        
+        const like: LikePair | null = await this.likeRepository.find(producerId, targetId);
+        if (like[0] != null)
+            return;
 
+        this.likeRepository.create(producerId, targetId);
         this.notificationService.notifyUserLike(producer, target);
+    }
+
+    async unLike(producerId: UserId, targetId: UserId): Promise<void> {
+        const producer: User | null = await this.userRepo.findUserById(producerId);
+        const target: User | null = await this.userRepo.findUserById(targetId);
+
+        if (!producer || !target) throw new UserNotFound();
+        
+        await this.likeRepository.delete(producerId, targetId);
+        //TODO: Notify user that he has been unliked
+        //this.notificationService.notifyUserLike(producer, target);
+    }
+
+    async getLikeStatus(userId: UserId, targetId: UserId): Promise<LikeStatus> {
+        const producer: User | null = await this.userRepo.findUserById(userId);
+        const target: User | null = await this.userRepo.findUserById(targetId);
+
+        if (!producer || !target) throw new UserNotFound();
+
+        const like: LikePair = await this.likeRepository.find(userId, targetId);
+
+        if (like[0] == null && like[1] == null) {
+            return LikeStatus.NOT_LIKED;
+        }
+        else if (like[0] == null && like[1] != null) {
+            return LikeStatus.LIKED_BACK;
+        }
+        else if (like[0] != null && like[1] == null) {
+            return LikeStatus.LIKED;
+        }
+        else {
+            return LikeStatus.MUTUAL;
+        }
     }
 
     async verifyUserEmail(verifyToken: string): Promise<void> {

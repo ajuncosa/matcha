@@ -9,29 +9,14 @@ export interface TagDto {
     name: string;
 }
 
-export interface UserProfileResponseDto {
-    id: number;
-    name: string;
-    lastname: string;
-    email: string;
-    emailValidatedAt: Date | null;
-    createdAt: Date;
-    gender: string;
-    sex: string;
-    biography: string;
-    profilePhoto: PhotoDto;
-    photos: PhotoDto[];
-    tags: TagDto[];
-    birthday: Date;
-    lat: number;
-    lon: number;
-    preferredGender: string;
-    preferredSex: string;
-    preferredMinAge: number;
-    preferredMaxAge: number;
-    fameRating: number;
-    lastConnection: Date | null;
-}
+const LikeStatus = {
+    NOT_LIKED: 'NOT_LIKED',
+    LIKED: 'LIKED',
+    LIKED_BACK: 'LIKED_BACK',
+    MUTUAL: 'MUTUAL'
+} as const;
+
+export type LikeStatus = typeof LikeStatus[keyof typeof LikeStatus];
 
 type TagAction =
   | {
@@ -58,6 +43,31 @@ export type PhotoAction =
         action: "none";
         file: File | null;
     };
+
+export interface UserProfileResponseDto {
+    id: number;
+    name: string;
+    lastname: string;
+    email: string;
+    emailValidatedAt: Date | null;
+    createdAt: Date;
+    gender: string;
+    sex: string;
+    biography: string;
+    profilePhoto: PhotoDto | null;
+    photos: PhotoDto[];
+    tags: TagDto[];
+    birthday: Date;
+    lat: number;
+    lon: number;
+    preferredGender: string;
+    preferredSex: string;
+    preferredMinAge: number;
+    preferredMaxAge: number;
+    fameRating: number;
+    lastConnection: Date | null;
+    likeStatus: LikeStatus;
+}
 
 export interface UpdateUserDetailsRequestDto {
     gender: string | undefined;

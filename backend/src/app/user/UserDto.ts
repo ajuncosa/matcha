@@ -22,6 +22,13 @@ export interface TagDto {
     name: string;
 }
 
+export enum LikeStatus {
+    NOT_LIKED = "NOT_LIKED",
+    LIKED = "LIKED",
+    LIKED_BACK = "LIKED_BACK",
+    MUTUAL = "MUTUAL"
+}
+
 export interface UserProfileResponseDto {
     id: number;
     name: string;
@@ -32,7 +39,7 @@ export interface UserProfileResponseDto {
     gender: string;
     sex: string;
     biography: string;
-    profilePhoto: PhotoDto;
+    profilePhoto: PhotoDto | null;
     photos: PhotoDto[];
     tags: TagDto[];
     birthday: Date;
@@ -44,6 +51,7 @@ export interface UserProfileResponseDto {
     preferredMaxAge: number;
     fameRating: number;
     lastConnection: Date | null;
+    likeStatus: LikeStatus;
 }
 
 type TagAction =
