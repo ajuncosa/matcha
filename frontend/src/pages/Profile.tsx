@@ -114,22 +114,22 @@ export default function ProfilePage() {
     function UserActionButton({ likeStatus, userId, onLike, onUnlike } : {likeStatus: LikeStatus, userId: string, onLike: CallableFunction, onUnlike: CallableFunction}) {
         return (
             <>
-            {likeStatus === "NOT_LIKED" && (
+            {(likeStatus === "NOT_LIKED" || likeStatus === "LIKED_BACK") && (
                 <Button 
-                variant="outline" 
-                size="lg" 
-                className="cursor-pointer" 
-                onClick={() => onLike(Number(userId))}
+                    variant="outline" 
+                    size="lg" 
+                    className="cursor-pointer" 
+                    onClick={() => onLike(Number(userId))}
                 >
                 <ThumbsUpIcon /> Like User
                 </Button>
             )}
-            {likeStatus === "LIKED" && (
+            {(likeStatus === "LIKED" || likeStatus === "MUTUAL") && (
                 <Button 
-                variant="outline" 
-                size="lg" 
-                className="cursor-pointer" 
-                onClick={() => onUnlike(Number(userId))}
+                    variant="outline" 
+                    size="lg" 
+                    className="cursor-pointer" 
+                    onClick={() => onUnlike(Number(userId))}
                 >
                 <ThumbsDown /> Unlike User
                 </Button>
@@ -166,24 +166,24 @@ export default function ProfilePage() {
                     </div>
                     {/* User info */}
                     <div className="flex flex-col justify-center">
-                        {
+                        {/*
                             user?.id != userProfileData?.id ? 
-                            <Badge className="bg-emerald-600">Online</Badge>  /* FIXME: change */
+                            <Badge className="bg-emerald-600">Online</Badge>
                             : <></>
-                        }
+                        */}
                         <div className="flex gap-2 mt-2">
-                            <span className="text-4xl">{userProfileData?.name}</span>
-                            <span className="text-4xl">{userProfileData?.lastname}</span>
+                            <span className="text-lg sm:text-xl md:text-2xl lg:text-4xl">{userProfileData?.name}</span>
+                            <span className="text-lg sm:text-xl md:text-2xl lg:text-4xl">{userProfileData?.lastname}</span>
                         </div>
-                        <div className="flex mt-2 items-center gap-1 text-lg">
+                        <div className="flex mt-1 items-center gap-1 text-md">
                             <SexIcon sex={userProfileData?.sex}/>
                             <span className="mr-1">| {userProfileData?.gender} | {calculateAge()}</span>
                         </div>
+                        <div className="flex mt-2 justify-center flex-col">
+                            <span className="text-xs text-muted-foreground uppercase">rating</span>
+                            <div className="text-4xl font-bold">{userProfileData?.fameRating}2k</div>
+                        </div>
                     </div>
-                </div>
-                <div className="flex justify-center flex-col">
-                    <span className="text-xs text-muted-foreground uppercase">rating</span>
-                    <div className="text-4xl font-bold">{userProfileData?.fameRating}</div>
                 </div>
             </div>
             <div className="mt-2">
