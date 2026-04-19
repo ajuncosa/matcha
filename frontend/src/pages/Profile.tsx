@@ -175,7 +175,12 @@ export default function ProfilePage() {
             <div className="flex justify-between items-stretch gap-4 h-32">
                 <div className="flex flex-start gap-4">
                     {/* Avatar */}
-                    <div>
+                    <div className="relative">
+                        {
+                            user?.id != userProfileData?.id ? 
+                                <Badge className="bg-emerald-600 h-6 w-6 absolute top-[-12px] right-[-12px] z-1"></Badge>
+                            : <></>
+                        }
                         <Avatar className="rounded-lg w-32 h-32">
                             {userProfileData?.profilePhoto &&
                                 <AvatarImage className="object-cover"
@@ -188,11 +193,6 @@ export default function ProfilePage() {
                     </div>
                     {/* User info */}
                     <div className="flex flex-col justify-center">
-                        {/*
-                            user?.id != userProfileData?.id ? 
-                            <Badge className="bg-emerald-600">Online</Badge>
-                            : <></>
-                        */}
                         <div className="flex gap-2 mt-2">
                             <span className="text-lg sm:text-xl md:text-2xl lg:text-4xl">{userProfileData?.name}</span>
                             <span className="text-lg sm:text-xl md:text-2xl lg:text-4xl">{userProfileData?.lastname}</span>
