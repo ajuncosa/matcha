@@ -111,32 +111,54 @@ export default function ProfilePage() {
         }
     }
 
-    function UserActionButton({ likeStatus, userId, onLike, onUnlike } : {likeStatus: LikeStatus, userId: string, onLike: CallableFunction, onUnlike: CallableFunction}) {
-        return (
-            <>
-            {(likeStatus === "NOT_LIKED" || likeStatus === "LIKED_BACK") && (
-                <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="cursor-pointer" 
-                    onClick={() => onLike(Number(userId))}
-                >
-                <ThumbsUpIcon /> Like User
-                </Button>
-            )}
-            {(likeStatus === "LIKED" || likeStatus === "MUTUAL") && (
-                <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="cursor-pointer" 
-                    onClick={() => onUnlike(Number(userId))}
-                >
-                <ThumbsDown /> Unlike User
-                </Button>
-            )}
-            </>
-        );
+    function UserActionButton({ likeStatus, userId, onLike, onUnlike } : {likeStatus: LikeStatus | undefined, userId: string, onLike: CallableFunction, onUnlike: CallableFunction}) {
+        const isMutual = likeStatus === "MUTUAL";
+        
+        const statusLabels: Record<string, string> = {
+            "NOT_LIKED": "Like",
+            "LIKED": "Liked",
+            "LIKED_BACK": "Liked Back",
+            "MUTUAL": "Mutual ❤️"
+        };
+
+        if (isMutual) {
+            return (
+                <div className="flex gap-2">
+                    <Button 
+                        variant="default" 
+                        size="lg" 
+                        disabled
+                    >
+                        <ThumbsUpIcon className="mr-2" />
+                        {statusLabels[likeStatus || ""]}
+                    </Button>
+                    <Button 
+                        variant="destructive" 
+                        size="lg" 
+                        className="cursor-pointer" 
+                        onClick={() => onUnlike(Number(userId))}
+                    >
+                        <ThumbsDown className="mr-2" />
+                        Remove
+                    </Button>
+                </div>
+            );
         }
+
+        const isLiked = likeStatus === "LIKED";
+
+        return (
+            <Button 
+                variant={isLiked ? "default" : "outline"} 
+                size="lg" 
+                className="cursor-pointer" 
+                onClick={() => isLiked ? onUnlike(Number(userId)) : onLike(Number(userId))}
+            >
+                {isLiked ? <ThumbsDown className="mr-2" /> : <ThumbsUpIcon className="mr-2" />}
+                {statusLabels[likeStatus || ""] || "Like"}
+            </Button>
+        );
+    }
 
     useEffect(() => {
         if (id) {
