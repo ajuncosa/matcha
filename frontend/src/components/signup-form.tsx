@@ -84,7 +84,6 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
         else {
             navigate('/login');
         }
-
     }
 
     return (

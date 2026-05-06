@@ -93,13 +93,10 @@ export default function Welcome() {
                 }
                 break;
             case "location":
-                // TODO:
-                /*
                 if (!formState.lat || !formState.lon) {
                     setFormError("Please fill all the required fields");
                     return;
                 }
-                */
                 break;
             case "photos":
                 if (!formState.profilePhoto) {
@@ -172,7 +169,7 @@ export default function Welcome() {
 
         if (!formState.gender || !formState.sex || !formState.birthday || !formState.biography
             || !formState.preferredGender || !formState.preferredSex || !formState.preferredMinAge
-            || !formState.preferredMaxAge  /*|| !formState.lat || !formState.lon */
+            || !formState.preferredMaxAge  || !formState.lat || !formState.lon
             || !formState.tags || !formState.profilePhoto)
         {
             setFormError("Missing fields");

@@ -210,15 +210,18 @@ export default function ProfilePage() {
             </div>
             <div className="mt-2">
                 {
-                    user?.id !== userProfileData?.id && userProfileData?.profilePhoto && id ? (
-                        <UserActionButton 
-                        likeStatus={userProfileData?.likeStatus}
-                        userId={id}
-                        onLike={likeUser}
-                        onUnlike={unLikeUser}
-                        />
-                    ) : (
-                        <ProfileEditDialog profileData={userProfileData} />
+                    userProfileData &&
+                    (
+                        user?.id !== userProfileData.id && userProfileData.profilePhoto && id ? (
+                            <UserActionButton 
+                            likeStatus={userProfileData.likeStatus}
+                            userId={id}
+                            onLike={likeUser}
+                            onUnlike={unLikeUser}
+                            />
+                        ) : (
+                            <ProfileEditDialog profileData={userProfileData} />
+                        )
                     )
                 }
             </div>
