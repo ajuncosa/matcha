@@ -5,14 +5,18 @@ import type { IUserRepository } from "@/core/user/IUserRepository";
 import { UserNotFound, type UserId } from "@/core/user/User";
 import type { Tag } from "@/core/tag/Tag";
 import { Photo } from "@/core/photos/Photo";
+import type { ISuggestionRepository } from "@/core/suggestion/ISuggestionRepository";
+import type { SuggestionService } from "../suggestion/SuggestionService";
 
 export class SearchUseCases {
     private searchRepo: ISearchRepository;
     private userRepo: IUserRepository;
+    private suggestionService: SuggestionService;
 
-    constructor(searchRepo: ISearchRepository, userRepo: IUserRepository) {
+    constructor(searchRepo: ISearchRepository, userRepo: IUserRepository, suggestionService: SuggestionService) {
         this.searchRepo = searchRepo;
         this.userRepo = userRepo;
+        this.suggestionService = suggestionService;
     }
 
     async search(searcherId: UserId, criteria: SearchCriteria): Promise<SearchResult> {
@@ -168,5 +172,9 @@ export class SearchUseCases {
             default:
                 return items;
         }
+    }
+
+    async recommendations(userId: UserId): Promise<void> {
+        this.suggestionService.generateSuggestions(userId);
     }
 }

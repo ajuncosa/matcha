@@ -1,6 +1,6 @@
-import { type UserId, User, EmailAddress, UserGender, UserSex, UserDetails } from "@/core/user/User";
-import type { Tag } from "@/core/tag/Tag";
-import type { Photo } from "@/core/photos/Photo";
+import { type UserId, User, EmailAddress, UserGender, UserSex, UserDetails } from "./User";
+import type { Tag } from "../tag/Tag";
+import type { Photo } from "../photos/Photo";
 
 export interface IUserRepository {
     findUserById(user: UserId): Promise<User | null>;
@@ -25,4 +25,6 @@ export interface IUserRepository {
     setEmailToken(userId: UserId, token: string): Promise<void>;
     setEmailValidated(userId: UserId): Promise<void>;
     getUserByEmailValidationToken(token: string): Promise<User | null>;
+
+    getUsersInArea(minLat: number, maxLat: number, minLon: number, maxLon: number): Promise<User[]>;
 }

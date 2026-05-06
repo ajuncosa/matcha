@@ -1,5 +1,5 @@
-import type { Tag } from "@/core/tag/Tag";
-import type { Photo } from "@/core/photos/Photo";
+import type { Tag } from "../tag/Tag";
+import type { Photo } from "../photos/Photo";
 
 export class InvalidEmailFormatError extends Error {
     constructor() {

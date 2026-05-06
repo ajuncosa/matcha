@@ -13,6 +13,7 @@ export default class SearchRouter extends MatchaRouter {
         super();
         this.searchUseCases = searchUseCases;
         this.router.get("/", (req, res) => this.search(req, res));
+        this.router.get("/recommendations", (req, res) => this.recommendations(req, res));
     }
 
     async search(req: Request, res: Response) {
@@ -85,5 +86,17 @@ export default class SearchRouter extends MatchaRouter {
             distance: item.distance,
             commonTagsCount: item.commonTagsCount
         };
+    }
+
+    async recommendations(req: Request, res: Response) {
+        const userId: number | null = req.session.userId ?? null;
+        
+        if (!userId) {
+            res.status(404).send("User not found");
+            return;
+        }
+
+        this.searchUseCases.recommendations(userId);
+        res.status(200).send();
     }
 }

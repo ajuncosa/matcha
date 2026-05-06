@@ -18,25 +18,18 @@ export default class UserRepositoryPostgres implements IUserRepository {
         if (detailsQuery.rows.length == 0)
             return null;
 
-        const userGender: UserGender | null = getUserGenderFromString(detailsQuery.rows[0].gender);
-        const userPreferredGender: UserGender | null = getUserGenderFromString(detailsQuery.rows[0].preferred_gender);
-        const userSex: UserSex | null = getUserSexFromString(detailsQuery.rows[0].sex);
-        const userPreferredSex: UserSex | null = getUserSexFromString(detailsQuery.rows[0].preferred_sex);
+        const userGender = getUserGenderFromString(detailsQuery.rows[0].gender);
+        const userSex = getUserSexFromString(detailsQuery.rows[0].sex);
+        const userPreferredGender = (getUserGenderFromString(detailsQuery.rows[0].preferred_gender) || UserGender.Any) as UserGender;
+        const userPreferredSex = (getUserSexFromString(detailsQuery.rows[0].preferred_sex) || UserSex.Any) as UserSex;
 
         if (!userGender)
             throw Error(`Cannot convert ${detailsQuery.rows[0].gender} to UserGender`);
-
-        if (!userPreferredGender)
-            throw Error(`Cannot convert ${detailsQuery.rows[0].preferred_gender} to UserGender`);
-
         if (!userSex)
             throw Error(`Cannot convert ${detailsQuery.rows[0].sex} to UserSex`);
 
-        if (!userPreferredSex)
-            throw Error(`Cannot convert ${detailsQuery.rows[0].preferred_sex} to UserSex`);
-
         const profilePhoto = photos.find((p) => p.id == detailsQuery.rows[0].profile_photo_id);
-        return new UserDetails(
+        const userDetails = new UserDetails(
             userGender,
             userSex,
             new Date(detailsQuery.rows[0].birthday),
@@ -51,6 +44,9 @@ export default class UserRepositoryPostgres implements IUserRepository {
             photos,
             profilePhoto ?? null
         );
+        userDetails.fameRating = detailsQuery.rows[0].fame_rating;
+        userDetails.lastConnection = detailsQuery.rows[0].last_connection ? new Date(detailsQuery.rows[0].last_connection) : null;
+        return userDetails;
     }
 
     async findUserById(userId: UserId): Promise<User | null> {
@@ -294,5 +290,41 @@ export default class UserRepositoryPostgres implements IUserRepository {
         return user;
     }
 
-    
+    async getUsersInArea(minLat: number, maxLat: number, minLon: number, maxLon: number): Promise<User[]> {
+        const query = await this.pool.query(`
+            SELECT u.*, ud.*
+            FROM users as u
+            JOIN users_details as ud
+            ON u.id = ud.user_id
+            WHERE 
+                ud.lat BETWEEN $1 AND $2 
+                AND ud.lon BETWEEN $3 AND $4
+        `, [minLat, maxLat, minLon, maxLon]);
+
+        const users: User[] = [];
+        for (const row of query.rows) {
+            let emailValidatedAt = undefined;
+            if (row.email_validated_at)
+                emailValidatedAt = new Date(row.email_validated_at);
+
+            const user = new User(
+                row.id,
+                row.name,
+                row.lastname,
+                new EmailAddress(row.email),
+                row.password,
+                new Date(row.created_at),
+                emailValidatedAt
+            );
+
+            const tags = await this.getUserTags(row.id);
+            const photos = await this.getUserPhotos(row.id);
+            const detailsQuery = { rows: [row] } as QueryResult<any>;
+            user.details = this.constructUserDetails(detailsQuery, tags, photos);
+
+            users.push(user);
+        }
+
+        return users;
+    }
 }

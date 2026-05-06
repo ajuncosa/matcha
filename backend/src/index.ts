@@ -41,6 +41,9 @@ import type { ISearchRepository } from "./core/search/ISearchRepository";
 import { SearchUseCases } from "./app/search/SearchUseCases";
 import SearchRepositoryPostgres from "./infra/repositories/SearchRepositoryPostgres";
 import SearchRouter from "./infra/http/routers/SearchRouter";
+import { SuggestionService } from "./app/suggestion/SuggestionService";
+import type { ISuggestionRepository } from "./core/suggestion/ISuggestionRepository";
+import { SuggestionRepositoryPostgres } from "./infra/repositories/SuggestionRespostiroyPostgres";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -68,6 +71,7 @@ const messageRepository: IMessageRepository = new MessageRepositoryPosgres(pgPoo
 const likeRepository: ILikeRepository = new LikeRepositoryPostgres(pgPool);
 const photoRespository: IPhotoRepository = new PhotoRepositoryPostgres(pgPool);
 const searchRepository: ISearchRepository = new SearchRepositoryPostgres(pgPool);
+const suggestionRepository: ISuggestionRepository = new SuggestionRepositoryPostgres(pgPool);
 
 //Email Senders
 const nodeMailerConfig: EmailSenderConfiguration = {
@@ -92,12 +96,13 @@ const tagsService: ITagsService = new TagService(tagRespository);
 const chatService: ChatService = new ChatService(socketRegistry, messageRepository);
 const photosService: IPhotoService = new PhotoService(photoRespository);
 const emailVerificationService: EmailVerificationService = new EmailVerificationService(nodeMailerEmailSender, userRepository);
+const suggestionService: SuggestionService = new SuggestionService(userRepository, suggestionRepository);
 
 // Use Cases
 const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, likeRepository, notificationService, tagsService, photosService, emailVerificationService, socketRegistry);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
 const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository, userRepository);
-const searchUseCases: SearchUseCases = new SearchUseCases(searchRepository, userRepository);
+const searchUseCases: SearchUseCases = new SearchUseCases(searchRepository, userRepository, suggestionService);
 
 // Routers
 const authRouter: AuthRouter = new AuthRouter(userUseCases);
