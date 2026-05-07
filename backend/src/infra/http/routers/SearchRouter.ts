@@ -13,7 +13,7 @@ export default class SearchRouter extends MatchaRouter {
         super();
         this.searchUseCases = searchUseCases;
         this.router.get("/", (req, res) => this.search(req, res));
-        this.router.get("/recommendations", (req, res) => this.recommendations(req, res));
+        this.router.get("/recommendations", (req, res) => this.getRecommendations(req, res));
     }
 
     async search(req: Request, res: Response) {
@@ -88,7 +88,7 @@ export default class SearchRouter extends MatchaRouter {
         };
     }
 
-    async recommendations(req: Request, res: Response) {
+    async getRecommendations(req: Request, res: Response) {
         const userId: number | null = req.session.userId ?? null;
         
         if (!userId) {
@@ -96,7 +96,8 @@ export default class SearchRouter extends MatchaRouter {
             return;
         }
 
-        this.searchUseCases.recommendations(userId);
-        res.status(200).send();
+        const users = await this.searchUseCases.getRecommentations(userId);
+        console.log(users);
+        res.status(200).json(users);
     }
 }

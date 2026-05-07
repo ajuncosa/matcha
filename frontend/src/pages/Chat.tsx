@@ -44,7 +44,7 @@ export default function ChatPage() {
     
     async function changeChat(index: number) {
         // Mark messages of selected chat as viewed
-        let unreadMessagesIds: number[] = chats[index].messages.filter((message) => {
+        const unreadMessagesIds: number[] = chats[index].messages.filter((message) => {
             if (message.sender != user.id && !message.viewed_at)
                 return true;
         }).map((msg) => msg.id);

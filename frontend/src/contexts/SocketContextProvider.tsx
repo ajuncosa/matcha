@@ -88,7 +88,7 @@ class UserSocket {
 }
 
 //TODO: Move this url to .env file
-let userSocket: UserSocket = new UserSocket("http://localhost");
+const userSocket: UserSocket = new UserSocket("http://localhost");
 const SocketContext = createContext<UserSocket>(userSocket);
 
 export function SocketContextProvider({children}: {children: React.ReactElement}) {

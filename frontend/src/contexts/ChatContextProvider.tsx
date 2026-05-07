@@ -47,7 +47,7 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
 
     async function fetchChats() {
         const request = await fetch("http://localhost/api/chat");
-        let chatsResponse: Chat[] = await request.json();
+        const chatsResponse: Chat[] = await request.json();
         
         if (chatsResponse.length < 0)
             return;

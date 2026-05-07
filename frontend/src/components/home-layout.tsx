@@ -23,9 +23,9 @@ import SocketContext from "@/contexts/SocketContextProvider"
 import { NotificationsPanel } from "./notifications-panel"
 
 export default function HomeLayout() {
-    let navigate = useNavigate();
-    let { deleteUser } = useContext(AuthContext);
-    let userSocket = useContext(SocketContext);
+    const navigate = useNavigate();
+    const { deleteUser } = useContext(AuthContext);
+    const userSocket = useContext(SocketContext);
 
     async function handleLogoutClick() : Promise<void> {
         userSocket.disconnect();

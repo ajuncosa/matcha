@@ -96,7 +96,7 @@ const tagsService: ITagsService = new TagService(tagRespository);
 const chatService: ChatService = new ChatService(socketRegistry, messageRepository);
 const photosService: IPhotoService = new PhotoService(photoRespository);
 const emailVerificationService: EmailVerificationService = new EmailVerificationService(nodeMailerEmailSender, userRepository);
-const suggestionService: SuggestionService = new SuggestionService(userRepository, suggestionRepository);
+const suggestionService: SuggestionService = new SuggestionService(userRepository, suggestionRepository, tagRespository);
 
 // Use Cases
 const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, likeRepository, notificationService, tagsService, photosService, emailVerificationService, socketRegistry);

@@ -4,6 +4,7 @@ export interface ITagsRepository {
     findTagById(id: TagId): Promise<Tag | null>;
     findTagByName(tag: string): Promise<Tag | null>;
     findTagsByName(normalizedTagNames: string[]): Promise<Tag[]>;
+    findTagsBulkById(tagsIds: TagId[]): Promise<Tag[]>;
     createTag(tag: string): Promise<Tag>;
     createTags(tags: string[]): Promise<Tag[]>;
     updateTags(tags: Tag[]): Promise<Tag[]>;

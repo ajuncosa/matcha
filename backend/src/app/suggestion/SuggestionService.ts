@@ -1,9 +1,11 @@
 import type { CreateSuggestion, ISuggestionRepository } from "../../core/suggestion/ISuggestionRepository";
-import type { Suggestion } from "../../core/suggestion/Suggestion";
+import type { SuggestedUser, Suggestion } from "../../core/suggestion/Suggestion";
 import type { IUserRepository } from "../../core/user/IUserRepository";
 import type { User, UserId } from "../../core/user/User";
 import { UserGender, UserSex } from "../../core/user/User";
 import type { Tag } from "../../core/tag/Tag";
+import { isAwaitKeyword } from "typescript";
+import type { ITagsRepository } from "@/core/tag/ITagsRepository";
 
 interface BoundingBox {
   minLat: number;
@@ -16,10 +18,12 @@ export class SuggestionService {
 
     private userRepository: IUserRepository;
     private suggestionRepository: ISuggestionRepository;
+    private tagRepository: ITagsRepository;
 
-    constructor(userRepository: IUserRepository, suggestionRepository: ISuggestionRepository) {
+    constructor(userRepository: IUserRepository, suggestionRepository: ISuggestionRepository, tagRepository: ITagsRepository) {
         this.userRepository = userRepository;
         this.suggestionRepository = suggestionRepository;
+        this.tagRepository = tagRepository;
     }
 
     /**
@@ -262,4 +266,30 @@ export class SuggestionService {
         const user = users.find(u => u.id === userId);
         return user?.details?.fameRating ?? 0;
     }
+
+    public async getUserSuggestions(userId: UserId): Promise<SuggestedUser[]> {
+        const suggestions: Suggestion[] = await this.suggestionRepository.findForUser(userId);
+        const suggestedUsers: SuggestedUser[] = [];
+
+        for (const suggestion of suggestions) {
+            const user: User | null = await this.userRepository.findUserById(suggestion.suggestedUser)
+            if (user == null) continue;
+            const {password, ...restOfUser} = user;
+
+
+            console.log("User tag ids", suggestion.sharedTagsIds);
+            const tags: Tag[] = await this.tagRepository.findTagsBulkById(suggestion.sharedTagsIds);
+            const suggestedUser: SuggestedUser = {
+                user: {...restOfUser},
+                commonTags: tags,
+                distanceBetween: suggestion.distanceBetween
+            };
+            
+            suggestedUsers.push(suggestedUser);
+        }
+        
+        return suggestedUsers;
+    }
+
+
 }

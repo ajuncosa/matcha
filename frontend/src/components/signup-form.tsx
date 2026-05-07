@@ -25,7 +25,7 @@ interface RegisterForm {
 };
 
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
-    let navigate = useNavigate();
+    const navigate = useNavigate();
     const [form, setForm] = useState<RegisterForm>({
         firstname: "",
         lastname: "",

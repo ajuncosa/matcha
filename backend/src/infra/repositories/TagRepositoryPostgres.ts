@@ -44,6 +44,34 @@ export class TagRepositoryPostgres implements ITagsRepository {
         return tags;
     }
 
+    async findTagsBulkById(tagsIds: TagId[]): Promise<Tag[]> {
+        if (tagsIds.length === 0) return [];
+
+        const values = tagsIds
+            .map((_, index) => {
+                return `($${index + 1})`;
+            })
+            .join(',');
+
+        const params = tagsIds.flatMap(tagId => [
+            tagId,
+        ]);
+
+        const query = await this.pool.query(`
+            SELECT * FROM tags
+            WHERE id IN (${values})
+        `, params);
+
+        const tags: Tag[] = query.rows.map((row) => {
+            return {
+                id: row.id,
+                name: row.name
+            }
+        });
+
+        return tags;
+    }
+
     async createTag(tag: string): Promise<Tag> {
         const query = await this.pool.query("\
             INSERT INTO tags(name) VALUES($1)\

@@ -299,9 +299,9 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
     const [openBirthdayCalendar, setOpenBirthdayCalendar] = useState(false);
 
     async function createFile(path: string, name: string): Promise<File> {
-        let response = await fetch(path);
-        let data = await response.blob();
-        let metadata = { type: data.type };
+        const response = await fetch(path);
+        const data = await response.blob();
+        const metadata = { type: data.type };
         return new File([data], name, metadata);
     }
 

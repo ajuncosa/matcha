@@ -79,7 +79,7 @@ export function AuthContextProvider({ children }: { children: ReactElement }) {
         if (userJSON) {
             const session = await checkSession();
             if (session) {
-                let user: User = await JSON.parse(userJSON);
+                const user: User = await JSON.parse(userJSON);
                 user.profileCompleted = session.profileCompleted;
                 setUser(user);
                 if (user.profileCompleted) {

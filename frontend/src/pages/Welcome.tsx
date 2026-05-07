@@ -43,8 +43,8 @@ interface FormState {
 }
 
 export default function Welcome() {
-    let { user } = useContext(AuthContext);
-    let navigate = useNavigate();
+    const { user } = useContext(AuthContext);
+    const navigate = useNavigate();
 
     const welcomeSteps : string[] = ["preferences", "about-you", "location", "photos", "tags"];
     const [currentStep, setCurrentStep] = useState<number>(0);
@@ -210,7 +210,7 @@ export default function Welcome() {
 
         const photosFormData = new FormData();
         photosFormData.append("profile_photo", formState.profilePhoto); // "profile_photo" must match backend multer field name
-        for (var p of formState.photos) {
+        for (const p of formState.photos) {
             if (p) {
                 photosFormData.append("photos", p);
             }

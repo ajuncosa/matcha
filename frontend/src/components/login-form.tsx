@@ -28,9 +28,9 @@ export function LoginForm({
     className,
     ...props
 }: React.ComponentProps<"div">) {
-    let navigate = useNavigate();
-    let { setUser } = useContext(AuthContext);
-    let userSocket = useContext(SocketContext);
+    const navigate = useNavigate();
+    const { setUser } = useContext(AuthContext);
+    const userSocket = useContext(SocketContext);
 
     const [form, setForm] = useState<LoginForm>({
         email: "",

@@ -2,11 +2,12 @@ import type { SearchCriteria } from "@/core/search/SearchCriteria";
 import type { SearchResult, SearchResultItem } from "@/core/search/SearchResult";
 import type { ISearchRepository, IUserSearchData } from "@/core/search/ISearchRepository";
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { UserNotFound, type UserId } from "@/core/user/User";
+import { User, UserNotFound, type UserId } from "@/core/user/User";
 import type { Tag } from "@/core/tag/Tag";
 import { Photo } from "@/core/photos/Photo";
 import type { ISuggestionRepository } from "@/core/suggestion/ISuggestionRepository";
 import type { SuggestionService } from "../suggestion/SuggestionService";
+import type { SuggestedUser } from "@/core/suggestion/Suggestion";
 
 export class SearchUseCases {
     private searchRepo: ISearchRepository;
@@ -174,7 +175,7 @@ export class SearchUseCases {
         }
     }
 
-    async recommendations(userId: UserId): Promise<void> {
-        this.suggestionService.generateSuggestions(userId);
+    async getRecommentations(userId: UserId): Promise<SuggestedUser[]> {
+        return await this.suggestionService.getUserSuggestions(userId);
     }
 }
