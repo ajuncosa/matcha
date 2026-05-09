@@ -24,6 +24,13 @@ import TagsPicker from "./tags-picker"
 import { Textarea } from "./ui/textarea"
 import UploadAndDisplayImage from "./upload-image"
 import LocationPicker from "./location-picker"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 interface BasicUserInfoForm {
     firstname: string;
@@ -241,28 +248,35 @@ function PhotosEditForm({ form, originalPhotos, setUserDetailsForm }: {
     }
 
     return (
-        <div className="mt-4 flex flex-col gap-4">
-            <div className="w-32">
-                {
-                    <UploadAndDisplayImage
-                        uploadedImage={form.profilePhoto.file}
-                        onImageUpload={(file: File) => setUserDetailsForm({ ...form, profilePhoto: { action: "add", file } })}
-                        onImageRemove={null}
-                        deletable={false}
-                    />
-                }
-            </div>
-            <div className="grid grid-cols-[repeat(auto-fit,_minmax(50px,_1fr))] gap-4">
-            {
-                [0, 1, 2, 3].map((i) =>
-                    <UploadAndDisplayImage key={i}
-                        uploadedImage={form.photos[i].file}
-                        onImageUpload={(file: File) => addPhoto(i, file)}
-                        onImageRemove={() => removePhoto(i)}
-                        deletable={true}
-                    />)
-                }
-            </div>
+        <div className=" gap-4 pl-10 pr-10">
+            <Carousel className="w-full max-w-[12rem] sm:max-w-xs">
+                <CarouselContent>
+                    <CarouselItem>
+                        <div className="p-1">
+                            <UploadAndDisplayImage
+                                uploadedImage={form.profilePhoto.file}
+                                onImageUpload={(file: File) => setUserDetailsForm({ ...form, profilePhoto: { action: "add", file } })}
+                                onImageRemove={null}
+                                deletable={false}
+                            />
+                        </div>
+                    </CarouselItem>
+                    {[0, 1, 2, 3].map((i) =>
+                        <CarouselItem key={i}>
+                            <div className="p-1">
+                                <UploadAndDisplayImage key={i}
+                                    uploadedImage={form.photos[i].file}
+                                    onImageUpload={(file: File) => addPhoto(i, file)}
+                                    onImageRemove={() => removePhoto(i)}
+                                    deletable={true}
+                                />
+                            </div>
+                        </CarouselItem>
+                    )}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+            </Carousel>
         </div>
     );
 }
@@ -297,6 +311,8 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
     const [formError, setFormError] = useState<string>("");
 
     const [openBirthdayCalendar, setOpenBirthdayCalendar] = useState(false);
+
+    const [openDialog, setOpenDialog] = useState(false);
 
     async function createFile(path: string, name: string): Promise<File> {
         const response = await fetch(path);
@@ -448,12 +464,14 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
         //    return;
         //}
         //else {
+            setOpenDialog(false);
         //    navigate('/login');
         //}
+
     }
 
     return (
-        <Dialog>
+        <Dialog open={openDialog} onOpenChange={setOpenDialog} >
             <form>
                 <DialogTrigger asChild>
                     <Button variant="outline" size="lg" className="cursor-pointer">
@@ -587,7 +605,7 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                             {/* TODO: reset form fields on cancel so that if you open the edit menu again, it will be as it was before */}
                             <Button variant="outline">Cancel</Button>
                         </DialogClose>
-                        <Button type="submit" onClick={submit}>Save changes</Button>
+                        <Button variant="default" type="submit" onClick={submit}>Save changes</Button>
                     </DialogFooter>
                 </DialogContent>
             </form>

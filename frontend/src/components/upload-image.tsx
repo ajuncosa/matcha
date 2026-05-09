@@ -32,11 +32,12 @@ const UploadAndDisplayImage = (
                             return;
                         setSelectedImage(file);
                         onImageUpload(file);
-                    }} />
+                    }}
+                />
             </Button>
             {
                 selectedImage && deletable && onImageRemove &&
-                <Button className="absolute cursor-pointer w-fit top-2 right-2 hidden group-hover:block"
+                <Button className="absolute cursor-pointer w-fit top-2 right-2 invisible group-hover:visible"
                     variant="destructive"
                     onClick={() => {
                         setSelectedImage(null);
