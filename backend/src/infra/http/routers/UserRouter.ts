@@ -1,4 +1,4 @@
-import { type UpdateUserDetailsRequestDto, type UserProfileResponseDto } from "@/app/user/UserDto";
+import { type UpdateUserRequestDto, type UserProfileResponseDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
 import { MissingRequestFields, UserNotFound } from "@/core/user/User";
 import { type Request, type Response } from "express";
@@ -13,17 +13,21 @@ export default class UserRouter extends MatchaRouter {
         super();
         this.userUseCases = userUseCases;
         this.photoService = photoService;
-        this.router.post("/details", (req, res) => this.updateUserDetails(req, res));
         this.router.get("/profile", (req, res) => this.getProfile(req, res));
+        this.router.post("/profile", (req, res) => this.updateUser(req, res));
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
         this.router.post('/unlike/:userId', (req, res) => this.unLike(req, res));
         this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.addUserPhotos(req, res));
         this.router.get("/:userId", (req, res) => this.getUser(req, res));
     }
 
-    async updateUserDetails(req: Request, res: Response) {
+    async updateUser(req: Request, res: Response) {
 
-        const dto: UpdateUserDetailsRequestDto = {
+        const dto: UpdateUserRequestDto = {
+            firstname: req.body.firstname,
+            lastname: req.body.lastname,
+            email: req.body.email,
+            password: req.body.password,
             gender: req.body.gender,
             sex: req.body.sex,
             birthday: req.body.birthday,
@@ -37,7 +41,7 @@ export default class UserRouter extends MatchaRouter {
             tags: req.body.tags
         }
         try {
-            await this.userUseCases.updateUserDetails(req.session.userId!, dto);
+            await this.userUseCases.updateUser(req.session.userId!, dto);
             res.status(200).send("Success!");
         }
         catch (e) {

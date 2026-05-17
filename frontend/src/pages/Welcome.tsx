@@ -24,7 +24,7 @@ import AuthContext from "@/contexts/AuthContextProvider";
 import UploadAndDisplayImage from "@/components/upload-image";
 import LocationPicker from "@/components/location-picker";
 import TagsPicker from "@/components/tags-picker";
-import type { UpdateUserDetailsRequestDto } from "@/dto/UserDto";
+import type { UpdateUserRequestDto } from "@/dto/UserDto";
 
 interface FormState {
     gender: string;
@@ -176,7 +176,11 @@ export default function Welcome() {
             return;
         }
 
-        const userDetailsDto : UpdateUserDetailsRequestDto = {
+        const userDetailsDto : UpdateUserRequestDto = {
+            firstname: undefined,
+            lastname: undefined,
+            email: undefined,
+            password: undefined,
             gender: formState.gender,
             sex: formState.sex,
             birthday: formState.birthday,
@@ -190,7 +194,7 @@ export default function Welcome() {
             tags: formState.tags.map((tagName) => {return {action: "add", value: tagName}})
         }
 
-        const resp : Response = await fetch("http://localhost/api/user/details", {
+        const resp : Response = await fetch("http://localhost/api/user/profile", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

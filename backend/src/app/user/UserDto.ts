@@ -66,7 +66,11 @@ type TagAction =
       value: string;
     };
 
-export interface UpdateUserDetailsRequestDto {
+export interface UpdateUserRequestDto {
+    firstname: string | undefined;
+    lastname: string | undefined;
+    email: string | undefined;
+    password: string | undefined;
     gender: string | undefined;
     sex: string | undefined;
     birthday: Date | undefined;

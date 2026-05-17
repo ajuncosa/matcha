@@ -139,8 +139,24 @@ export default class UserRepositoryPostgres implements IUserRepository {
         );
     }
 
-    async updateUserDetails(userId: UserId, details: UserDetails): Promise<void> {
+    async updateUser(userId: UserId, name: string, lastname: string, email: EmailAddress, password: string): Promise<void>
+    {
         const query = await this.pool.query(`
+            UPDATE users 
+            SET name=$2, lastname=$3, email=$4, password=$5
+            WHERE user_id=$1
+            RETURNING name, lastname, email, password
+        `, [
+            userId,         // $1
+            name,           // $2  
+            lastname,       // $3
+            email.value(),  // $4
+            password        // $5
+        ]);
+    }
+
+    async updateUserDetails(userId: UserId, details: UserDetails): Promise<void> {
+        await this.pool.query(`
             UPDATE users_details 
             SET gender=$2, sex=$3, biography=$4, lat=$5, lon=$6, 
                 preferred_gender=$7, preferred_sex=$8, preferred_min_age=$9, 

@@ -1,6 +1,6 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
 import { EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
-import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserDetailsRequestDto, type UserProfileResponseDto, LikeStatus } from "@/app/user/UserDto";
+import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserRequestDto, type UserProfileResponseDto, LikeStatus } from "@/app/user/UserDto";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
@@ -8,9 +8,8 @@ import type { ITagsService } from "@/core/tag/ITagsService";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
 import type EmailVerificationService from "../email/EmailVerificationService";
 import type { ILikeRepository } from "@/core/like/ILikeRepository";
-import type { Like, LikePair } from "@/core/like/Like";
+import type { LikePair } from "@/core/like/Like";
 import type { IUserSocketRegistry } from "@/core/socket/IUserSocketRegistry";
-import type { Socket } from "@/core/socket/Socket";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
@@ -116,11 +115,27 @@ export class UserUseCases {
         };
     }
 
-    async updateUserDetails(userId: number, dto: UpdateUserDetailsRequestDto): Promise<void>
+    async updateUser(userId: number, dto: UpdateUserRequestDto): Promise<void>
     {
         const user: User | null = await this.userRepo.findUserById(userId);
         if (!user)
             throw new UserNotFound();
+
+        if (dto.email) {
+            
+        }
+        if (dto.firstname || dto.lastname || dto.email || dto.password) {
+            // TODO: if email was updated, do we need to reset and resend the email verification?
+            const userEmail = new EmailAddress(dto.email);
+            const userExists: User | null = await this.userRepo.findUserByEmail(userEmail);
+            if (userExists)
+                throw new UserEmailAlreadyExists();
+
+            //TODO: check if password format and length is valid
+
+            const hashedPassword: string = await this.passwordHasher.hash(dto.password);
+            const createdUser: User = await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
+        }
 
         const userGender: UserGender | null | undefined = dto.gender ? getUserGenderFromString(dto.gender) : undefined;
         const userSex: UserSex | null | undefined = dto.sex ? getUserSexFromString(dto.sex) : undefined;
@@ -153,7 +168,7 @@ export class UserUseCases {
             const createdTags: Tag[] = await this.tagService.upsertTags(normalizedTagsNames);
 
             await this.userRepo.createUserDetails(userId, userGender, userSex,
-                dto.birthday, dto.lat!, dto.lon!, userPreferredGender, userPreferredSex,
+                dto.birthday, dto.lat, dto.lon, userPreferredGender, userPreferredSex,
                 dto.preferredMinAge, dto.preferredMaxAge, dto.biography);
 
             await this.userRepo.addTagsToUser(userId, createdTags);

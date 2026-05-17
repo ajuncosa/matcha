@@ -32,15 +32,15 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 
-interface BasicUserInfoForm {
+interface UserForm {
+    /* Basic info */
     firstname: string;
     lastname: string;
     email: string;
     password: string;
     confirm_password: string;
-}
 
-interface UserDetailsForm {
+    /* Details */
     gender: string;
     sex: string;
     birthday: Date | undefined;
@@ -56,7 +56,7 @@ interface UserDetailsForm {
     photos: [PhotoAction, PhotoAction, PhotoAction, PhotoAction];
 };
 
-function BasicInfoEditForm({ form, onChange }: { form: BasicUserInfoForm, onChange: ChangeEventHandler<HTMLInputElement> }) {
+function BasicInfoEditForm({ form, onChange }: { form: UserForm, onChange: ChangeEventHandler<HTMLInputElement> }) {
     return (
         <FieldGroup className="gap-4">
             <Field>
@@ -71,7 +71,7 @@ function BasicInfoEditForm({ form, onChange }: { form: BasicUserInfoForm, onChan
     )
 }
 
-function AccountEditForm({ form, onChange }: { form: BasicUserInfoForm, onChange: ChangeEventHandler<HTMLInputElement> }) {
+function AccountEditForm({ form, onChange }: { form: UserForm, onChange: ChangeEventHandler<HTMLInputElement> }) {
     return (
         <FieldGroup className="gap-4">
             <Field>
@@ -94,7 +94,7 @@ function AccountEditForm({ form, onChange }: { form: BasicUserInfoForm, onChange
 }
 
 function AboutYouEditForm({ form, setSelectValue, isCalendarOpen, setOpenBirthdayCalendar }: {
-    form: UserDetailsForm,
+    form: UserForm,
     setSelectValue: CallableFunction,
     isCalendarOpen: boolean,
     setOpenBirthdayCalendar: Dispatch<SetStateAction<boolean>>
@@ -165,7 +165,7 @@ function AboutYouEditForm({ form, setSelectValue, isCalendarOpen, setOpenBirthda
 }
 
 function PreferencesEditForm({ form, setSelectValue, setInputValue }: {
-    form: UserDetailsForm,
+    form: UserForm,
     setSelectValue: CallableFunction,
     setInputValue: ChangeEventHandler<HTMLInputElement>
 }) {
@@ -230,21 +230,21 @@ function PreferencesEditForm({ form, setSelectValue, setInputValue }: {
     )
 }
 
-function PhotosEditForm({ form, originalPhotos, setUserDetailsForm }: {
-    form: UserDetailsForm,
+function PhotosEditForm({ form, originalPhotos, setUserForm }: {
+    form: UserForm,
     originalPhotos: PhotoDto[],
-    setUserDetailsForm: Dispatch<SetStateAction<UserDetailsForm>>
+    setUserForm: Dispatch<SetStateAction<UserForm>>
 }) {
     function addPhoto(idx: number, file: File) {
         const newPhotos : [PhotoAction, PhotoAction, PhotoAction, PhotoAction] = [...form.photos];
         newPhotos[idx] = { action: "add", file };
-        setUserDetailsForm({ ...form, photos: newPhotos });
+        setUserForm({ ...form, photos: newPhotos });
     }
 
     function removePhoto(idx: number) {
         const newPhotos : [PhotoAction, PhotoAction, PhotoAction, PhotoAction] = [...form.photos];
         newPhotos[idx] = { action: "delete", id: originalPhotos[idx].id, file: null };
-        setUserDetailsForm({ ...form, photos: newPhotos });
+        setUserForm({ ...form, photos: newPhotos });
     }
 
     return (
@@ -255,7 +255,7 @@ function PhotosEditForm({ form, originalPhotos, setUserDetailsForm }: {
                         <div className="p-1">
                             <UploadAndDisplayImage
                                 uploadedImage={form.profilePhoto.file}
-                                onImageUpload={(file: File) => setUserDetailsForm({ ...form, profilePhoto: { action: "add", file } })}
+                                onImageUpload={(file: File) => setUserForm({ ...form, profilePhoto: { action: "add", file } })}
                                 onImageRemove={null}
                                 deletable={false}
                             />
@@ -284,15 +284,12 @@ function PhotosEditForm({ form, originalPhotos, setUserDetailsForm }: {
 export default function ProfileEditDialog({ profileData }: { profileData: UserProfileResponseDto }) {
     const { user } = useContext(AuthContext);
 
-    const [basicUserInfoForm, setBasicUserInfoForm] = useState<BasicUserInfoForm>({
+    const [userForm, setUserForm] = useState<UserForm>({
         firstname: profileData.name,
         lastname: profileData.lastname,
         email: profileData.email,
         password: "",
-        confirm_password: ""
-    });
-
-    const [userDetailsForm, setUserDetailsForm] = useState<UserDetailsForm>({
+        confirm_password: "",
         gender: profileData.gender,
         sex: profileData.sex,
         birthday: new Date(profileData.birthday),
@@ -335,8 +332,8 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                     }
                 })
             )
-            setUserDetailsForm({
-                ...userDetailsForm,
+            setUserForm({
+                ...userForm,
                 profilePhoto: loadedProfilePhoto,
                 photos: [
                     loadedPhotos[0] ?? { action: "none", file: null },
@@ -352,33 +349,25 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
     if (user.id != profileData.id)
         return;
 
-    function setBasicInputFormValue(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
-    {
-        setBasicUserInfoForm({
-            ...basicUserInfoForm,
-            [e.target.id]: e.target.value
-        });
-    }
-
     function setInputFormValue(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
     {
-        setUserDetailsForm({
-            ...userDetailsForm,
+        setUserForm({
+            ...userForm,
             [e.target.id]: e.target.value
         });
     }
 
     function setSelectFormValue(key: string, value: string)
     {
-        setUserDetailsForm({
-            ...userDetailsForm,
+        setUserForm({
+            ...userForm,
             [key]: value
         });
     }
 
     function setLocation(lat: number, lon: number) {
-        setUserDetailsForm({
-            ...userDetailsForm,
+        setUserForm({
+            ...userForm,
             lat: lat,
             lon: lon
         });
@@ -386,19 +375,19 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
     }
 
     function addTag(tag: string) {
-        const newTags = [...userDetailsForm.tags, tag];
+        const newTags = [...userForm.tags, tag];
 
-        setUserDetailsForm({
-            ...userDetailsForm,
+        setUserForm({
+            ...userForm,
             tags: newTags
         });
     }
 
     function removeTag(tag: string) {
-        const newTags = userDetailsForm.tags.filter((t) => t != tag);
+        const newTags = userForm.tags.filter((t) => t != tag);
 
-        setUserDetailsForm({
-            ...userDetailsForm,
+        setUserForm({
+            ...userForm,
             tags: newTags
         });
     }
@@ -407,67 +396,46 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
         e.preventDefault();
         setFormError("");
 
-        console.log("BIRDAY: " + userDetailsForm.birthday)
-        console.log("PROF FOTO: " + userDetailsForm.profilePhoto.action + userDetailsForm.profilePhoto.file?.name)
-        console.log("fOTOS: " + userDetailsForm.photos.map((p) => p.action + p.file?.name))
-        if (!basicUserInfoForm.firstname)
-        {
-            setFormError("First name cannot be blank");
-            return;
+        for (const [key, value] of Object.entries(userForm)) {
+            if (key != "password" && key != "confirm_password"&& !value) {
+                setFormError(`Field \"${key}\" cannot be blank`);
+                return;
+            }
         }
-        else if (!basicUserInfoForm.lastname)
-        {
-            setFormError("Last name cannot be blank");
-            return;
-        }
-        else if (!basicUserInfoForm.email)
-        {
-            setFormError("Email cannot be blank");
-            return;
-        }
-        else if (basicUserInfoForm.password && basicUserInfoForm.password != basicUserInfoForm.confirm_password) {
-            setBasicUserInfoForm({ ...basicUserInfoForm, password: "", confirm_password: "" });
-            setFormError("Passwords do not match");
-            return;
-        }
-        else if (!userDetailsForm.gender || !userDetailsForm.sex || !userDetailsForm.birthday || !userDetailsForm.biography
-            || !userDetailsForm.preferredGender || !userDetailsForm.preferredSex || !userDetailsForm.preferredMinAge
-            || !userDetailsForm.preferredMaxAge  || !userDetailsForm.lat || !userDetailsForm.lon
-            || !userDetailsForm.tags || !userDetailsForm.profilePhoto)
-        {
-            setFormError("Missing fields");
+        if (userForm.tags.length < 3) {
+            setFormError("You must fill at least 3 tags.");
             return;
         }
 
-        //TODO: check password things
+        if (userForm.password) {
+            //TODO: check password requirements
+            if (userForm.password != userForm.confirm_password) {
+                setUserForm({ ...userForm, password: "", confirm_password: "" });
+                setFormError("Passwords do not match");
+                return;
+            }
+        }
 
-        //const resp : Response = await fetch("http://localhost/api/auth/register", {
-        //    method: "POST",
-        //    headers: {
-        //        "Content-Type": "application/json"
-        //    },
-        //    body: JSON.stringify({
-        //        email: basicUserInfoForm.email,
-        //        name: basicUserInfoForm.firstname,
-        //        lastname: basicUserInfoForm.lastname,
-        //        password: basicUserInfoForm.password
-        //    })
-        //});
-//
-        //if (resp.status != 200) {
-        //    if (resp.body) {
-        //        const reqBody = await resp.text();
-        //        setFormError(reqBody);
-        //    }
-        //    else
-        //        setFormError(`Server error (${resp.status})`);
-        //    return;
-        //}
-        //else {
+        const resp : Response = await fetch("http://localhost/api/user/profile", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(userForm)
+        });
+
+        if (resp.status != 200) {
+            if (resp.body) {
+                const reqBody = await resp.text();
+                setFormError(reqBody);
+            }
+            else
+                setFormError(`Server error (${resp.status})`);
+            return;
+        }
+        else {
             setOpenDialog(false);
-        //    navigate('/login');
-        //}
-
+        }
     }
 
     return (
@@ -506,7 +474,7 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-sm">
-                                    <BasicInfoEditForm form={basicUserInfoForm} onChange={setBasicInputFormValue} />
+                                    <BasicInfoEditForm form={userForm} onChange={setInputFormValue} />
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -518,7 +486,7 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-sm">
-                                    <AccountEditForm form={basicUserInfoForm} onChange={setBasicInputFormValue} />
+                                    <AccountEditForm form={userForm} onChange={setInputFormValue} />
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -530,7 +498,7 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-sm">
-                                    <PreferencesEditForm form={userDetailsForm} setSelectValue={setSelectFormValue} setInputValue={setInputFormValue} />
+                                    <PreferencesEditForm form={userForm} setSelectValue={setSelectFormValue} setInputValue={setInputFormValue} />
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -542,7 +510,7 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-sm">
-                                    <AboutYouEditForm form={userDetailsForm} setSelectValue={setSelectFormValue} isCalendarOpen={openBirthdayCalendar} setOpenBirthdayCalendar={setOpenBirthdayCalendar} />
+                                    <AboutYouEditForm form={userForm} setSelectValue={setSelectFormValue} isCalendarOpen={openBirthdayCalendar} setOpenBirthdayCalendar={setOpenBirthdayCalendar} />
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -554,7 +522,7 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-sm">
-                                    <Textarea id="biography" className="mt-3 h-32" placeholder="Tell people about yourself :)" value={userDetailsForm.biography} onChange={setInputFormValue}/>
+                                    <Textarea id="biography" className="mt-3 h-32" placeholder="Tell people about yourself :)" value={userForm.biography} onChange={setInputFormValue}/>
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -566,7 +534,7 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-sm">
-                                    <TagsPicker tags={userDetailsForm.tags} addTag={addTag} removeTag={removeTag}/>
+                                    <TagsPicker tags={userForm.tags} addTag={addTag} removeTag={removeTag}/>
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -579,9 +547,9 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                 </CardHeader>
                                 <CardContent className="text-sm">
                                     <PhotosEditForm
-                                        form={userDetailsForm}
+                                        form={userForm}
                                         originalPhotos={profileData.photos}
-                                        setUserDetailsForm={setUserDetailsForm}
+                                        setUserForm={setUserForm}
                                     />
                                 </CardContent>
                             </Card>
