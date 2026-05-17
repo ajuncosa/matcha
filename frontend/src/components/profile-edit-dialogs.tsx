@@ -562,8 +562,7 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-sm">
-                                    {/* TODO: add default location to current one */}
-                                    <LocationPicker setLocation={setLocation}/>
+                                    <LocationPicker setLocation={setLocation} defaultLat={profileData.lat} defaultLon={profileData.lon} askForLocation={false}/>
                                 </CardContent>
                             </Card>
                         </TabsContent>

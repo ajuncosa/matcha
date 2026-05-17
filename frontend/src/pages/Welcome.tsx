@@ -401,7 +401,7 @@ export default function Welcome() {
                     {/** Location */}
                     {(welcomeSteps[currentStep] == 'location') && <>
                         <h1 className="text-xl font-bold">Where are you?</h1>
-                        <LocationPicker setLocation={setLocation}/>
+                        <LocationPicker setLocation={setLocation} defaultLat={40.4168} defaultLon={-3.7038} askForLocation={true}/>
                     </>}
 
                     {/** Photos */}

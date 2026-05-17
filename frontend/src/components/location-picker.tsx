@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import "leaflet/dist/leaflet.css";
 
-export default function LocationPicker({setLocation} : {setLocation: CallableFunction}) {
+export default function LocationPicker({setLocation, defaultLat, defaultLon, askForLocation} : {setLocation: CallableFunction, defaultLat: number, defaultLon: number, askForLocation: boolean}) {
     const mapRef = useRef(null);
     const leafletMapRef = useRef<L.Map | null>(null);
     const [locationError, setLocationError] = useState("");
@@ -59,17 +59,22 @@ export default function LocationPicker({setLocation} : {setLocation: CallableFun
     useEffect(() => {
         if (!mapRef.current || leafletMapRef.current) return;
 
-        const map = L.map(mapRef.current).setView([40.4168, -3.7038], 13);
-        
+        const map = L.map(mapRef.current).setView([defaultLat, defaultLon], 13);
+
         L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
             attribution: "&copy; OpenStreetMap",
         }).addTo(map);
 
         leafletMapRef.current = map;
 
+        markerRef.current = L.marker([defaultLat, defaultLon]).addTo(map);
+        markerRef.current.bindPopup("Your location");
+        setLocation(defaultLat, defaultLon);
+
         map.on("click", onMapClick);
 
-        askUserLocation();
+        if (askForLocation)
+            askUserLocation();
 
         // Cleanup on unmount
         return () => {
