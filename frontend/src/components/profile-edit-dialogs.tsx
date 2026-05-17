@@ -12,7 +12,7 @@ import {
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import AuthContext from "@/contexts/AuthContextProvider"
-import type { PhotoAction, PhotoDto, UserProfileResponseDto } from "@/dto/UserDto"
+import type { PhotoAction, PhotoDto, UpdateUserRequestDto, UserProfileResponseDto } from "@/dto/UserDto"
 import { ChevronDownIcon, EditIcon } from "lucide-react"
 import { useContext, useEffect, useState, type ChangeEventHandler, type Dispatch, type SetStateAction } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -242,8 +242,12 @@ function PhotosEditForm({ form, originalPhotos, setUserForm }: {
     }
 
     function removePhoto(idx: number) {
-        const newPhotos : [PhotoAction, PhotoAction, PhotoAction, PhotoAction] = [...form.photos];
-        newPhotos[idx] = { action: "delete", id: originalPhotos[idx].id, file: null };
+        const newPhotos: [PhotoAction, PhotoAction, PhotoAction, PhotoAction] = [...form.photos];
+        if (originalPhotos[idx]) {
+            newPhotos[idx] = { action: "delete", id: originalPhotos[idx].id, file: null };
+        } else {
+            newPhotos[idx] = { action: "none", file: null };
+        }
         setUserForm({ ...form, photos: newPhotos });
     }
 
@@ -396,46 +400,90 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
         e.preventDefault();
         setFormError("");
 
-        for (const [key, value] of Object.entries(userForm)) {
-            if (key != "password" && key != "confirm_password"&& !value) {
-                setFormError(`Field \"${key}\" cannot be blank`);
-                return;
-            }
+        if (!userForm.firstname || !userForm.lastname || !userForm.email
+            || !userForm.gender || !userForm.sex || !userForm.birthday
+            || !userForm.preferredGender || !userForm.preferredSex || !userForm.biography) {
+            setFormError("Please fill all the required fields");
+            return;
         }
         if (userForm.tags.length < 3) {
             setFormError("You must fill at least 3 tags.");
             return;
         }
+        if (userForm.password && userForm.password !== userForm.confirm_password) {
+            setUserForm({ ...userForm, password: "", confirm_password: "" });
+            setFormError("Passwords do not match");
+            return;
+        }
 
-        if (userForm.password) {
-            //TODO: check password requirements
-            if (userForm.password != userForm.confirm_password) {
-                setUserForm({ ...userForm, password: "", confirm_password: "" });
-                setFormError("Passwords do not match");
+        const originalTagNames = profileData.tags.map(t => t.name);
+        type TagAction = { action: "add"; value: string } | { action: "delete"; id: number; value: string };
+        const tagActions: TagAction[] = [
+            ...userForm.tags
+                .filter(name => !originalTagNames.includes(name))
+                .map(name => ({ action: "add" as const, value: name })),
+            ...profileData.tags
+                .filter(t => !userForm.tags.includes(t.name))
+                .map(t => ({ action: "delete" as const, id: t.id, value: t.name }))
+        ];
+
+        const dto: UpdateUserRequestDto = {
+            firstname: userForm.firstname,
+            lastname: userForm.lastname,
+            email: userForm.email,
+            password: userForm.password || undefined,
+            gender: userForm.gender,
+            sex: userForm.sex,
+            birthday: userForm.birthday,
+            lat: userForm.lat,
+            lon: userForm.lon,
+            preferredGender: userForm.preferredGender,
+            preferredSex: userForm.preferredSex,
+            preferredMinAge: Number(userForm.preferredMinAge),
+            preferredMaxAge: Number(userForm.preferredMaxAge),
+            biography: userForm.biography,
+            tags: tagActions,
+        };
+
+        const resp: Response = await fetch("http://localhost/api/user/profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dto)
+        });
+
+        if (resp.status != 200) {
+            setFormError(resp.body ? await resp.text() : `Server error (${resp.status})`);
+            return;
+        }
+
+        for (const p of userForm.photos) {
+            if (p.action === "delete") {
+                await fetch(`http://localhost/api/user/photos/${p.id}`, { method: "DELETE" });
+            }
+        }
+
+        const hasNewPhotos = userForm.profilePhoto.action === "add"
+            || userForm.photos.some(p => p.action === "add");
+
+        if (hasNewPhotos) {
+            const formData = new FormData();
+            if (userForm.profilePhoto.action === "add")
+                formData.append("profile_photo", userForm.profilePhoto.file);
+            for (const p of userForm.photos)
+                if (p.action === "add") formData.append("photos", p.file);
+
+            const respPhotos: Response = await fetch("http://localhost/api/user/photos", {
+                method: "POST",
+                body: formData
+            });
+
+            if (respPhotos.status != 200) {
+                setFormError(respPhotos.body ? await respPhotos.text() : `Server error (${respPhotos.status})`);
                 return;
             }
         }
 
-        const resp : Response = await fetch("http://localhost/api/user/profile", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(userForm)
-        });
-
-        if (resp.status != 200) {
-            if (resp.body) {
-                const reqBody = await resp.text();
-                setFormError(reqBody);
-            }
-            else
-                setFormError(`Server error (${resp.status})`);
-            return;
-        }
-        else {
-            setOpenDialog(false);
-        }
+        setOpenDialog(false);
     }
 
     return (

@@ -18,6 +18,7 @@ export default class UserRouter extends MatchaRouter {
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
         this.router.post('/unlike/:userId', (req, res) => this.unLike(req, res));
         this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.addUserPhotos(req, res));
+        this.router.delete("/photos/:photoId", (req, res) => this.deleteUserPhoto(req, res));
         this.router.get("/:userId", (req, res) => this.getUser(req, res));
     }
 
@@ -91,6 +92,22 @@ export default class UserRouter extends MatchaRouter {
             else {
                 throw e;
             }
+        }
+    }
+
+    async deleteUserPhoto(req: Request, res: Response) {
+        const photoId = parseInt(req.params.photoId);
+        if (!photoId)
+            return res.status(400).send("Invalid photoId");
+        try {
+            await this.userUseCases.deleteUserPhoto(req.session.userId!, photoId);
+            res.status(200).send("Success!");
+        }
+        catch (e) {
+            if (e instanceof UserNotFound)
+                res.status(401).send(`User not found`);
+            else
+                throw e;
         }
     }
 

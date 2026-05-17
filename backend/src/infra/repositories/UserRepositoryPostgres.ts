@@ -144,7 +144,7 @@ export default class UserRepositoryPostgres implements IUserRepository {
         const query = await this.pool.query(`
             UPDATE users 
             SET name=$2, lastname=$3, email=$4, password=$5
-            WHERE user_id=$1
+            WHERE id=$1
             RETURNING name, lastname, email, password
         `, [
             userId,         // $1

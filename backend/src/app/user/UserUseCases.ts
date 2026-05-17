@@ -121,20 +121,21 @@ export class UserUseCases {
         if (!user)
             throw new UserNotFound();
 
-        if (dto.email) {
-            
-        }
         if (dto.firstname || dto.lastname || dto.email || dto.password) {
-            // TODO: if email was updated, do we need to reset and resend the email verification?
-            const userEmail = new EmailAddress(dto.email);
-            const userExists: User | null = await this.userRepo.findUserByEmail(userEmail);
-            if (userExists)
-                throw new UserEmailAlreadyExists();
+            const newName = dto.firstname ?? user.name;
+            const newLastname = dto.lastname ?? user.lastname;
+            const newEmail = dto.email ? new EmailAddress(dto.email) : user.email;
+            let newPassword = user.password;
 
-            //TODO: check if password format and length is valid
-
-            const hashedPassword: string = await this.passwordHasher.hash(dto.password);
-            const createdUser: User = await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
+            if (dto.email && dto.email !== user.email.value()) {
+                const emailExists: User | null = await this.userRepo.findUserByEmail(newEmail);
+                if (emailExists)
+                    throw new UserEmailAlreadyExists();
+            }
+            if (dto.password) {
+                newPassword = await this.passwordHasher.hash(dto.password);
+            }
+            await this.userRepo.updateUser(userId, newName, newLastname, newEmail, newPassword);
         }
 
         const userGender: UserGender | null | undefined = dto.gender ? getUserGenderFromString(dto.gender) : undefined;
@@ -220,6 +221,16 @@ export class UserUseCases {
 
         const insertedPhotos = await this.photoService.insertPhotos(filePaths);
         await this.userRepo.addPhotosToUser(userId, insertedPhotos);
+    }
+
+    async deleteUserPhoto(userId: number, photoId: number): Promise<void> {
+        const user: User | null = await this.userRepo.findUserById(userId);
+        if (!user)
+            throw new UserNotFound();
+        const photo = user.details?.photos.find(p => p.id === photoId);
+        if (!photo)
+            return;
+        await this.userRepo.deletePhotosFromUser(userId, [photo]);
     }
 
     async like(producerId: UserId, targetId: UserId): Promise<void> {
