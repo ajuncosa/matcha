@@ -285,7 +285,10 @@ function PhotosEditForm({ form, originalPhotos, setUserForm }: {
     );
 }
 
-export default function ProfileEditDialog({ profileData }: { profileData: UserProfileResponseDto }) {
+export default function ProfileEditDialog({ profileData, onUpdate }: {
+    profileData: UserProfileResponseDto,
+    onUpdate: CallableFunction })
+{
     const { user } = useContext(AuthContext);
 
     const [userForm, setUserForm] = useState<UserForm>({
@@ -467,10 +470,21 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
 
         if (hasNewPhotos) {
             const formData = new FormData();
-            if (userForm.profilePhoto.action === "add")
+
+            if (userForm.profilePhoto.action === "add") {
+                if (profileData.profilePhoto)
+                    await fetch(`http://localhost/api/user/photos/${profileData.profilePhoto.id}`, { method: "DELETE" });
                 formData.append("profile_photo", userForm.profilePhoto.file);
-            for (const p of userForm.photos)
-                if (p.action === "add") formData.append("photos", p.file);
+            }
+
+            for (let [idx, p] of userForm.photos.entries()) {
+                if (p.action === "add") {
+                    if (profileData.photos[idx])
+                        await fetch(`http://localhost/api/user/photos/${profileData.photos[idx].id}`, { method: "DELETE" });
+
+                    formData.append("photos", p.file);
+                }
+            }
 
             const respPhotos: Response = await fetch("http://localhost/api/user/photos", {
                 method: "POST",
@@ -482,6 +496,8 @@ export default function ProfileEditDialog({ profileData }: { profileData: UserPr
                 return;
             }
         }
+
+        onUpdate();
 
         setOpenDialog(false);
     }

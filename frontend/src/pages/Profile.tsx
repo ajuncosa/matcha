@@ -117,7 +117,7 @@ export default function ProfilePage() {
         const statusLabels: Record<string, string> = {
             "NOT_LIKED": "Like",
             "LIKED": "Liked",
-            "LIKED_BACK": "Liked Back",
+            "LIKED_BACK": "Like Back",
             "MUTUAL": "Mutual ❤️"
         };
 
@@ -203,7 +203,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="flex mt-2 justify-center flex-col">
                             <span className="text-xs text-muted-foreground uppercase">rating</span>
-                            <div className="text-4xl font-bold">{userProfileData?.fameRating}2k</div>
+                            <div className="text-4xl font-bold">{userProfileData?.fameRating}</div>
                         </div>
                     </div>
                 </div>
@@ -220,7 +220,7 @@ export default function ProfilePage() {
                             onUnlike={unLikeUser}
                             />
                         ) : (
-                            <ProfileEditDialog profileData={userProfileData} />
+                            <ProfileEditDialog profileData={userProfileData} onUpdate={getProfile} />
                         )
                     )
                 }

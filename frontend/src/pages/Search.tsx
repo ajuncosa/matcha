@@ -156,7 +156,7 @@ export default function SearchPage() {
 
     const getImageUrl = (item: SearchResultItem) => {
         if (item.profilePhoto) {
-            return `/images/${item.profilePhoto.filePath}`;
+            return `http://localhost/api/images/${item.profilePhoto.filePath}`;
         }
         return `https://lipsum.app/random/680x420?seed=${item.id}`;
     };

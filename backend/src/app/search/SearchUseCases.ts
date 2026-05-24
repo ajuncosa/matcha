@@ -5,7 +5,6 @@ import type { IUserRepository } from "@/core/user/IUserRepository";
 import { User, UserNotFound, type UserId } from "@/core/user/User";
 import type { Tag } from "@/core/tag/Tag";
 import { Photo } from "@/core/photos/Photo";
-import type { ISuggestionRepository } from "@/core/suggestion/ISuggestionRepository";
 import type { SuggestionService } from "../suggestion/SuggestionService";
 import type { SuggestedUser } from "@/core/suggestion/Suggestion";
 
