@@ -156,9 +156,9 @@ export default function SearchPage() {
 
     const getImageUrl = (item: SearchResultItem) => {
         if (item.profilePhoto) {
-            return `http://localhost/api/images/${item.profilePhoto.filePath}`;
+            return `${API_URL}/images/${item.profilePhoto.filePath}`;
         }
-        return `https://lipsum.app/random/680x420?seed=${item.id}`;
+        return null;
     };
 
     return (
@@ -306,13 +306,17 @@ export default function SearchPage() {
                     <NavLink to={`/user/${item.id}`}>
                         <Card key={item.id} className="w-full rounded-md py-4 gap-3">
                             <CardContent className="px-4">
-                                <div className="object-cover w-full">
-                                    <img 
-                                        className="rounded-lg w-full h-48 object-cover" 
-                                        src={getImageUrl(item)} 
+                                {getImageUrl(item) ? (
+                                    <img
+                                        className="rounded-lg w-full h-48 object-cover"
+                                        src={getImageUrl(item)!}
                                         alt={`${item.name} ${item.lastname}`}
                                     />
-                                </div>
+                                ) : (
+                                    <div className="rounded-lg w-full h-48 bg-muted flex items-center justify-center text-4xl font-semibold text-muted-foreground select-none">
+                                        {item.name[0]}{item.lastname[0]}
+                                    </div>
+                                )}
                             </CardContent>
                             <CardFooter className="flex flex-col items-start px-4">
                                 <div className="text-xl">

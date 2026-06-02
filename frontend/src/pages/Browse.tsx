@@ -120,9 +120,9 @@ export default function BrowsePage() {
 
     const getImageUrl = (recommendation: Recommendation) => {
         if (recommendation.user.details.profilePhoto) {
-            return `/images/${recommendation.user.details.profilePhoto.filePath}`;
+            return `${API_URL}/images/${recommendation.user.details.profilePhoto.filePath}`;
         }
-        return `https://lipsum.app/random/680x420?seed=${recommendation.user.id}`;
+        return null;
     };
 
     return (
@@ -241,13 +241,17 @@ export default function BrowsePage() {
                     <NavLink key={rec.user.id} to={`/user/${rec.user.id}`}>
                         <Card className="w-full rounded-md py-4 gap-3">
                             <CardContent className="px-4">
-                                <div className="object-cover w-full">
+                                {getImageUrl(rec) ? (
                                     <img
                                         className="rounded-lg w-full h-48 object-cover"
-                                        src={getImageUrl(rec)}
+                                        src={getImageUrl(rec)!}
                                         alt={`${rec.user.name} ${rec.user.lastname}`}
                                     />
-                                </div>
+                                ) : (
+                                    <div className="rounded-lg w-full h-48 bg-muted flex items-center justify-center text-4xl font-semibold text-muted-foreground select-none">
+                                        {rec.user.name[0]}{rec.user.lastname[0]}
+                                    </div>
+                                )}
                             </CardContent>
                             <CardFooter className="flex flex-col items-start px-4">
                                 <div className="text-xl">
