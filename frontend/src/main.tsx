@@ -20,14 +20,8 @@ import { NotificationsContextProvider } from './contexts/NotificationsContextPro
 import { Toaster } from 'sonner';
 import { ChatContextProvider } from './contexts/ChatContextProvider';
 import VerifyUser from './pages/VerifyUser';
+import LandingPage from '@/pages/Landing';
 
-function Index() {
-    return <>
-        <div>Sup dude</div>
-        <div><a className='text-blue-500' href="/register">register</a></div>
-        <div><a className='text-blue-500' href="/login">login</a></div>
-    </>;
-}
 
 function RootLayout() {
     return (
@@ -86,7 +80,7 @@ const router = createBrowserRouter([
         element: <RootLayout />,
         errorElement: <RootErrorBoundary />,
         children: [
-            { index: true, element: <Index /> },
+            { index: true, element: <LandingPage /> },
             { path: 'login', element: <Login /> },
             { path: 'register', element: <Register /> },
             { path: 'verify/:id', element: <VerifyUser /> },
