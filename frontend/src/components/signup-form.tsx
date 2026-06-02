@@ -15,7 +15,18 @@ import {
 import { Input } from "@/components/ui/input"
 import { useState } from "react";
 import { Link } from "react-router";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Check, X } from "lucide-react";
+
+const passwordRules = [
+    { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+    { label: "One uppercase letter",  test: (p: string) => /[A-Z]/.test(p) },
+    { label: "One lowercase letter",  test: (p: string) => /[a-z]/.test(p) },
+    { label: "One number",            test: (p: string) => /[0-9]/.test(p) },
+];
+
+function isPasswordValid(password: string) {
+    return passwordRules.every(r => r.test(password));
+}
 
 interface RegisterForm {
     firstname: string;
@@ -52,13 +63,16 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             return;
         }
 
+        if (!isPasswordValid(form.password)) {
+            setFormError("Password does not meet the requirements below");
+            return;
+        }
+
         if (form.password != form.confirm_password) {
             setForm({ ...form, password: "", confirm_password: "" });
             setFormError("Passwords do not match");
             return;
         }
-
-        //TODO: check password things
 
         const resp : Response = await fetch("http://localhost/api/auth/register", {
             method: "POST",
@@ -144,9 +158,22 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                         <Field>
                             <FieldLabel htmlFor="password">Password</FieldLabel>
                             <Input id="password" type="password" required onChange={onFormChange} value={form.password} />
-                            <FieldDescription>
-                                Must be at least 8 characters long.
-                            </FieldDescription>
+                            {form.password.length > 0 && (
+                                <ul className="mt-1 space-y-0.5">
+                                    {passwordRules.map(rule => {
+                                        const met = rule.test(form.password);
+                                        return (
+                                            <li key={rule.label} className={`flex items-center gap-1 text-xs ${met ? "text-green-600" : "text-muted-foreground"}`}>
+                                                {met ? <Check size={12} /> : <X size={12} />}
+                                                {rule.label}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            )}
+                            {form.password.length === 0 && (
+                                <FieldDescription>Must meet all requirements shown on input.</FieldDescription>
+                            )}
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="confirm-password">

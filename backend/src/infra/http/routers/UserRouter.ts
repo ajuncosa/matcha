@@ -1,6 +1,6 @@
 import { type UpdateUserRequestDto, type UserProfileResponseDto, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
-import { BiographyTooLong, MissingRequestFields, UserNotFound } from "@/core/user/User";
+import { BiographyTooLong, MissingRequestFields, UserNotFound, WeakPasswordError } from "@/core/user/User";
 import { type Request, type Response } from "express";
 import MatchaRouter from "./MatchaRouter";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
@@ -54,6 +54,9 @@ export default class UserRouter extends MatchaRouter {
                 res.status(422).send(e.message);
             }
             else if (e instanceof BiographyTooLong) {
+                res.status(422).send(e.message);
+            }
+            else if (e instanceof WeakPasswordError) {
                 res.status(422).send(e.message);
             }
             else {

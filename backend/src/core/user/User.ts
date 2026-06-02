@@ -49,6 +49,12 @@ export class BiographyTooLong extends Error {
     }
 }
 
+export class WeakPasswordError extends Error {
+    constructor() {
+        super("Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, and a number");
+    }
+}
+
 export class EmailAddress {
     private email: string;
 

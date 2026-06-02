@@ -1,4 +1,15 @@
 import { Button } from "@/components/ui/button"
+
+const passwordRules = [
+    { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+    { label: "One uppercase letter",  test: (p: string) => /[A-Z]/.test(p) },
+    { label: "One lowercase letter",  test: (p: string) => /[a-z]/.test(p) },
+    { label: "One number",            test: (p: string) => /[0-9]/.test(p) },
+];
+
+function isPasswordValid(password: string) {
+    return passwordRules.every(r => r.test(password));
+}
 import {
     Dialog,
     DialogClose,
@@ -415,6 +426,10 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
         }
         if (userForm.tags.length < 3) {
             setFormError("You must fill at least 3 tags.");
+            return;
+        }
+        if (userForm.password && !isPasswordValid(userForm.password)) {
+            setFormError("Password does not meet the requirements (min 8 chars, uppercase, lowercase, number)");
             return;
         }
         if (userForm.password && userForm.password !== userForm.confirm_password) {

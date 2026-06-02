@@ -1,5 +1,5 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
+import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, WeakPasswordError, type UserId } from "@/core/user/User";
 import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserRequestDto, type UserProfileResponseDto, LikeStatus, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { IProfileVisitRepository } from "@/core/profileVisit/IProfileVisitRepository";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
@@ -46,13 +46,24 @@ export class UserUseCases {
         this.profileVisitRepository = profileVisitRepository;
     }
 
+    private validatePassword(password: string): void {
+        if (
+            password.length < 8 ||
+            !/[A-Z]/.test(password) ||
+            !/[a-z]/.test(password) ||
+            !/[0-9]/.test(password)
+        ) {
+            throw new WeakPasswordError();
+        }
+    }
+
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
         const userEmail = new EmailAddress(dto.email);
         const userExists: User | null = await this.userRepo.findUserByEmail(userEmail);
         if (userExists)
             throw new UserEmailAlreadyExists();
 
-        //TODO: check if password format and length is valid
+        this.validatePassword(dto.password);
 
         const hashedPassword: string = await this.passwordHasher.hash(dto.password);
         const createdUser: User = await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
@@ -152,6 +163,7 @@ export class UserUseCases {
                     throw new UserEmailAlreadyExists();
             }
             if (dto.password) {
+                this.validatePassword(dto.password);
                 newPassword = await this.passwordHasher.hash(dto.password);
             }
             await this.userRepo.updateUser(userId, newName, newLastname, newEmail, newPassword);

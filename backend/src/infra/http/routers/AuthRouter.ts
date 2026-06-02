@@ -2,7 +2,7 @@ import { type Request, type Response } from "express";
 import type { UserUseCases } from "@/app/user/UserUseCases";
 import MatchaRouter from "./MatchaRouter";
 import type { UserLoginRequestDto, UserRegisterRequestDto, UserProfileResponseDto } from "@/app/user/UserDto";
-import { IncorrectPassword, InvalidEmailFormatError, InvalidUserValidationToken, UserAccountNotVerified, UserEmailAlreadyExists, UserNotFound, type User } from "@/core/user/User";
+import { IncorrectPassword, InvalidEmailFormatError, InvalidUserValidationToken, UserAccountNotVerified, UserEmailAlreadyExists, UserNotFound, WeakPasswordError, type User } from "@/core/user/User";
 
 export default class AuthRouter extends MatchaRouter {
     private userUseCases: UserUseCases;
@@ -77,7 +77,10 @@ export default class AuthRouter extends MatchaRouter {
                 res.status(422).send(`Invalid email format \"${req.body.email}\"`);   //TODO: easier for frontend to parse if JSON
             }
             else if (e instanceof UserEmailAlreadyExists) {
-                res.status(409).send(`Email \"${req.body.email}\" is already in use`);  //TODO: easier for frontend to parse if JSON
+                res.status(409).send(`Email \"${req.body.email}\" is already in use`);
+            }
+            else if (e instanceof WeakPasswordError) {
+                res.status(422).send(e.message);
             }
             else {
                 throw e;
