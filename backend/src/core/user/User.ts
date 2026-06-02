@@ -43,6 +43,12 @@ export class InvalidUserValidationToken extends Error {
     }
 }
 
+export class BiographyTooLong extends Error {
+    constructor() {
+        super("Biography must be 300 characters or fewer");
+    }
+}
+
 export class EmailAddress {
     private email: string;
 

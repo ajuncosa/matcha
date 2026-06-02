@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
+import { CheckCircle2 } from "lucide-react";
 
 interface RegisterForm {
     firstname: string;
@@ -25,7 +26,6 @@ interface RegisterForm {
 };
 
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
-    const navigate = useNavigate();
     const [form, setForm] = useState<RegisterForm>({
         firstname: "",
         lastname: "",
@@ -33,7 +33,8 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
         password: "",
         confirm_password: ""
     });
-    const [formError, setFormError] = useState<string>("")
+    const [formError, setFormError] = useState<string>("");
+    const [success, setSuccess] = useState(false);
 
     function onFormChange(e: React.ChangeEvent<HTMLInputElement>) {
         setForm({
@@ -82,8 +83,29 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             return;
         }
         else {
-            navigate('/login');
+            setSuccess(true);
         }
+    }
+
+    if (success) {
+        return (
+            <Card {...props}>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <CheckCircle2 className="text-green-500" />
+                        Account created!
+                    </CardTitle>
+                    <CardDescription>
+                        We sent a verification email to <strong>{form.email}</strong>. Click the link inside to activate your account, then sign in.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild className="w-full">
+                        <Link to="/login">Go to login</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+        );
     }
 
     return (

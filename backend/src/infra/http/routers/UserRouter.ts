@@ -1,6 +1,6 @@
 import { type UpdateUserRequestDto, type UserProfileResponseDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
-import { MissingRequestFields, UserNotFound } from "@/core/user/User";
+import { BiographyTooLong, MissingRequestFields, UserNotFound } from "@/core/user/User";
 import { type Request, type Response } from "express";
 import MatchaRouter from "./MatchaRouter";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
@@ -49,7 +49,10 @@ export default class UserRouter extends MatchaRouter {
             if (e instanceof UserNotFound) {
                 res.status(401).send(`User with ID \"${req.session.userId}\" was not found`);
             }
-            if (e instanceof MissingRequestFields) {
+            else if (e instanceof MissingRequestFields) {
+                res.status(422).send(e.message);
+            }
+            else if (e instanceof BiographyTooLong) {
                 res.status(422).send(e.message);
             }
             else {

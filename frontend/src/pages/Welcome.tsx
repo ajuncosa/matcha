@@ -91,6 +91,10 @@ export default function Welcome() {
                     setFormError("Please fill all the required fields");
                     return;
                 }
+                if (formState.biography.length > 300) {
+                    setFormError("Biography must be 300 characters or fewer");
+                    return;
+                }
                 break;
             case "location":
                 if (!formState.lat || !formState.lon) {
@@ -394,7 +398,10 @@ export default function Welcome() {
                             <Label htmlFor="bio" className="px-1 mt-4">
                                 Bio
                             </Label>
-                            <Textarea id="biography" className="mt-3 h-32" placeholder="Tell people about yourself :)" value={formState.biography} onChange={setInputFormValue}/>
+                            <Textarea id="biography" className="mt-3 h-32" maxLength={300} placeholder="Tell people about yourself :)" value={formState.biography} onChange={setInputFormValue}/>
+                            <p className={`text-xs mt-1 text-right ${formState.biography.length >= 300 ? "text-destructive" : "text-muted-foreground"}`}>
+                                {formState.biography.length}/300
+                            </p>
                         </div>
                     </>}
 

@@ -409,6 +409,10 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
             setFormError("Please fill all the required fields");
             return;
         }
+        if (userForm.biography.length > 300) {
+            setFormError("Biography must be 300 characters or fewer");
+            return;
+        }
         if (userForm.tags.length < 3) {
             setFormError("You must fill at least 3 tags.");
             return;
@@ -586,7 +590,10 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="text-sm">
-                                    <Textarea id="biography" className="mt-3 h-32" placeholder="Tell people about yourself :)" value={userForm.biography} onChange={setInputFormValue}/>
+                                    <Textarea id="biography" className="mt-3 h-32" maxLength={300} placeholder="Tell people about yourself :)" value={userForm.biography} onChange={setInputFormValue}/>
+                                    <p className={`text-xs mt-1 text-right ${userForm.biography.length >= 300 ? "text-destructive" : "text-muted-foreground"}`}>
+                                        {userForm.biography.length}/300
+                                    </p>
                                 </CardContent>
                             </Card>
                         </TabsContent>
