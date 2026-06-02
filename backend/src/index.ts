@@ -44,6 +44,8 @@ import SearchRouter from "./infra/http/routers/SearchRouter";
 import { SuggestionService } from "./app/suggestion/SuggestionService";
 import type { ISuggestionRepository } from "./core/suggestion/ISuggestionRepository";
 import { SuggestionRepositoryPostgres } from "./infra/repositories/SuggestionRespostiroyPostgres";
+import type { IProfileVisitRepository } from "./core/profileVisit/IProfileVisitRepository";
+import { ProfileVisitRepositoryPostgres } from "./infra/repositories/ProfileVisitRepositoryPostgres";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -72,6 +74,7 @@ const likeRepository: ILikeRepository = new LikeRepositoryPostgres(pgPool);
 const photoRespository: IPhotoRepository = new PhotoRepositoryPostgres(pgPool);
 const searchRepository: ISearchRepository = new SearchRepositoryPostgres(pgPool);
 const suggestionRepository: ISuggestionRepository = new SuggestionRepositoryPostgres(pgPool);
+const profileVisitRepository: IProfileVisitRepository = new ProfileVisitRepositoryPostgres(pgPool);
 
 //Email Senders
 const nodeMailerConfig: EmailSenderConfiguration = {
@@ -99,7 +102,7 @@ const emailVerificationService: EmailVerificationService = new EmailVerification
 const suggestionService: SuggestionService = new SuggestionService(userRepository, suggestionRepository, tagRespository);
 
 // Use Cases
-const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, likeRepository, notificationService, tagsService, photosService, emailVerificationService, socketRegistry);
+const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, likeRepository, notificationService, tagsService, photosService, emailVerificationService, socketRegistry, profileVisitRepository);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
 const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository, userRepository);
 const searchUseCases: SearchUseCases = new SearchUseCases(searchRepository, userRepository, suggestionService);

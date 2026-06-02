@@ -1,6 +1,7 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
 import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, type UserId } from "@/core/user/User";
-import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserRequestDto, type UserProfileResponseDto, LikeStatus } from "@/app/user/UserDto";
+import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserRequestDto, type UserProfileResponseDto, LikeStatus, type ProfileVisitorDto } from "@/app/user/UserDto";
+import type { IProfileVisitRepository } from "@/core/profileVisit/IProfileVisitRepository";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
@@ -20,17 +21,19 @@ export class UserUseCases {
     private photoService: IPhotoService;
     private emailVerificationService: EmailVerificationService;
     private socketRegistry: IUserSocketRegistry;
+    private profileVisitRepository: IProfileVisitRepository;
 
     constructor(
-        userRepo: IUserRepository, 
+        userRepo: IUserRepository,
         passwordHasher: IPasswordHasher,
         likeRepository: ILikeRepository,
-        notificationService: INotificationService, 
-        tagService: ITagsService, 
+        notificationService: INotificationService,
+        tagService: ITagsService,
         photoService: IPhotoService,
         emailVerificationService: EmailVerificationService,
-        socketRegistry: IUserSocketRegistry
-    ) 
+        socketRegistry: IUserSocketRegistry,
+        profileVisitRepository: IProfileVisitRepository
+    )
     {
         this.userRepo = userRepo;
         this.passwordHasher = passwordHasher;
@@ -39,7 +42,8 @@ export class UserUseCases {
         this.tagService = tagService;
         this.photoService = photoService;
         this.emailVerificationService = emailVerificationService,
-        this.socketRegistry = socketRegistry
+        this.socketRegistry = socketRegistry;
+        this.profileVisitRepository = profileVisitRepository;
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
@@ -88,6 +92,10 @@ export class UserUseCases {
 
         const isOnline: boolean = this.socketRegistry.getUserSocket(userId) ? true : false;
 
+        if (viewerId !== undefined && viewerId !== userId) {
+            this.profileVisitRepository.record(viewerId, userId);
+        }
+
         return {
             id: user.id,
             name: user.name,
@@ -113,6 +121,17 @@ export class UserUseCases {
             likeStatus: likeStatus,
             isOnline: isOnline,
         };
+    }
+
+    async getProfileVisitors(userId: number): Promise<ProfileVisitorDto[]> {
+        const visitors = await this.profileVisitRepository.getVisitors(userId);
+        return visitors.map(v => ({
+            id: v.id,
+            name: v.name,
+            lastname: v.lastname,
+            profilePhotoPath: v.profilePhotoPath,
+            lastVisitedAt: v.lastVisitedAt,
+        }));
     }
 
     async updateUser(userId: number, dto: UpdateUserRequestDto): Promise<void>

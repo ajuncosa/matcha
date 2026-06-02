@@ -13,13 +13,34 @@ import 'leaflet/dist/leaflet.css';
 import { toast } from "sonner";
 import { Mars, ThumbsDown, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, NavLink } from "react-router";
+
+interface ProfileVisitorDto {
+    id: number;
+    name: string;
+    lastname: string;
+    profilePhotoPath: string | null;
+    lastVisitedAt: string;
+}
+
+function timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    return new Date(dateStr).toLocaleDateString();
+}
 
 export default function ProfilePage() {
     const { id } = useParams();
     const { user } = useContext(AuthContext);
     const [userProfileData, setUserProfileData] = useState<UserProfileResponseDto>();
     const [location, setLocation] = useState<{lat: number, lon: number}>({lat: 40.4168, lon: -3.7038});
+    const [visitors, setVisitors] = useState<ProfileVisitorDto[]>([]);
     const navigate = useNavigate();
 
     async function fetchUserData(url: string, onError?: () => void): Promise<void> {
@@ -50,6 +71,10 @@ export default function ProfilePage() {
 
     async function getProfile(): Promise<void> {
         await fetchUserData("http://localhost/api/user/profile");
+        const resp = await fetch("/api/user/visitors");
+        if (resp.ok) {
+            setVisitors(await resp.json());
+        }
     }
 
     async function getUser(id: number): Promise<void> {
@@ -161,13 +186,15 @@ export default function ProfilePage() {
     }
 
     useEffect(() => {
+        setUserProfileData(undefined);
+        setVisitors([]);
         if (id) {
             getUser(Number(id));
         }
         else {
             getProfile();
         }
-    }, []);
+    }, [id]);
 
     return (
         <div className="w-full">
@@ -181,14 +208,16 @@ export default function ProfilePage() {
                                 <Badge className={`${userProfileData?.isOnline ? 'bg-emerald-600' : 'bg-red-600'}  h-6 w-6 absolute top-[-12px] right-[-12px] z-1`}></Badge>
                             : <></>
                         }
-                        <Avatar className="rounded-lg w-32 h-32">
+                        <Avatar key={userProfileData?.id} className="rounded-lg w-32 h-32">
                             {userProfileData?.profilePhoto &&
                                 <AvatarImage className="object-cover"
                                     src={`http://localhost/api/images/${userProfileData?.profilePhoto.filePath}`}
                                     alt={`${userProfileData?.name} ${userProfileData?.lastname}`}
                                 />
                             }
-                            <AvatarFallback>No photo</AvatarFallback>
+                            <AvatarFallback className="rounded-lg text-2xl font-semibold">
+                                {userProfileData?.name?.[0]}{userProfileData?.lastname?.[0]}
+                            </AvatarFallback>
                         </Avatar>
                     </div>
                     {/* User info */}
@@ -274,36 +303,41 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            <div className="w-full mt-4">
-                <h2 className="text-2xl">Visit History</h2>
-                <div className="mt-2 grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-2">
-                    {
-                        [1, 2, 3, 4, 5, 6, 7, 9, 11].map((i) => {
-                            return (
-                                <Card className="p-2" key={i}>
-                                    <CardContent className="flex items-center gap-4 p-2">
-                                        <Avatar className="rounded-lg w-12 h-12">
-                                            <AvatarImage
-                                                src="https://github.com/evilrabbit.png"
-                                                alt="@evilrabbit"
-                                            />
-                                            <AvatarFallback>ER</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <p className="text-lg">
-                                                Juan manuel
-                                            </p>
-                                            <p className="text-gray-500 text-sm">
-                                                24-03-1999 13:69
-                                            </p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })
-                    }
+            {!id && (
+                <div className="w-full mt-4">
+                    <h2 className="text-2xl">Visit History</h2>
+                    {visitors.length === 0 ? (
+                        <p className="mt-2 text-muted-foreground text-sm">Nobody has visited your profile yet.</p>
+                    ) : (
+                        <div className="mt-2 grid grid-cols-[repeat(auto-fit,_minmax(260px,_1fr))] gap-2">
+                            {visitors.map((v) => (
+                                <NavLink key={v.id} to={`/user/${v.id}`}>
+                                    <Card className="p-2 hover:bg-accent transition-colors">
+                                        <CardContent className="flex items-center gap-3 p-2">
+                                            <Avatar className="rounded-lg w-12 h-12 shrink-0">
+                                                {v.profilePhotoPath && (
+                                                    <AvatarImage
+                                                        className="object-cover"
+                                                        src={`/api/images/${v.profilePhotoPath}`}
+                                                        alt={`${v.name} ${v.lastname}`}
+                                                    />
+                                                )}
+                                                <AvatarFallback className="rounded-lg text-sm font-semibold">
+                                                    {v.name[0]}{v.lastname[0]}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="min-w-0">
+                                                <p className="font-medium truncate">{v.name} {v.lastname}</p>
+                                                <p className="text-muted-foreground text-sm">{timeAgo(v.lastVisitedAt)}</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </NavLink>
+                            ))}
+                        </div>
+                    )}
                 </div>
-            </div>
+            )}
         </div>
     )
 }

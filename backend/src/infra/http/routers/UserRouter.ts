@@ -1,4 +1,4 @@
-import { type UpdateUserRequestDto, type UserProfileResponseDto } from "@/app/user/UserDto";
+import { type UpdateUserRequestDto, type UserProfileResponseDto, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
 import { BiographyTooLong, MissingRequestFields, UserNotFound } from "@/core/user/User";
 import { type Request, type Response } from "express";
@@ -15,6 +15,7 @@ export default class UserRouter extends MatchaRouter {
         this.photoService = photoService;
         this.router.get("/profile", (req, res) => this.getProfile(req, res));
         this.router.post("/profile", (req, res) => this.updateUser(req, res));
+        this.router.get("/visitors", (req, res) => this.getVisitors(req, res));
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
         this.router.post('/unlike/:userId', (req, res) => this.unLike(req, res));
         this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.addUserPhotos(req, res));
@@ -65,6 +66,21 @@ export default class UserRouter extends MatchaRouter {
         try {
             const responseDto: UserProfileResponseDto = await this.userUseCases.getUser(req.session.userId!);
             res.status(200).send(responseDto);
+        }
+        catch (e) {
+            if (e instanceof UserNotFound) {
+                res.status(401).send(`User with ID "${req.session.userId}" was not found`);
+            }
+            else {
+                throw e;
+            }
+        }
+    }
+
+    async getVisitors(req: Request, res: Response) {
+        try {
+            const visitors: ProfileVisitorDto[] = await this.userUseCases.getProfileVisitors(req.session.userId!);
+            res.status(200).json(visitors);
         }
         catch (e) {
             if (e instanceof UserNotFound) {

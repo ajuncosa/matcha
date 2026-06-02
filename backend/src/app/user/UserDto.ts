@@ -66,6 +66,14 @@ type TagAction =
       value: string;
     };
 
+export interface ProfileVisitorDto {
+    id: number;
+    name: string;
+    lastname: string;
+    profilePhotoPath: string | null;
+    lastVisitedAt: Date;
+}
+
 export interface UpdateUserRequestDto {
     firstname: string | undefined;
     lastname: string | undefined;
