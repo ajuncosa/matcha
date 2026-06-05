@@ -50,6 +50,10 @@ export class UserUseCases {
         this.blockRepository = blockRepository;
     }
 
+    private adjustFame(userId: number, delta: number): void {
+        this.userRepo.adjustFameRating(userId, delta).catch(() => {});
+    }
+
     private validatePassword(password: string): void {
         if (
             password.length < 8 ||
@@ -112,6 +116,7 @@ export class UserUseCases {
             likeStatus = await this.getLikeStatus(viewerId, userId);
             isBlockedByMe = (await this.blockRepository.getBlockedIds(viewerId)).includes(userId);
             this.profileVisitRepository.record(viewerId, userId);
+            this.adjustFame(userId, +1);
         }
 
         const isOnline: boolean = this.socketRegistry.getUserSocket(userId) ? true : false;
@@ -153,6 +158,7 @@ export class UserUseCases {
         // Remove mutual likes so the chat disappears for both sides
         await this.likeRepository.delete(blockerId, targetId);
         await this.likeRepository.delete(targetId, blockerId);
+        this.adjustFame(targetId, -5);
     }
 
     async unblockUser(blockerId: UserId, targetId: UserId): Promise<void> {
@@ -309,8 +315,17 @@ export class UserUseCases {
         if (like[0] != null)
             return;
 
-        this.likeRepository.create(producerId, targetId);
+        await this.likeRepository.create(producerId, targetId);
         this.notificationService.notifyUserLike(producer, target);
+
+        const wasVisitFirst = await this.profileVisitRepository.hadVisited(producerId, targetId);
+        this.adjustFame(targetId, wasVisitFirst ? 5 : 3);
+
+        // like[1] non-null means target had already liked producer → mutual match formed
+        if (like[1] != null) {
+            this.adjustFame(targetId, +2);
+            this.adjustFame(producerId, +2);
+        }
     }
 
     async unLike(producerId: UserId, targetId: UserId): Promise<void> {
@@ -318,10 +333,9 @@ export class UserUseCases {
         const target: User | null = await this.userRepo.findUserById(targetId);
 
         if (!producer || !target) throw new UserNotFound();
-        
+
         await this.likeRepository.delete(producerId, targetId);
-        //TODO: Notify user that he has been unliked
-        //this.notificationService.notifyUserLike(producer, target);
+        this.adjustFame(targetId, -2);
     }
 
     async getLikeStatus(userId: UserId, targetId: UserId): Promise<LikeStatus> {

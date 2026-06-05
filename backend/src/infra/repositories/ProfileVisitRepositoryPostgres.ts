@@ -43,4 +43,14 @@ export class ProfileVisitRepositoryPostgres implements IProfileVisitRepository {
             lastVisitedAt: new Date(row.last_visited_at),
         }));
     }
+
+    async hadVisited(visitorId: number, visitedId: number): Promise<boolean> {
+        const result = await this.pool.query(
+            `SELECT 1 FROM profile_visits
+             WHERE visitor_user_id = $1 AND visited_user_id = $2
+             LIMIT 1`,
+            [visitorId, visitedId]
+        );
+        return result.rows.length > 0;
+    }
 }

@@ -306,6 +306,15 @@ export default class UserRepositoryPostgres implements IUserRepository {
         return user;
     }
 
+    async adjustFameRating(userId: UserId, delta: number): Promise<void> {
+        await this.pool.query(
+            `UPDATE users_details
+             SET fame_rating = GREATEST(0, fame_rating + $2)
+             WHERE user_id = $1`,
+            [userId, delta]
+        );
+    }
+
     async getUsersInArea(minLat: number, maxLat: number, minLon: number, maxLon: number): Promise<User[]> {
         const query = await this.pool.query(`
             SELECT u.*, ud.*

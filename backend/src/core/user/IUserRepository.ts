@@ -28,4 +28,6 @@ export interface IUserRepository {
     getUserByEmailValidationToken(token: string): Promise<User | null>;
 
     getUsersInArea(minLat: number, maxLat: number, minLon: number, maxLon: number): Promise<User[]>;
+
+    adjustFameRating(userId: UserId, delta: number): Promise<void>;
 }
