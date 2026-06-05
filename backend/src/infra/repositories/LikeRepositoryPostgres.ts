@@ -69,15 +69,19 @@ export class LikeRepositoryPostgres implements ILikeRepository {
 
     async getUserConnections(userId: UserId): Promise<Like[]> {
         const query = await this.pool.query(`
-            SELECT DISTINCT 
+            SELECT DISTINCT
                 p1.id, p1.created_at,
                 p2.liker_user_id as user2_id
             FROM profile_likes p1
-            JOIN profile_likes p2 ON p1.liker_user_id = p2.liked_user_id 
+            JOIN profile_likes p2 ON p1.liker_user_id = p2.liked_user_id
                 AND p1.liked_user_id = p2.liker_user_id
-            WHERE p1.liker_user_id = $1::bigint 
+            LEFT JOIN blocked_users bu ON
+                (bu.blocker_user_id = $1 AND bu.blocked_user_id = p2.liker_user_id) OR
+                (bu.blocker_user_id = p2.liker_user_id AND bu.blocked_user_id = $1)
+            WHERE p1.liker_user_id = $1::bigint
                 AND p1.liked_user_id != $1::bigint
-                AND p2.id != p1.id;`,
+                AND p2.id != p1.id
+                AND bu.id IS NULL;`,
         [userId]);
         
         return query.rows.map((like) => ({

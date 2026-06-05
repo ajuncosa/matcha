@@ -53,6 +53,7 @@ export interface UserProfileResponseDto {
     lastConnection: Date | null;
     likeStatus: LikeStatus;
     isOnline: boolean;
+    isBlockedByMe: boolean;
 }
 
 type TagAction =

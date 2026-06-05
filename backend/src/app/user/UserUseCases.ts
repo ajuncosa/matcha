@@ -1,7 +1,8 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, WeakPasswordError, type UserId } from "@/core/user/User";
+import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserBlockedError, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, WeakPasswordError, type UserId } from "@/core/user/User";
 import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserRequestDto, type UserProfileResponseDto, LikeStatus, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { IProfileVisitRepository } from "@/core/profileVisit/IProfileVisitRepository";
+import type { IBlockRepository } from "@/core/block/IBlockRepository";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
@@ -22,6 +23,7 @@ export class UserUseCases {
     private emailVerificationService: EmailVerificationService;
     private socketRegistry: IUserSocketRegistry;
     private profileVisitRepository: IProfileVisitRepository;
+    private blockRepository: IBlockRepository;
 
     constructor(
         userRepo: IUserRepository,
@@ -32,7 +34,8 @@ export class UserUseCases {
         photoService: IPhotoService,
         emailVerificationService: EmailVerificationService,
         socketRegistry: IUserSocketRegistry,
-        profileVisitRepository: IProfileVisitRepository
+        profileVisitRepository: IProfileVisitRepository,
+        blockRepository: IBlockRepository
     )
     {
         this.userRepo = userRepo;
@@ -44,6 +47,7 @@ export class UserUseCases {
         this.emailVerificationService = emailVerificationService,
         this.socketRegistry = socketRegistry;
         this.profileVisitRepository = profileVisitRepository;
+        this.blockRepository = blockRepository;
     }
 
     private validatePassword(password: string): void {
@@ -97,15 +101,20 @@ export class UserUseCases {
             throw new UserNotFound();
 
         let likeStatus: LikeStatus = LikeStatus.NOT_LIKED;
-        if (viewerId !== undefined) {
+        let isBlockedByMe = false;
+
+        if (viewerId !== undefined && viewerId !== userId) {
+            // Blocked by the viewed user → deny access
+            const blockedByThem = await this.blockRepository.getBlockerIds(viewerId);
+            if (blockedByThem.includes(userId))
+                throw new UserBlockedError();
+
             likeStatus = await this.getLikeStatus(viewerId, userId);
+            isBlockedByMe = (await this.blockRepository.getBlockedIds(viewerId)).includes(userId);
+            this.profileVisitRepository.record(viewerId, userId);
         }
 
         const isOnline: boolean = this.socketRegistry.getUserSocket(userId) ? true : false;
-
-        if (viewerId !== undefined && viewerId !== userId) {
-            this.profileVisitRepository.record(viewerId, userId);
-        }
 
         return {
             id: user.id,
@@ -131,7 +140,27 @@ export class UserUseCases {
             lastConnection: user.details.lastConnection,
             likeStatus: likeStatus,
             isOnline: isOnline,
+            isBlockedByMe,
         };
+    }
+
+    async blockUser(blockerId: UserId, targetId: UserId): Promise<void> {
+        const blocker = await this.userRepo.findUserById(blockerId);
+        const target = await this.userRepo.findUserById(targetId);
+        if (!blocker || !target) throw new UserNotFound();
+
+        await this.blockRepository.block(blockerId, targetId);
+        // Remove mutual likes so the chat disappears for both sides
+        await this.likeRepository.delete(blockerId, targetId);
+        await this.likeRepository.delete(targetId, blockerId);
+    }
+
+    async unblockUser(blockerId: UserId, targetId: UserId): Promise<void> {
+        const blocker = await this.userRepo.findUserById(blockerId);
+        const target = await this.userRepo.findUserById(targetId);
+        if (!blocker || !target) throw new UserNotFound();
+
+        await this.blockRepository.unblock(blockerId, targetId);
     }
 
     async getProfileVisitors(userId: number): Promise<ProfileVisitorDto[]> {
@@ -272,7 +301,10 @@ export class UserUseCases {
         const target: User | null = await this.userRepo.findUserById(targetId);
 
         if (!producer || !target) throw new UserNotFound();
-        
+
+        if (await this.blockRepository.isBlocked(producerId, targetId))
+            throw new UserBlockedError();
+
         const like: LikePair | null = await this.likeRepository.find(producerId, targetId);
         if (like[0] != null)
             return;

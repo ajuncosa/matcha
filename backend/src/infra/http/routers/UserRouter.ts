@@ -1,6 +1,6 @@
 import { type UpdateUserRequestDto, type UserProfileResponseDto, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
-import { BiographyTooLong, MissingRequestFields, UserNotFound, WeakPasswordError } from "@/core/user/User";
+import { BiographyTooLong, MissingRequestFields, UserBlockedError, UserNotFound, WeakPasswordError } from "@/core/user/User";
 import { type Request, type Response } from "express";
 import MatchaRouter from "./MatchaRouter";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
@@ -18,6 +18,8 @@ export default class UserRouter extends MatchaRouter {
         this.router.get("/visitors", (req, res) => this.getVisitors(req, res));
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
         this.router.post('/unlike/:userId', (req, res) => this.unLike(req, res));
+        this.router.post('/block/:userId', (req, res) => this.blockUser(req, res));
+        this.router.post('/unblock/:userId', (req, res) => this.unblockUser(req, res));
         this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.addUserPhotos(req, res));
         this.router.delete("/photos/:photoId", (req, res) => this.deleteUserPhoto(req, res));
         this.router.get("/:userId", (req, res) => this.getUser(req, res));
@@ -111,6 +113,9 @@ export default class UserRouter extends MatchaRouter {
             if (e instanceof UserNotFound) {
                 res.status(404).send(`User with id ${req.params.userId} was not found`);
             }
+            else if (e instanceof UserBlockedError) {
+                res.status(403).send(e.message);
+            }
             else {
                 throw e;
             }
@@ -156,6 +161,9 @@ export default class UserRouter extends MatchaRouter {
             if (e instanceof UserNotFound) {
                 res.status(401).send(`User with ID \"${req.session.userId}\" was not found`);
             }
+            else if (e instanceof UserBlockedError) {
+                res.status(403).send(e.message);
+            }
         }
     }
 
@@ -182,6 +190,34 @@ export default class UserRouter extends MatchaRouter {
             if (e instanceof UserNotFound) {
                 res.status(401).send(`User with ID \"${req.session.userId}\" was not found`);
             }
+        }
+    }
+
+    async blockUser(req: Request, res: Response) {
+        const blockerId = req.session.userId;
+        const targetId = req.params.userId ? parseInt(req.params.userId) : NaN;
+        if (!blockerId || isNaN(targetId)) return res.status(400).send("Missing parameters");
+        try {
+            await this.userUseCases.blockUser(blockerId, targetId);
+            res.status(200).send();
+        }
+        catch (e) {
+            if (e instanceof UserNotFound) res.status(404).send("User not found");
+            else throw e;
+        }
+    }
+
+    async unblockUser(req: Request, res: Response) {
+        const blockerId = req.session.userId;
+        const targetId = req.params.userId ? parseInt(req.params.userId) : NaN;
+        if (!blockerId || isNaN(targetId)) return res.status(400).send("Missing parameters");
+        try {
+            await this.userUseCases.unblockUser(blockerId, targetId);
+            res.status(200).send();
+        }
+        catch (e) {
+            if (e instanceof UserNotFound) res.status(404).send("User not found");
+            else throw e;
         }
     }
 

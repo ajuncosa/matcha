@@ -11,7 +11,7 @@ import ProfileEditDialog from "@/components/profile-edit-dialogs";
 import type { LikeStatus, UserProfileResponseDto } from "@/dto/UserDto";
 import 'leaflet/dist/leaflet.css';
 import { toast } from "sonner";
-import { Mars, ThumbsDown, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
+import { Ban, Mars, ThumbsDown, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate, NavLink } from "react-router";
 
@@ -78,10 +78,18 @@ export default function ProfilePage() {
     }
 
     async function getUser(id: number): Promise<void> {
-        await fetchUserData(
-            `http://localhost/api/user/${id}`,
-            () => navigate('/search')
-        );
+        const resp = await fetch(`/api/user/${id}`);
+        if (resp.status === 403 || resp.status === 404) {
+            navigate('/browser');
+            return;
+        }
+        if (!resp.ok || !resp.body) return;
+        const respBody: UserProfileResponseDto = await resp.json();
+        const filteredPhotos = respBody.profilePhoto
+            ? respBody.photos.filter((photo) => photo.id !== respBody.profilePhoto!.id)
+            : respBody.photos;
+        setUserProfileData({ ...respBody, photos: filteredPhotos });
+        if (respBody?.lat && respBody?.lon) setLocation({ lat: respBody.lat, lon: respBody.lon });
     }
 
     function calculateAge() : number
@@ -136,9 +144,29 @@ export default function ProfilePage() {
         }
     }
 
-    function UserActionButton({ likeStatus, userId, onLike, onUnlike } : {likeStatus: LikeStatus | undefined, userId: string, onLike: CallableFunction, onUnlike: CallableFunction}) {
+    async function blockUser(id: number) {
+        const resp = await fetch(`/api/user/block/${id}`, { method: "POST" });
+        if (resp.ok) {
+            setUserProfileData(prev => prev ? { ...prev, isBlockedByMe: true, likeStatus: "NOT_LIKED" } : prev);
+            toast.success(`You blocked ${userProfileData!.name}`);
+        } else {
+            toast.error(`Error blocking ${userProfileData!.name}`);
+        }
+    }
+
+    async function unblockUser(id: number) {
+        const resp = await fetch(`/api/user/unblock/${id}`, { method: "POST" });
+        if (resp.ok) {
+            setUserProfileData(prev => prev ? { ...prev, isBlockedByMe: false } : prev);
+            toast.success(`You unblocked ${userProfileData!.name}`);
+        } else {
+            toast.error(`Error unblocking ${userProfileData!.name}`);
+        }
+    }
+
+    function UserActionButton({ likeStatus, isBlockedByMe, userId, onLike, onUnlike, onBlock, onUnblock } : {likeStatus: LikeStatus | undefined, isBlockedByMe: boolean, userId: string, onLike: CallableFunction, onUnlike: CallableFunction, onBlock: CallableFunction, onUnblock: CallableFunction}) {
         const isMutual = likeStatus === "MUTUAL";
-        
+
         const statusLabels: Record<string, string> = {
             "NOT_LIKED": "Like",
             "LIKED": "Liked",
@@ -146,26 +174,32 @@ export default function ProfilePage() {
             "MUTUAL": "Mutual ❤️"
         };
 
+        const blockButton = isBlockedByMe ? (
+            <Button variant="outline" size="lg" className="cursor-pointer" onClick={() => onUnblock(Number(userId))}>
+                <Ban className="mr-2" /> Unblock
+            </Button>
+        ) : (
+            <Button variant="outline" size="lg" className="cursor-pointer text-destructive hover:text-destructive" onClick={() => onBlock(Number(userId))}>
+                <Ban className="mr-2" /> Block
+            </Button>
+        );
+
+        if (isBlockedByMe) {
+            return <div className="flex gap-2">{blockButton}</div>;
+        }
+
         if (isMutual) {
             return (
                 <div className="flex gap-2">
-                    <Button 
-                        variant="default" 
-                        size="lg" 
-                        disabled
-                    >
+                    <Button variant="default" size="lg" disabled>
                         <ThumbsUpIcon className="mr-2" />
                         {statusLabels[likeStatus || ""]}
                     </Button>
-                    <Button 
-                        variant="destructive" 
-                        size="lg" 
-                        className="cursor-pointer" 
-                        onClick={() => onUnlike(Number(userId))}
-                    >
+                    <Button variant="destructive" size="lg" className="cursor-pointer" onClick={() => onUnlike(Number(userId))}>
                         <ThumbsDown className="mr-2" />
                         Remove
                     </Button>
+                    {blockButton}
                 </div>
             );
         }
@@ -173,15 +207,18 @@ export default function ProfilePage() {
         const isLiked = likeStatus === "LIKED";
 
         return (
-            <Button 
-                variant={isLiked ? "default" : "outline"} 
-                size="lg" 
-                className="cursor-pointer" 
-                onClick={() => isLiked ? onUnlike(Number(userId)) : onLike(Number(userId))}
-            >
-                {isLiked ? <ThumbsDown className="mr-2" /> : <ThumbsUpIcon className="mr-2" />}
-                {statusLabels[likeStatus || ""] || "Like"}
-            </Button>
+            <div className="flex gap-2">
+                <Button
+                    variant={isLiked ? "default" : "outline"}
+                    size="lg"
+                    className="cursor-pointer"
+                    onClick={() => isLiked ? onUnlike(Number(userId)) : onLike(Number(userId))}
+                >
+                    {isLiked ? <ThumbsDown className="mr-2" /> : <ThumbsUpIcon className="mr-2" />}
+                    {statusLabels[likeStatus || ""] || "Like"}
+                </Button>
+                {blockButton}
+            </div>
         );
     }
 
@@ -241,12 +278,15 @@ export default function ProfilePage() {
                 {
                     userProfileData &&
                     (
-                        user?.id !== userProfileData.id && userProfileData.profilePhoto && id ? (
-                            <UserActionButton 
-                            likeStatus={userProfileData.likeStatus}
-                            userId={id}
-                            onLike={likeUser}
-                            onUnlike={unLikeUser}
+                        user?.id !== userProfileData.id && id ? (
+                            <UserActionButton
+                                likeStatus={userProfileData.likeStatus}
+                                isBlockedByMe={userProfileData.isBlockedByMe}
+                                userId={id}
+                                onLike={likeUser}
+                                onUnlike={unLikeUser}
+                                onBlock={blockUser}
+                                onUnblock={unblockUser}
                             />
                         ) : (
                             <ProfileEditDialog profileData={userProfileData} onUpdate={getProfile} />

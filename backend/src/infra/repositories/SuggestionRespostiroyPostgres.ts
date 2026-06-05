@@ -11,7 +11,15 @@ export class SuggestionRepositoryPostgres implements ISuggestionRepository {
     }
 
     async findForUser(userId: UserId): Promise<Suggestion[]> {
-        const query = await this.pool.query("SELECT * FROM suggestions WHERE user_id=$1", [userId]);
+        const query = await this.pool.query(`
+            SELECT * FROM suggestions
+            WHERE user_id = $1
+              AND suggested_user NOT IN (
+                  SELECT blocked_user_id FROM blocked_users WHERE blocker_user_id = $1
+                  UNION
+                  SELECT blocker_user_id FROM blocked_users WHERE blocked_user_id = $1
+              )`,
+        [userId]);
         
         return query.rows.map((row) => {
             return {

@@ -15,7 +15,11 @@ export default class SearchRepositoryPostgres implements ISearchRepository {
         searcherId: UserId,
         criteria: SearchCriteria
     ): Promise<{ users: IUserSearchData[]; total: number }> {
-        const conditions: string[] = ["u.id != $1"];
+        // Always exclude users who have blocked the searcher (but allow searcher to find users they've blocked)
+        const conditions: string[] = [
+            "u.id != $1",
+            "NOT EXISTS (SELECT 1 FROM blocked_users WHERE blocker_user_id = u.id AND blocked_user_id = $1)"
+        ];
         const params: (string | number)[] = [searcherId];
         let paramIndex = 2;
 

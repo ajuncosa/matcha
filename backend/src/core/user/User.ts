@@ -55,6 +55,12 @@ export class WeakPasswordError extends Error {
     }
 }
 
+export class UserBlockedError extends Error {
+    constructor() {
+        super("This profile is not available");
+    }
+}
+
 export class EmailAddress {
     private email: string;
 
