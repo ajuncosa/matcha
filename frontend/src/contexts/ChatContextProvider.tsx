@@ -29,12 +29,14 @@ interface ChatContext {
     chats: Chat[];
     sendMessage: CallableFunction;
     setMessagesAsViewed: (chatIndex: number, messageIds: number[]) => Promise<void>;
+    refreshChats: () => Promise<void>;
 }
 
 const defaultChatContext: ChatContext = {
     chats: [],
     sendMessage: () => {},
-    setMessagesAsViewed: async () => {}
+    setMessagesAsViewed: async () => {},
+    refreshChats: async () => {}
 };
 
 const ChatContext = createContext<ChatContext>(defaultChatContext);
@@ -155,7 +157,7 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
     }, [user.loggedIn]);
 
     return (
-        <ChatContext value={{chats, sendMessage, setMessagesAsViewed}}>
+        <ChatContext value={{chats, sendMessage, setMessagesAsViewed, refreshChats: fetchChats}}>
             {children}
         </ChatContext>
     )
