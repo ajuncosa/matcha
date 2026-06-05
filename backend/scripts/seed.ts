@@ -74,8 +74,26 @@ const tagNames = [
     "chess", "board-games", "hockey", "basketball", "soccer", "tennis"
 ];
 
-const genders = ["man", "woman", "non_binary", "other"];
-const sexes = ["male", "female", "intersex"];
+interface CompatibleProfile {
+    gender: string;
+    sex: string;
+    preferredGender: string;
+    preferredSex: string;
+}
+
+function generateCompatibleProfile(): CompatibleProfile {
+    const r = Math.random();
+    if (r < 0.45) {
+        // Straight man
+        return { gender: "man", sex: "male", preferredGender: "woman", preferredSex: "female" };
+    } else if (r < 0.90) {
+        // Straight woman
+        return { gender: "woman", sex: "female", preferredGender: "man", preferredSex: "male" };
+    } else {
+        // Non-binary / open preferences (matches anyone with "any" prefs)
+        return { gender: "non_binary", sex: "intersex", preferredGender: "any", preferredSex: "any" };
+    }
+}
 
 interface SeedUser {
     name: string;
@@ -101,7 +119,7 @@ function randomInt(min: number, max: number): number {
 }
 
 function randomItem<T>(arr: T[]): T {
-    return arr[randomInt(0, arr.length - 1)];
+    return arr[randomInt(0, arr.length - 1)] as T;
 }
 
 function generateBirthday(age: number): Date {
@@ -113,24 +131,17 @@ function generateBirthday(age: number): Date {
 }
 
 function generateLocation(): { lat: number; lon: number } {
-    // Generate random coordinates around major cities (approximate ranges)
-    const cities = [
-        { lat: [40.4, 40.9], lon: [-74.3, -73.7] }, // NYC
-        { lat: [34.0, 34.3], lon: [-118.5, -118.1] }, // LA
-        { lat: [41.6, 42.0], lon: [-87.9, -87.5] }, // Chicago
-        { lat: [29.6, 30.0], lon: [-95.7, -95.3] }, // Houston
-        { lat: [33.6, 33.9], lon: [-112.2, -111.8] }, // Phoenix
-        { lat: [39.8, 40.0], lon: [-75.3, -75.0] }, // Philadelphia
-        { lat: [29.3, 29.6], lon: [-98.7, -98.3] }, // San Antonio
-        { lat: [32.6, 32.9], lon: [-117.3, -117.0] }, // San Diego
-        { lat: [32.7, 33.0], lon: [-97.5, -97.0] }, // Dallas
-        { lat: [37.2, 37.5], lon: [-122.0, -121.8] }, // San Jose
-    ];
-    
-    const city = randomItem(cities);
+    // Scatter users around Madrid centre within ~15 km radius
+    const MADRID_LAT = 40.4168;
+    const MADRID_LON = -3.7038;
+    const RADIUS = 0.15; // ~15 km in degrees
+
+    const offsetLat = (Math.random() * 2 - 1) * RADIUS;
+    const offsetLon = (Math.random() * 2 - 1) * RADIUS;
+
     return {
-        lat: randomInt(Math.floor(city.lat[0] * 100), Math.floor(city.lat[1] * 100)) / 100,
-        lon: randomInt(Math.floor(city.lon[0] * 100), Math.floor(city.lon[1] * 100)) / 100,
+        lat: Math.round((MADRID_LAT + offsetLat) * 10000) / 10000,
+        lon: Math.round((MADRID_LON + offsetLon) * 10000) / 10000,
     };
 }
 
@@ -140,32 +151,31 @@ function generateUsers(count: number): SeedUser[] {
     for (let i = 0; i < count; i++) {
         const name = randomItem(firstNames);
         const lastname = randomItem(lastNames);
-        const age = randomInt(18, 65);
+        const age = randomInt(20, 45);
         const birthday = generateBirthday(age);
         const location = generateLocation();
-        const gender = randomItem(genders);
-        const sex = randomItem(sexes);
+        const profile = generateCompatibleProfile();
         const numTags = randomInt(2, 6);
         const userTags: string[] = [];
-        
+
         while (userTags.length < numTags) {
             const tag = randomItem(tagNames);
             if (!userTags.includes(tag)) {
                 userTags.push(tag);
             }
         }
-        
+
         users.push({
             name,
             lastname,
             email: `${name.toLowerCase()}.${lastname.toLowerCase()}${randomInt(1, 999)}@example.com`,
             password: "password123",
-            gender,
-            sex,
-            preferredGender: randomItem(genders),
-            preferredSex: randomItem(sexes),
-            preferredMinAge: randomInt(18, 35),
-            preferredMaxAge: randomInt(40, 70),
+            gender: profile.gender,
+            sex: profile.sex,
+            preferredGender: profile.preferredGender,
+            preferredSex: profile.preferredSex,
+            preferredMinAge: 18,
+            preferredMaxAge: 60,
             lat: location.lat,
             lon: location.lon,
             biography: randomItem(biographies),
@@ -298,7 +308,7 @@ async function seedPhotos(client: Client): Promise<void> {
 
 async function main() {
     const args = process.argv.slice(2);
-    const userCount = parseInt(args[0]) || 50;
+    const userCount = parseInt(args[0] ?? "") || 50;
     
     console.log(`Starting database seeding with ${userCount} users...`);
     

@@ -204,7 +204,7 @@ export class SuggestionService {
      *  Deletes all the current suggestions and generates new suggestions for the user 
      */
     async generateSuggestions(userId: UserId): Promise<CreateSuggestion[]> {
-        this.suggestionRepository.deleteForUser(userId);
+        await this.suggestionRepository.deleteForUser(userId);
         const user: User | null = await this.userRepository.findUserById(userId);
         if (!user || !user.details) return [];
 
@@ -219,41 +219,31 @@ export class SuggestionService {
         const suggestions: CreateSuggestion[] = [];
 
         for (const potentialUser of usersInBoundingBox) {
-            // Skip the user themselves
             if (potentialUser.id === user.id) continue;
-
-            // Skip if potential user has no details
             if (!potentialUser.details) continue;
-
-            // Check orientation match
             if (!this.isOrientationMatch(user, potentialUser)) continue;
-
-            // Check age match
             if (!this.isAgeMatch(user, potentialUser)) continue;
 
-            // Calculate distance
             const distance = this.calculateDistance(
-                Number(user.details.lat), 
+                Number(user.details.lat),
                 Number(user.details.lon),
-                Number(potentialUser.details.lat), 
+                Number(potentialUser.details.lat),
                 Number(potentialUser.details.lon)
             );
 
-            // Calculate shared tags
             const sharedTags = this.getSharedTags(user, potentialUser);
             const sharedTagsIds = sharedTags.map(tag => tag.id);
 
             suggestions.push({
                 userId: user.id,
                 suggestedUser: potentialUser.id,
-                distanceBetween: Math.round(distance * 10) / 10, // Round to 1 decimal place
+                distanceBetween: Math.round(distance * 10) / 10,
                 sharedTagsIds: sharedTagsIds
             });
         }
 
-        // Store suggestions in bulk
         if (suggestions.length > 0) {
-            this.suggestionRepository.createBulk(suggestions);
+            await this.suggestionRepository.createBulk(suggestions);
         }
 
         return suggestions;
@@ -277,7 +267,6 @@ export class SuggestionService {
             const {password, ...restOfUser} = user;
 
 
-            console.log("User tag ids", suggestion.sharedTagsIds);
             const tags: Tag[] = await this.tagRepository.findTagsBulkById(suggestion.sharedTagsIds);
             const suggestedUser: SuggestedUser = {
                 user: {...restOfUser},

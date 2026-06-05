@@ -100,8 +100,6 @@ export default function SearchPage() {
 
             const data: SearchResponse = await response.json();
 
-            console.log(data);
-
             if (append) {
                 setResults(prev => [...prev, ...data.items]);
             } else {

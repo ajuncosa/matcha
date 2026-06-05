@@ -146,7 +146,6 @@ export default function Welcome() {
             lat: lat,
             lon: lon
         });
-        console.log(lat, lon);
     }
 
     function addTag(tag: string) {

@@ -25,8 +25,6 @@ export default class ChatRouter extends MatchaRouter {
             res.status(400).send("Missing notifications ids");
         }
 
-        console.log(req.body);
-
         await this.chatUseCases.markMessagesAsViewed(req.body.messagesIds);
 
         res.status(200).send();

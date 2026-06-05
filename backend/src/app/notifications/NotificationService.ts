@@ -37,7 +37,15 @@ export class NotificationService implements INotificationService {
 
     }
 
-    notifyUnlikeNotification(from: UserId, to: UserId): Promise<UnlikeNotification> {
+    async notifyUnlikeNotification(producer: User, target: User): Promise<UnlikeNotification> {
+        const notificationMessage: string = `${producer.name} ${producer.lastname} unliked you.`;
+        const notif = await this.notificationRepo.create(producer.id, target.id, NotificationType.UNLIKE, notificationMessage) as UnlikeNotification;
 
+        const targetSocket: Socket | null = this.socketRegistry.getUserSocket(target.id);
+        if (targetSocket) {
+            targetSocket.send('notification-unlike', notif);
+        }
+
+        return notif;
     }
 }

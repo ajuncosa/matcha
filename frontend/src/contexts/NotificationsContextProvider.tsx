@@ -94,14 +94,20 @@ export function NotificationsContextProvider({children}: {children: ReactElement
     useEffect(() => {
         if (user.loggedIn) {
             fetchUnreadNotifications();
-            const subscriberId: number = socket.subscribeToEvent(
-                'notification:like', 
-                "NotificationsContextProvider", 
+            const likeSubId: number = socket.subscribeToEvent(
+                'notification:like',
+                "NotificationsContextProvider",
+                (notification) => addNotification(notification)
+            );
+            const unlikeSubId: number = socket.subscribeToEvent(
+                'notification:unlike',
+                "NotificationsContextProvider",
                 (notification) => addNotification(notification)
             );
 
             return () => {
-                socket.unsubscribeFromEvent(subscriberId, 'notification:like', "NotificationsContextProvider");
+                socket.unsubscribeFromEvent(likeSubId, 'notification:like', "NotificationsContextProvider");
+                socket.unsubscribeFromEvent(unlikeSubId, 'notification:unlike', "NotificationsContextProvider");
             }
         }
     }, [user.loggedIn]);

@@ -88,8 +88,6 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
     private onAnyEvent(event: EventName, socket: Socket, payload: any) {
         const subscribers: EventSubscriber[] | undefined = this.subscribers.get(event);
 
-        console.log("any event", event, socket.id, payload);
-
         if (!subscribers)
             return;
 

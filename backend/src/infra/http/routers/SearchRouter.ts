@@ -97,7 +97,6 @@ export default class SearchRouter extends MatchaRouter {
         }
 
         const users = await this.searchUseCases.getRecommentations(userId);
-        console.log(users);
         res.status(200).json(users);
     }
 }

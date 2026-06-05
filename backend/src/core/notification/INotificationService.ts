@@ -5,5 +5,5 @@ export interface INotificationService {
     notifyUserLike(from: User, to: User): Promise<LikeNotification>;
     notifyUserMessage(from: UserId, to: UserId): Promise<MessageNotification>;
     notifiProfileView(from: UserId, to: UserId): Promise<ProfileViewNotification>;
-    notifyUnlikeNotification(from: UserId, to: UserId): Promise<UnlikeNotification>;
+    notifyUnlikeNotification(producer: User, target: User): Promise<UnlikeNotification>;
 }

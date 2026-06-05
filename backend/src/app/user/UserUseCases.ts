@@ -336,6 +336,7 @@ export class UserUseCases {
 
         await this.likeRepository.delete(producerId, targetId);
         this.adjustFame(targetId, -2);
+        this.notificationService.notifyUnlikeNotification(producer, target).catch(() => {});
     }
 
     async getLikeStatus(userId: UserId, targetId: UserId): Promise<LikeStatus> {

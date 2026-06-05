@@ -175,6 +175,7 @@ export class SearchUseCases {
     }
 
     async getRecommentations(userId: UserId): Promise<SuggestedUser[]> {
+        await this.suggestionService.generateSuggestions(userId);
         return await this.suggestionService.getUserSuggestions(userId);
     }
 }
