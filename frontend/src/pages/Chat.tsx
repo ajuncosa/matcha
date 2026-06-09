@@ -89,7 +89,7 @@ export default function ChatPage() {
     const activeChat = chats[currentChat];
 
     return (
-        <div className="w-full flex gap-2 h-full min-h-0">
+        <div className="w-full flex gap-2 h-[calc(100svh-4rem)]">
             {/* Chat list */}
             <div className={`w-full lg:w-1/3 lg:flex flex-col gap-2 overflow-y-auto ${hiddenChat ? "flex" : "hidden"}`}>
                 {chats.length === 0 ? (
