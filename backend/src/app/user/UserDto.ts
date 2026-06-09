@@ -4,11 +4,12 @@ export interface UserRegisterRequestDto {
     email: string;
     name: string;
     lastname: string;
+    username: string;
     password: string;
 }
 
 export interface UserLoginRequestDto {
-    email: string;
+    username: string;
     password: string;
 }
 

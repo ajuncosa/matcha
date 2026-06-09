@@ -89,9 +89,9 @@ export default function ChatPage() {
     const activeChat = chats[currentChat];
 
     return (
-        <div className="w-full flex gap-2 h-full">
+        <div className="w-full flex gap-2 h-full min-h-0">
             {/* Chat list */}
-            <div className={`w-full lg:w-1/3 lg:flex flex-col gap-2 ${hiddenChat ? "flex" : "hidden"}`}>
+            <div className={`w-full lg:w-1/3 lg:flex flex-col gap-2 overflow-y-auto ${hiddenChat ? "flex" : "hidden"}`}>
                 {chats.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground py-16">
                         <MessageSquareOff size={40} />
@@ -127,48 +127,46 @@ export default function ChatPage() {
             </div>
 
             {/* Chat panel */}
-            <div className={`w-full h-full lg:w-2/3 lg:block ${hiddenChat ? "hidden" : "block"}`}>
+            <div className={`w-full min-h-0 lg:w-2/3 lg:block ${hiddenChat ? "hidden" : "block"}`}>
                 {activeChat ? (
-                    <div className="w-full flex-1 h-full">
-                        <Card className="w-full pt-0 rounded-md h-full">
-                            <CardHeader className="p-0 m-0">
-                                <Item className="px-6">
-                                    <ItemMedia className="flex items-center">
-                                        <Button className="cursor-pointer lg:hidden" variant="outline" onClick={() => setHiddenChat(true)}>
-                                            <ArrowLeft />
-                                        </Button>
-                                        <Avatar className="rounded-lg size-10">
-                                            <AvatarFallback className="rounded-lg font-semibold">
-                                                {activeChat.otherUser.name[0]}{activeChat.otherUser.lastname[0]}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    </ItemMedia>
-                                    <ItemContent>
-                                        <ItemTitle>{activeChat.otherUser.name} {activeChat.otherUser.lastname}</ItemTitle>
-                                    </ItemContent>
-                                </Item>
-                            </CardHeader>
-                            <CardContent className="w-full">
-                                <ScrollArea className="h-98 w-full rounded-md border" ref={scrollAreaRef}>
-                                    <div className="flex flex-col gap-2 p-3">
-                                        {activeChat.messages.map((msg, i) =>
-                                            <div key={i} className={`flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm ${msg.receiver == user.id ? "bg-muted" : "bg-primary text-primary-foreground ml-auto"}`}>
-                                                {msg.message}
-                                            </div>
-                                        )}
-                                    </div>
-                                </ScrollArea>
-                            </CardContent>
-                            <CardFooter className="flex-col gap-2">
-                                <ButtonGroup className="w-full">
-                                    <Input value={inputMessage} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Type message..." />
-                                    <Button className="cursor-pointer" variant="outline" aria-label="Send" onClick={onSendMessageClick}>
-                                        <SendHorizonal />
+                    <Card className="w-full h-full pt-0 rounded-md flex flex-col">
+                        <CardHeader className="p-0 m-0 shrink-0">
+                            <Item className="px-6">
+                                <ItemMedia className="flex items-center">
+                                    <Button className="cursor-pointer lg:hidden" variant="outline" onClick={() => setHiddenChat(true)}>
+                                        <ArrowLeft />
                                     </Button>
-                                </ButtonGroup>
-                            </CardFooter>
-                        </Card>
-                    </div>
+                                    <Avatar className="rounded-lg size-10">
+                                        <AvatarFallback className="rounded-lg font-semibold">
+                                            {activeChat.otherUser.name[0]}{activeChat.otherUser.lastname[0]}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </ItemMedia>
+                                <ItemContent>
+                                    <ItemTitle>{activeChat.otherUser.name} {activeChat.otherUser.lastname}</ItemTitle>
+                                </ItemContent>
+                            </Item>
+                        </CardHeader>
+                        <CardContent className="flex-1 min-h-0 p-3">
+                            <ScrollArea className="h-full w-full rounded-md border" ref={scrollAreaRef}>
+                                <div className="flex flex-col gap-2 p-3">
+                                    {activeChat.messages.map((msg, i) =>
+                                        <div key={i} className={`flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm ${msg.receiver == user.id ? "bg-muted" : "bg-primary text-primary-foreground ml-auto"}`}>
+                                            {msg.message}
+                                        </div>
+                                    )}
+                                </div>
+                            </ScrollArea>
+                        </CardContent>
+                        <CardFooter className="shrink-0 flex-col gap-2">
+                            <ButtonGroup className="w-full">
+                                <Input value={inputMessage} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Type message..." />
+                                <Button className="cursor-pointer" variant="outline" aria-label="Send" onClick={onSendMessageClick}>
+                                    <SendHorizonal />
+                                </Button>
+                            </ButtonGroup>
+                        </CardFooter>
+                    </Card>
                 ) : (
                     <div className="hidden lg:flex h-full items-center justify-center text-muted-foreground">
                         <p>Select a conversation to start chatting</p>

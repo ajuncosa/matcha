@@ -5,7 +5,8 @@ import type { Photo } from "../photos/Photo";
 export interface IUserRepository {
     findUserById(user: UserId): Promise<User | null>;
     findUserByEmail(email: EmailAddress): Promise<User | null>;
-    createUser(name: string, lastname: string, email: EmailAddress, password: string): Promise<User>;
+    findUserByUsername(username: string): Promise<User | null>;
+    createUser(name: string, lastname: string, email: EmailAddress, password: string, username: string): Promise<User>;
     createUserDetails(userId: UserId, gender: UserGender, sex: UserSex, birthday: Date,
         lat: number, lon: number, preferredGender: UserGender, preferredSex: UserSex,
         preferredMinAge: number, preferredMaxAge: number, biography: string): Promise<void>;
@@ -30,4 +31,9 @@ export interface IUserRepository {
     getUsersInArea(minLat: number, maxLat: number, minLon: number, maxLon: number): Promise<User[]>;
 
     adjustFameRating(userId: UserId, delta: number): Promise<void>;
+
+    setPasswordResetToken(userId: UserId, token: string, expiresAt: Date): Promise<void>;
+    getUserByPasswordResetToken(token: string): Promise<User | null>;
+    clearPasswordResetToken(userId: UserId): Promise<void>;
+    updatePassword(userId: UserId, hashedPassword: string): Promise<void>;
 }

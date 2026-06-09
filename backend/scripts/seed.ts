@@ -223,8 +223,8 @@ async function seedUsers(client: Client, count: number, tagMap: Map<string, numb
         
         // Insert user
         const userResult = await client.query(
-            `INSERT INTO users(name, lastname, email, email_validated_at, password, created_at)
-             VALUES($1, $2, $3, CURRENT_TIMESTAMP, $4, CURRENT_TIMESTAMP)
+            `INSERT INTO users(name, lastname, email, email_validated_at, password, username, created_at)
+             VALUES($1, $2, $3, CURRENT_TIMESTAMP, $4, LOWER($1) || (RANDOM()*10000)::int::text, CURRENT_TIMESTAMP)
              RETURNING id`,
             [user.name, user.lastname, user.email, hashedPassword]
         );

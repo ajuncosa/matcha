@@ -20,7 +20,7 @@ import AuthContext, { logInUser, type User } from "@/contexts/AuthContextProvide
 import SocketContext from "@/contexts/SocketContextProvider"
 
 interface LoginForm {
-    email: string;
+    username: string;
     password: string;
 };
 
@@ -33,7 +33,7 @@ export function LoginForm({
     const userSocket = useContext(SocketContext);
 
     const [form, setForm] = useState<LoginForm>({
-        email: "",
+        username: "",
         password: ""
     });
 
@@ -50,13 +50,13 @@ export function LoginForm({
         e.preventDefault();
         setFormError("");
 
-        if (!form.email || !form.password) {
+        if (!form.username || !form.password) {
             setFormError("Please fill all the required fields");
             return;
         }
 
         try {
-            const loggedInUser: User = await logInUser(form.email, form.password);
+            const loggedInUser: User = await logInUser(form.username, form.password);
             if (!loggedInUser) {
                 return;
             }
@@ -89,24 +89,24 @@ export function LoginForm({
                     <form>
                         <FieldGroup>
                             <Field>
-                                <FieldLabel htmlFor="email">Email</FieldLabel>
+                                <FieldLabel htmlFor="username">Username</FieldLabel>
                                 <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="m@example.com"
+                                    id="username"
+                                    type="text"
+                                    placeholder="johndoe"
                                     required
-                                    onChange={onFormChange} 
+                                    onChange={onFormChange}
                                 />
                             </Field>
                             <Field>
                                 <div className="flex items-center">
                                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                                    <a
-                                        href="#"
+                                    <Link
+                                        to="/forgot-password"
                                         className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                                     >
                                         Forgot your password?
-                                    </a>
+                                    </Link>
                                 </div>
                                 <Input id="password" type="password" required onChange={onFormChange} value={form.password} />
                             </Field>

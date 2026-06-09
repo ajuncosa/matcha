@@ -94,20 +94,16 @@ export function NotificationsContextProvider({children}: {children: ReactElement
     useEffect(() => {
         if (user.loggedIn) {
             fetchUnreadNotifications();
-            const likeSubId: number = socket.subscribeToEvent(
-                'notification:like',
-                "NotificationsContextProvider",
-                (notification) => addNotification(notification)
-            );
-            const unlikeSubId: number = socket.subscribeToEvent(
-                'notification:unlike',
-                "NotificationsContextProvider",
-                (notification) => addNotification(notification)
-            );
+            const likeSubId = socket.subscribeToEvent('notification:like', "NotificationsContextProvider", (n) => addNotification(n));
+            const unlikeSubId = socket.subscribeToEvent('notification:unlike', "NotificationsContextProvider", (n) => addNotification(n));
+            const profileViewSubId = socket.subscribeToEvent('notification:profile-view', "NotificationsContextProvider", (n) => addNotification(n));
+            const messageSubId = socket.subscribeToEvent('notification:message', "NotificationsContextProvider", (n) => addNotification(n));
 
             return () => {
                 socket.unsubscribeFromEvent(likeSubId, 'notification:like', "NotificationsContextProvider");
                 socket.unsubscribeFromEvent(unlikeSubId, 'notification:unlike', "NotificationsContextProvider");
+                socket.unsubscribeFromEvent(profileViewSubId, 'notification:profile-view', "NotificationsContextProvider");
+                socket.unsubscribeFromEvent(messageSubId, 'notification:message', "NotificationsContextProvider");
             }
         }
     }, [user.loggedIn]);

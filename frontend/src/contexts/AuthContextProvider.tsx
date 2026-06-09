@@ -29,14 +29,14 @@ const defaultUserValue: AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>(defaultUserValue);
 
-export async function logInUser(email: string, password: string): Promise<User> {
+export async function logInUser(username: string, password: string): Promise<User> {
      const resp : Response = await fetch("http://localhost/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                email: email,
+                username: username,
                 password: password
             })
         });

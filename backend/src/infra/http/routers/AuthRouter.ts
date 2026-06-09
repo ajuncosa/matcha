@@ -2,7 +2,7 @@ import { type Request, type Response } from "express";
 import type { UserUseCases } from "@/app/user/UserUseCases";
 import MatchaRouter from "./MatchaRouter";
 import type { UserLoginRequestDto, UserRegisterRequestDto, UserProfileResponseDto } from "@/app/user/UserDto";
-import { IncorrectPassword, InvalidEmailFormatError, InvalidUserValidationToken, UserAccountNotVerified, UserEmailAlreadyExists, UserNotFound, WeakPasswordError, type User } from "@/core/user/User";
+import { IncorrectPassword, InvalidEmailFormatError, InvalidPasswordResetToken, InvalidUserValidationToken, UserAccountNotVerified, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserNotFound, WeakPasswordError, type User } from "@/core/user/User";
 
 export default class AuthRouter extends MatchaRouter {
     private userUseCases: UserUseCases;
@@ -15,12 +15,14 @@ export default class AuthRouter extends MatchaRouter {
         this.router.post("/logout", (req, res) => this.logout(req, res));
         this.router.get('/check-session', (req, res) => this.checkSession(req, res));
         this.router.get("/verify/:token", (req, res) => this.verifyUser(req, res));
+        this.router.post("/forgot-password", (req, res) => this.forgotPassword(req, res));
+        this.router.post("/reset-password", (req, res) => this.resetPassword(req, res));
     }
 
     async login(req: Request, res: Response) {
 
         const dto: UserLoginRequestDto = {
-            email: req.body.email,
+            username: req.body.username,
             password: req.body.password
         }
 
@@ -36,7 +38,7 @@ export default class AuthRouter extends MatchaRouter {
         }
         catch (e) {
             if (e instanceof UserNotFound) {
-                res.status(401).send(`User with email \"${req.body.email}\" does not exist`);   //TODO: easier for frontend to parse if JSON
+                res.status(401).send(`User with username "${req.body.username}" does not exist`);
             }
             else if (e instanceof IncorrectPassword) {
                 res.status(401).send(e.message);   //TODO: easier for frontend to parse if JSON
@@ -66,18 +68,22 @@ export default class AuthRouter extends MatchaRouter {
             email: req.body.email,
             name: req.body.name,
             lastname: req.body.lastname,
+            username: req.body.username,
             password: req.body.password
         }
         try {
             await this.userUseCases.registerUser(dto);
-            res.status(200).send(`Hello ${req.body.email}`); //TODO: easier for frontend to parse if JSON
+            res.status(200).send(`Hello ${req.body.email}`);
         }
         catch (e) {
             if (e instanceof InvalidEmailFormatError) {
-                res.status(422).send(`Invalid email format \"${req.body.email}\"`);   //TODO: easier for frontend to parse if JSON
+                res.status(422).send(`Invalid email format "${req.body.email}"`);
             }
             else if (e instanceof UserEmailAlreadyExists) {
-                res.status(409).send(`Email \"${req.body.email}\" is already in use`);
+                res.status(409).send(`Email "${req.body.email}" is already in use`);
+            }
+            else if (e instanceof UsernameAlreadyExistsError) {
+                res.status(409).send(e.message);
             }
             else if (e instanceof WeakPasswordError) {
                 res.status(422).send(e.message);
@@ -98,6 +104,27 @@ export default class AuthRouter extends MatchaRouter {
         }
         else {
             res.status(401).send();
+        }
+    }
+
+    async forgotPassword(req: Request, res: Response) {
+        const email: string = req.body.email;
+        if (!email) return res.status(400).send("Email is required");
+        await this.userUseCases.forgotPassword(email);
+        res.status(200).send();
+    }
+
+    async resetPassword(req: Request, res: Response) {
+        const { token, password } = req.body;
+        if (!token || !password) return res.status(400).send("Missing parameters");
+        try {
+            await this.userUseCases.resetPassword(token, password);
+            res.status(200).send();
+        }
+        catch (e) {
+            if (e instanceof InvalidPasswordResetToken) res.status(400).send(e.message);
+            else if (e instanceof WeakPasswordError) res.status(422).send(e.message);
+            else throw e;
         }
     }
 

@@ -20,31 +20,19 @@ import {
 	SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { NavLink } from "react-router"
-import { useContext } from "react"
+import { useContext, useMemo } from "react"
 import AuthContext from "@/contexts/AuthContextProvider"
-
-const data = {
-	navMain: [
-		{
-			title: "Browser",
-			url: "/browser",
-			icon: Compass,
-		},
-		{
-			title: "Search",
-			url: "/search",
-			icon: Search,
-		},
-		{
-			title: "Chat",
-			url: "/chat",
-			icon: MessageCircle,
-		},
-	]
-}
+import ChatContext from "@/contexts/ChatContextProvider"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { user } = useContext(AuthContext);
+    const { chats } = useContext(ChatContext);
+    const totalUnread = useMemo(() => chats.reduce((acc, c) => acc + c.unreadMessages, 0), [chats]);
+    const navMain = [
+        { title: "Browser", url: "/browser", icon: Compass },
+        { title: "Search", url: "/search", icon: Search },
+        { title: "Chat", url: "/chat", icon: MessageCircle, badge: totalUnread || undefined },
+    ];
 	const navUser = {
 		name: `${user.name} ${user.lastname}`,
 		// TODO: fill this in
@@ -71,7 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				</SidebarMenu>
 			</SidebarHeader>
 			<SidebarContent>
-				<NavMain items={data.navMain} />
+				<NavMain items={navMain} />
 			</SidebarContent>
 			<SidebarFooter>
 				<NavUser user={navUser} />

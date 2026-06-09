@@ -1,4 +1,4 @@
-import type { ILikeRepository } from "@/core/like/ILikeRepository";
+import type { ILikeRepository, LikerInfo } from "@/core/like/ILikeRepository";
 import type { Like, LikePair } from "@/core/like/Like";
 import type { UserId } from "@/core/user/User";
 import type { Pool } from "pg";
@@ -89,6 +89,28 @@ export class LikeRepositoryPostgres implements ILikeRepository {
             liker: userId,
             liked: Number(like.user2_id),
             createdAt: like.created_at
+        }));
+    }
+
+    async getLikers(userId: UserId): Promise<LikerInfo[]> {
+        const query = await this.pool.query(`
+            SELECT u.id, u.name, u.lastname,
+                   ph.file_path AS profile_photo_path,
+                   l.created_at AS liked_at
+            FROM profile_likes l
+            JOIN users u ON u.id = l.liker_user_id
+            LEFT JOIN users_details ud ON ud.user_id = l.liker_user_id
+            LEFT JOIN photos ph ON ph.id = ud.profile_photo_id
+            WHERE l.liked_user_id = $1
+            ORDER BY l.created_at DESC`,
+        [userId]);
+
+        return query.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            lastname: row.lastname,
+            profilePhotoPath: row.profile_photo_path ?? null,
+            likedAt: new Date(row.liked_at),
         }));
     }
 

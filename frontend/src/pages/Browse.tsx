@@ -56,6 +56,12 @@ export default function BrowsePage() {
     const [error, setError] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<string>("");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [filterMinAge, setFilterMinAge] = useState<string>("");
+    const [filterMaxAge, setFilterMaxAge] = useState<string>("");
+    const [filterMinFame, setFilterMinFame] = useState<string>("");
+    const [filterMaxFame, setFilterMaxFame] = useState<string>("");
+    const [filterMaxDistance, setFilterMaxDistance] = useState<string>("");
+    const [filterMinCommonTags, setFilterMinCommonTags] = useState<string>("");
 
     const calculateAge = (birthday: string) => {
         const birthDate = new Date(birthday);
@@ -93,10 +99,9 @@ export default function BrowsePage() {
 
     const sortedRecommendations = useMemo(() => {
         if (!sortBy || sortBy === "no-sort") return recommendations;
-        
+
         return [...recommendations].sort((a, b) => {
             let comparison = 0;
-            
             switch (sortBy) {
                 case "age":
                     comparison = calculateAge(a.user.details.birthday) - calculateAge(b.user.details.birthday);
@@ -113,10 +118,31 @@ export default function BrowsePage() {
                 default:
                     return 0;
             }
-            
             return sortOrder === "asc" ? comparison : -comparison;
         });
     }, [recommendations, sortBy, sortOrder]);
+
+    const filteredRecommendations = useMemo(() => {
+        return sortedRecommendations.filter(rec => {
+            const age = calculateAge(rec.user.details.birthday);
+            if (filterMinAge !== "" && age < parseInt(filterMinAge)) return false;
+            if (filterMaxAge !== "" && age > parseInt(filterMaxAge)) return false;
+            if (filterMinFame !== "" && rec.user.details.fameRating < parseInt(filterMinFame)) return false;
+            if (filterMaxFame !== "" && rec.user.details.fameRating > parseInt(filterMaxFame)) return false;
+            if (filterMaxDistance !== "" && parseFloat(rec.distanceBetween) > parseFloat(filterMaxDistance)) return false;
+            if (filterMinCommonTags !== "" && rec.commonTags.length < parseInt(filterMinCommonTags)) return false;
+            return true;
+        });
+    }, [sortedRecommendations, filterMinAge, filterMaxAge, filterMinFame, filterMaxFame, filterMaxDistance, filterMinCommonTags]);
+
+    function clearFilters() {
+        setFilterMinAge("");
+        setFilterMaxAge("");
+        setFilterMinFame("");
+        setFilterMaxFame("");
+        setFilterMaxDistance("");
+        setFilterMinCommonTags("");
+    }
 
     const getImageUrl = (recommendation: Recommendation) => {
         if (recommendation.user.details.profilePhoto) {
@@ -165,65 +191,35 @@ export default function BrowsePage() {
                     <PopoverContent className="w-80">
                         <div className="grid gap-2">
                             <div className="grid grid-cols-3 items-center gap-4">
-                                <Label htmlFor="age">Age</Label>
+                                <Label>Age</Label>
                                 <div className="col-span-2 flex gap-1">
-                                    <Input
-                                        id="min-age"
-                                        placeholder="min"
-                                        className="h-8 flex-1"
-                                        type="number"
-                                    />
+                                    <Input value={filterMinAge} onChange={e => setFilterMinAge(e.target.value)} placeholder="min" className="h-8 flex-1" type="number" />
                                     -
-                                    <Input
-                                        id="max-age"
-                                        placeholder="max"
-                                        className="h-8 flex-1"
-                                        type="number"
-                                    />
+                                    <Input value={filterMaxAge} onChange={e => setFilterMaxAge(e.target.value)} placeholder="max" className="h-8 flex-1" type="number" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 items-center gap-4">
-                                <Label htmlFor="fame-rating">Fame</Label>
+                                <Label>Fame</Label>
                                 <div className="col-span-2 flex gap-1">
-                                    <Input
-                                        id="min-fame"
-                                        placeholder="min"
-                                        className="h-8 flex-1"
-                                        type="number"
-                                    />
+                                    <Input value={filterMinFame} onChange={e => setFilterMinFame(e.target.value)} placeholder="min" className="h-8 flex-1" type="number" />
                                     -
-                                    <Input
-                                        id="max-fame"
-                                        placeholder="max"
-                                        className="h-8 flex-1"
-                                        type="number"
-                                    />
+                                    <Input value={filterMaxFame} onChange={e => setFilterMaxFame(e.target.value)} placeholder="max" className="h-8 flex-1" type="number" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 items-center gap-4">
-                                <Label htmlFor="distance">Distance (km)</Label>
+                                <Label>Distance (km)</Label>
                                 <div className="col-span-2 flex gap-1">
-                                    <Input
-                                        id="max-distance"
-                                        placeholder="max"
-                                        className="h-8 flex-1"
-                                        type="number"
-                                    />
+                                    <Input value={filterMaxDistance} onChange={e => setFilterMaxDistance(e.target.value)} placeholder="max" className="h-8 flex-1" type="number" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 items-center gap-4">
-                                <Label htmlFor="common-tags">Common tags</Label>
+                                <Label>Common tags</Label>
                                 <div className="col-span-2 flex gap-1">
-                                    <Input
-                                        id="min-number-of-common-tags"
-                                        placeholder="min"
-                                        className="h-8 flex-1"
-                                        type="number"
-                                    />
+                                    <Input value={filterMinCommonTags} onChange={e => setFilterMinCommonTags(e.target.value)} placeholder="min" className="h-8 flex-1" type="number" />
                                 </div>
                             </div>
                         </div>
-                        <Button className="cursor-pointer mt-4 w-full" variant="secondary">
+                        <Button className="cursor-pointer mt-4 w-full" variant="secondary" onClick={clearFilters}>
                             Clear filters
                         </Button>
                     </PopoverContent>
@@ -237,7 +233,7 @@ export default function BrowsePage() {
             )}
 
             <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4">
-                {sortedRecommendations.map((rec) => (
+                {filteredRecommendations.map((rec) => (
                     <NavLink key={rec.user.id} to={`/user/${rec.user.id}`}>
                         <Card className="w-full rounded-md py-4 gap-3">
                             <CardContent className="px-4">

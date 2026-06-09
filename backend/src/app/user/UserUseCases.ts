@@ -1,15 +1,17 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidUserValidationToken, MissingRequestFields, User, UserAccountNotVerified, UserBlockedError, UserEmailAlreadyExists, UserGender, UserNotFound, UserSex, WeakPasswordError, type UserId } from "@/core/user/User";
+import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidPasswordResetToken, InvalidUserValidationToken, MissingRequestFields, NoProfilePhotoError, User, UserAccountNotVerified, UserBlockedError, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserGender, UserNotFound, UserSex, WeakPasswordError, type UserId } from "@/core/user/User";
 import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserRequestDto, type UserProfileResponseDto, LikeStatus, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { IProfileVisitRepository } from "@/core/profileVisit/IProfileVisitRepository";
 import type { IBlockRepository } from "@/core/block/IBlockRepository";
+import type { IReportRepository } from "@/core/report/IReportRepository";
 import type { IPasswordHasher } from "@/core/user/IPasswordHasher";
 import type { INotificationService } from "@/core/notification/INotificationService";
 import { Tag } from "@/core/tag/Tag";
 import type { ITagsService } from "@/core/tag/ITagsService";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
 import type EmailVerificationService from "../email/EmailVerificationService";
-import type { ILikeRepository } from "@/core/like/ILikeRepository";
+import crypto from "node:crypto";
+import type { ILikeRepository, LikerInfo } from "@/core/like/ILikeRepository";
 import type { LikePair } from "@/core/like/Like";
 import type { IUserSocketRegistry } from "@/core/socket/IUserSocketRegistry";
 
@@ -24,6 +26,7 @@ export class UserUseCases {
     private socketRegistry: IUserSocketRegistry;
     private profileVisitRepository: IProfileVisitRepository;
     private blockRepository: IBlockRepository;
+    private reportRepository: IReportRepository;
 
     constructor(
         userRepo: IUserRepository,
@@ -35,7 +38,8 @@ export class UserUseCases {
         emailVerificationService: EmailVerificationService,
         socketRegistry: IUserSocketRegistry,
         profileVisitRepository: IProfileVisitRepository,
-        blockRepository: IBlockRepository
+        blockRepository: IBlockRepository,
+        reportRepository: IReportRepository
     )
     {
         this.userRepo = userRepo;
@@ -48,11 +52,18 @@ export class UserUseCases {
         this.socketRegistry = socketRegistry;
         this.profileVisitRepository = profileVisitRepository;
         this.blockRepository = blockRepository;
+        this.reportRepository = reportRepository;
     }
 
     private adjustFame(userId: number, delta: number): void {
         this.userRepo.adjustFameRating(userId, delta).catch(() => {});
     }
+
+    private readonly commonPasswords = [
+        "password", "password1", "password123", "123456", "12345678", "qwerty",
+        "qwerty123", "abc123", "letmein", "monkey", "1234567890", "iloveyou",
+        "admin", "welcome", "login", "passw0rd", "master", "hello", "sunshine", "dragon"
+    ];
 
     private validatePassword(password: string): void {
         if (
@@ -63,25 +74,29 @@ export class UserUseCases {
         ) {
             throw new WeakPasswordError();
         }
+        if (this.commonPasswords.includes(password.toLowerCase())) {
+            throw new WeakPasswordError();
+        }
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
         const userEmail = new EmailAddress(dto.email);
         const userExists: User | null = await this.userRepo.findUserByEmail(userEmail);
-        if (userExists)
-            throw new UserEmailAlreadyExists();
+        if (userExists) throw new UserEmailAlreadyExists();
+
+        const usernameExists: User | null = await this.userRepo.findUserByUsername(dto.username);
+        if (usernameExists) throw new UsernameAlreadyExistsError();
 
         this.validatePassword(dto.password);
 
         const hashedPassword: string = await this.passwordHasher.hash(dto.password);
-        const createdUser: User = await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword);
+        const createdUser: User = await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword, dto.username);
 
         this.emailVerificationService.sendVerificationEmail(createdUser);
     }
 
     async loginUser(dto: UserLoginRequestDto): Promise<User> {
-        const userEmail = new EmailAddress(dto.email);
-        const user: User | null = await this.userRepo.findUserByEmail(userEmail);
+        const user: User | null = await this.userRepo.findUserByUsername(dto.username);
         if (!user)
             throw new UserNotFound();
 
@@ -117,6 +132,10 @@ export class UserUseCases {
             isBlockedByMe = (await this.blockRepository.getBlockedIds(viewerId)).includes(userId);
             this.profileVisitRepository.record(viewerId, userId);
             this.adjustFame(userId, +1);
+            const viewer = await this.userRepo.findUserById(viewerId);
+            if (viewer) {
+                this.notificationService.notifiProfileView(viewer, user).catch(() => {});
+            }
         }
 
         const isOnline: boolean = this.socketRegistry.getUserSocket(userId) ? true : false;
@@ -308,6 +327,9 @@ export class UserUseCases {
 
         if (!producer || !target) throw new UserNotFound();
 
+        if (!producer.details?.profilePhoto)
+            throw new NoProfilePhotoError();
+
         if (await this.blockRepository.isBlocked(producerId, targetId))
             throw new UserBlockedError();
 
@@ -325,6 +347,7 @@ export class UserUseCases {
         if (like[1] != null) {
             this.adjustFame(targetId, +2);
             this.adjustFame(producerId, +2);
+            this.notificationService.notifyUserLikedBack(producer, target).catch(() => {});
         }
     }
 
@@ -359,6 +382,41 @@ export class UserUseCases {
         else {
             return LikeStatus.MUTUAL;
         }
+    }
+
+    async getProfileLikers(userId: number): Promise<LikerInfo[]> {
+        return this.likeRepository.getLikers(userId);
+    }
+
+    async reportUser(reporterId: UserId, reportedId: UserId): Promise<void> {
+        const reporter = await this.userRepo.findUserById(reporterId);
+        const reported = await this.userRepo.findUserById(reportedId);
+        if (!reporter || !reported) throw new UserNotFound();
+        await this.reportRepository.report(reporterId, reportedId);
+    }
+
+    async forgotPassword(email: string): Promise<void> {
+        const userEmail = new EmailAddress(email);
+        const user = await this.userRepo.findUserByEmail(userEmail);
+        if (!user) return; // don't reveal whether email exists
+
+        const token = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+        await this.userRepo.setPasswordResetToken(user.id, token, expiresAt);
+
+        const domain = process.env.DOMAIN || "http://localhost";
+        const resetUrl = `${domain}/reset-password?token=${token}`;
+        this.emailVerificationService.sendPasswordResetEmail(user, resetUrl);
+    }
+
+    async resetPassword(token: string, newPassword: string): Promise<void> {
+        const user = await this.userRepo.getUserByPasswordResetToken(token);
+        if (!user) throw new InvalidPasswordResetToken();
+
+        this.validatePassword(newPassword);
+        const hashed = await this.passwordHasher.hash(newPassword);
+        await this.userRepo.updatePassword(user.id, hashed);
+        await this.userRepo.clearPasswordResetToken(user.id);
     }
 
     async verifyUserEmail(verifyToken: string): Promise<void> {

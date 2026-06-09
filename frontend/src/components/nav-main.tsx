@@ -16,6 +16,7 @@ import {
 	SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import { NavLink } from "react-router"
+import { Badge } from "@/components/ui/badge"
 
 export function NavMain({
 	items,
@@ -25,6 +26,7 @@ export function NavMain({
 		url: string
 		icon: LucideIcon
 		isActive?: boolean
+		badge?: number
 		items?: {
 			title: string
 			url: string
@@ -41,6 +43,7 @@ export function NavMain({
 								<NavLink to={item.url}>
 									<item.icon />
 									<span>{item.title}</span>
+									{item.badge ? <Badge variant="destructive" className="ml-auto text-xs px-1.5 py-0">{item.badge}</Badge> : null}
 								</NavLink>
 							</SidebarMenuButton>
 							{item.items?.length ? (

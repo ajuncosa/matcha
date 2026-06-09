@@ -44,6 +44,17 @@ class EmailVerificationService {
         return new URL(`/verify/${hash}`, base).toString();
     }
 
+    async sendPasswordResetEmail(user: User, resetUrl: string): Promise<void> {
+        const email: EmailMessage = {
+            senderName: "Matcha",
+            senderAddress: new EmailAddress("no-reply@matcha.com"),
+            recipientAddress: user.email,
+            subject: "Password reset",
+            body: `Click the link below to reset your password. It expires in 1 hour.\n\n${resetUrl}`,
+        };
+        this.emailSender.sendEmail(email);
+    }
+
     async sendVerificationEmail(user: User): Promise<void> {
         const verificationToken: string = this.createVerificationToken();
         

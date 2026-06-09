@@ -21,6 +21,8 @@ import { Toaster } from 'sonner';
 import { ChatContextProvider } from './contexts/ChatContextProvider';
 import VerifyUser from './pages/VerifyUser';
 import LandingPage from '@/pages/Landing';
+import ForgotPasswordPage from '@/pages/ForgotPassword';
+import ResetPasswordPage from '@/pages/ResetPassword';
 
 
 function RootLayout() {
@@ -84,6 +86,8 @@ const router = createBrowserRouter([
             { path: 'login', element: <Login /> },
             { path: 'register', element: <Register /> },
             { path: 'verify/:id', element: <VerifyUser /> },
+            { path: 'forgot-password', element: <ForgotPasswordPage /> },
+            { path: 'reset-password', element: <ResetPasswordPage /> },
             {
                 element: <ProtectedRoute/>,
                 path: "",

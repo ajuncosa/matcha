@@ -11,7 +11,17 @@ import ProfileEditDialog from "@/components/profile-edit-dialogs";
 import type { LikeStatus, UserProfileResponseDto } from "@/dto/UserDto";
 import 'leaflet/dist/leaflet.css';
 import { toast } from "sonner";
-import { Ban, Mars, ThumbsDown, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
+import { Ban, Flag, Mars, ThumbsDown, ThumbsUpIcon, Venus, VenusAndMars } from "lucide-react";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate, NavLink } from "react-router";
 
@@ -21,6 +31,14 @@ interface ProfileVisitorDto {
     lastname: string;
     profilePhotoPath: string | null;
     lastVisitedAt: string;
+}
+
+interface LikerDto {
+    id: number;
+    name: string;
+    lastname: string;
+    profilePhotoPath: string | null;
+    likedAt: string;
 }
 
 function timeAgo(dateStr: string): string {
@@ -41,6 +59,7 @@ export default function ProfilePage() {
     const [userProfileData, setUserProfileData] = useState<UserProfileResponseDto>();
     const [location, setLocation] = useState<{lat: number, lon: number}>({lat: 40.4168, lon: -3.7038});
     const [visitors, setVisitors] = useState<ProfileVisitorDto[]>([]);
+    const [likers, setLikers] = useState<LikerDto[]>([]);
     const navigate = useNavigate();
 
     async function fetchUserData(url: string, onError?: () => void): Promise<void> {
@@ -71,10 +90,12 @@ export default function ProfilePage() {
 
     async function getProfile(): Promise<void> {
         await fetchUserData("http://localhost/api/user/profile");
-        const resp = await fetch("/api/user/visitors");
-        if (resp.ok) {
-            setVisitors(await resp.json());
-        }
+        const [visitorsResp, likersResp] = await Promise.all([
+            fetch("/api/user/visitors"),
+            fetch("/api/user/likers"),
+        ]);
+        if (visitorsResp.ok) setVisitors(await visitorsResp.json());
+        if (likersResp.ok) setLikers(await likersResp.json());
     }
 
     async function getUser(id: number): Promise<void> {
@@ -164,7 +185,16 @@ export default function ProfilePage() {
         }
     }
 
-    function UserActionButton({ likeStatus, isBlockedByMe, userId, onLike, onUnlike, onBlock, onUnblock } : {likeStatus: LikeStatus | undefined, isBlockedByMe: boolean, userId: string, onLike: CallableFunction, onUnlike: CallableFunction, onBlock: CallableFunction, onUnblock: CallableFunction}) {
+    async function reportUser(id: number) {
+        const resp = await fetch(`/api/user/report/${id}`, { method: "POST" });
+        if (resp.ok) {
+            toast.success(`You reported ${userProfileData!.name} as fake.`);
+        } else {
+            toast.error(`Error reporting ${userProfileData!.name}`);
+        }
+    }
+
+    function UserActionButton({ likeStatus, isBlockedByMe, userId, onLike, onUnlike, onBlock, onUnblock, onReport } : {likeStatus: LikeStatus | undefined, isBlockedByMe: boolean, userId: string, onLike: CallableFunction, onUnlike: CallableFunction, onBlock: CallableFunction, onUnblock: CallableFunction, onReport: CallableFunction}) {
         const isMutual = likeStatus === "MUTUAL";
 
         const statusLabels: Record<string, string> = {
@@ -173,6 +203,32 @@ export default function ProfilePage() {
             "LIKED_BACK": "Like Back",
             "MUTUAL": "Mutual ❤️"
         };
+
+        const reportButton = (
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant="ghost" size="lg" className="cursor-pointer text-destructive hover:text-destructive">
+                        <Flag className="mr-2" /> Report
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Report this profile?</DialogTitle>
+                        <DialogDescription>
+                            This will flag the profile as fake for review. This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <DialogClose asChild>
+                            <Button variant="destructive" onClick={() => onReport(Number(userId))}>Report</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
 
         const blockButton = isBlockedByMe ? (
             <Button variant="outline" size="lg" className="cursor-pointer" onClick={() => onUnblock(Number(userId))}>
@@ -200,6 +256,7 @@ export default function ProfilePage() {
                         Remove
                     </Button>
                     {blockButton}
+                    {reportButton}
                 </div>
             );
         }
@@ -218,6 +275,7 @@ export default function ProfilePage() {
                     {statusLabels[likeStatus || ""] || "Like"}
                 </Button>
                 {blockButton}
+                {reportButton}
             </div>
         );
     }
@@ -225,6 +283,7 @@ export default function ProfilePage() {
     useEffect(() => {
         setUserProfileData(undefined);
         setVisitors([]);
+        setLikers([]);
         if (id) {
             getUser(Number(id));
         }
@@ -287,6 +346,7 @@ export default function ProfilePage() {
                                 onUnlike={unLikeUser}
                                 onBlock={blockUser}
                                 onUnblock={unblockUser}
+                                onReport={reportUser}
                             />
                         ) : (
                             <ProfileEditDialog profileData={userProfileData} onUpdate={getProfile} />
@@ -342,6 +402,36 @@ export default function ProfilePage() {
                     <LocationDisplayMap location={location}/>
                 </div>
             </div>
+
+            {!id && (
+                <div className="w-full mt-4">
+                    <h2 className="text-2xl">Who Liked Me</h2>
+                    {likers.length === 0 ? (
+                        <p className="mt-2 text-muted-foreground text-sm">Nobody has liked your profile yet.</p>
+                    ) : (
+                        <div className="mt-2 grid grid-cols-[repeat(auto-fit,_minmax(260px,_1fr))] gap-2">
+                            {likers.map((l) => (
+                                <NavLink key={l.id} to={`/user/${l.id}`}>
+                                    <Card className="p-2 hover:bg-accent transition-colors">
+                                        <CardContent className="flex items-center gap-3 p-2">
+                                            <Avatar className="rounded-lg w-12 h-12 shrink-0">
+                                                {l.profilePhotoPath && (
+                                                    <AvatarImage className="object-cover" src={`/api/images/${l.profilePhotoPath}`} alt={`${l.name} ${l.lastname}`} />
+                                                )}
+                                                <AvatarFallback className="rounded-lg text-sm font-semibold">{l.name[0]}{l.lastname[0]}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="min-w-0">
+                                                <p className="font-medium truncate">{l.name} {l.lastname}</p>
+                                                <p className="text-muted-foreground text-sm">{timeAgo(l.likedAt)}</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </NavLink>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {!id && (
                 <div className="w-full mt-4">

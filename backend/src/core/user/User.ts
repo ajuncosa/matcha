@@ -61,6 +61,24 @@ export class UserBlockedError extends Error {
     }
 }
 
+export class NoProfilePhotoError extends Error {
+    constructor() {
+        super("You must set a profile photo before liking someone");
+    }
+}
+
+export class UsernameAlreadyExistsError extends Error {
+    constructor() {
+        super("This username is already taken");
+    }
+}
+
+export class InvalidPasswordResetToken extends Error {
+    constructor() {
+        super("Invalid or expired password reset link");
+    }
+}
+
 export class EmailAddress {
     private email: string;
 
@@ -135,16 +153,18 @@ export class User {
     id: UserId;
     name: string;
     lastname: string;
+    username: string;
     email: EmailAddress;
     password: string;
     createdAt: Date;
     emailValidatedAt: Date | null;
     details: UserDetails | null;
 
-    constructor(id: UserId, name: string, lastname: string, email: EmailAddress, password: string, createdAt: Date, emailValidatedAt?: Date) {
+    constructor(id: UserId, name: string, lastname: string, username: string, email: EmailAddress, password: string, createdAt: Date, emailValidatedAt?: Date) {
         this.id = id;
         this.name = name;
         this.lastname = lastname;
+        this.username = username;
         this.email = email;
         this.password = password;
         this.createdAt = createdAt;

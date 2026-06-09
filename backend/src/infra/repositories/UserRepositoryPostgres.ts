@@ -62,6 +62,7 @@ export default class UserRepositoryPostgres implements IUserRepository {
             userQuery.rows[0].id,
             userQuery.rows[0].name,
             userQuery.rows[0].lastname,
+            userQuery.rows[0].username ?? "",
             new EmailAddress(userQuery.rows[0].email),
             userQuery.rows[0].password,
             new Date(userQuery.rows[0].created_at),
@@ -92,6 +93,7 @@ export default class UserRepositoryPostgres implements IUserRepository {
             query.rows[0].id,
             query.rows[0].name,
             query.rows[0].lastname,
+            query.rows[0].username ?? "",
             new EmailAddress(query.rows[0].email),
             query.rows[0].password,
             new Date(query.rows[0].created_at),
@@ -109,16 +111,46 @@ export default class UserRepositoryPostgres implements IUserRepository {
         return user;
     }
 
-    async createUser(name: string, lastname: string, email: EmailAddress, password: string): Promise<User> {
-        const query = await this.pool.query(`INSERT INTO users(name, lastname, email, password, created_at)
-                        VALUES($1, $2, $3, $4, CURRENT_TIMESTAMP)
-                        RETURNING id, name, lastname, email, password, created_at`,
-                    [name, lastname, email.value(), password]);
+    async findUserByUsername(username: string): Promise<User | null> {
+        const query = await this.pool.query("SELECT * FROM users WHERE username=$1", [username]);
+        if (query.rows.length == 0) return null;
+
+        let emailValidatedAt = undefined;
+        if (query.rows[0].email_validated_at)
+            emailValidatedAt = new Date(query.rows[0].email_validated_at);
 
         const user = new User(
             query.rows[0].id,
             query.rows[0].name,
             query.rows[0].lastname,
+            query.rows[0].username ?? "",
+            new EmailAddress(query.rows[0].email),
+            query.rows[0].password,
+            new Date(query.rows[0].created_at),
+            emailValidatedAt
+        );
+
+        const detailsQuery = await this.pool.query("SELECT * FROM users_details WHERE user_id=$1", [user.id]);
+        if (detailsQuery.rows.length != 0) {
+            const tags = await this.getUserTags(user.id);
+            const photos = await this.getUserPhotos(user.id);
+            user.details = this.constructUserDetails(detailsQuery, tags, photos);
+        }
+
+        return user;
+    }
+
+    async createUser(name: string, lastname: string, email: EmailAddress, password: string, username: string): Promise<User> {
+        const query = await this.pool.query(`INSERT INTO users(name, lastname, email, password, username, created_at)
+                        VALUES($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+                        RETURNING id, name, lastname, email, password, username, created_at`,
+                    [name, lastname, email.value(), password, username]);
+
+        const user = new User(
+            query.rows[0].id,
+            query.rows[0].name,
+            query.rows[0].lastname,
+            query.rows[0].username,
             new EmailAddress(query.rows[0].email),
             query.rows[0].password,
             new Date(query.rows[0].created_at)
@@ -297,6 +329,7 @@ export default class UserRepositoryPostgres implements IUserRepository {
             userQuery.rows[0].id,
             userQuery.rows[0].name,
             userQuery.rows[0].lastname,
+            userQuery.rows[0].username ?? "",
             new EmailAddress(userQuery.rows[0].email),
             userQuery.rows[0].password,
             new Date(userQuery.rows[0].created_at),
@@ -312,6 +345,50 @@ export default class UserRepositoryPostgres implements IUserRepository {
              SET fame_rating = GREATEST(0, fame_rating + $2)
              WHERE user_id = $1`,
             [userId, delta]
+        );
+    }
+
+    async setPasswordResetToken(userId: UserId, token: string, expiresAt: Date): Promise<void> {
+        await this.pool.query(
+            `UPDATE users SET password_reset_token=$2, password_reset_expires_at=$3 WHERE id=$1`,
+            [userId, token, expiresAt]
+        );
+    }
+
+    async getUserByPasswordResetToken(token: string): Promise<User | null> {
+        const query = await this.pool.query(
+            "SELECT * FROM users WHERE password_reset_token=$1 AND password_reset_expires_at > NOW()",
+            [token]
+        );
+        if (query.rows.length == 0) return null;
+
+        let emailValidatedAt = undefined;
+        if (query.rows[0].email_validated_at)
+            emailValidatedAt = new Date(query.rows[0].email_validated_at);
+
+        return new User(
+            query.rows[0].id,
+            query.rows[0].name,
+            query.rows[0].lastname,
+            query.rows[0].username ?? "",
+            new EmailAddress(query.rows[0].email),
+            query.rows[0].password,
+            new Date(query.rows[0].created_at),
+            emailValidatedAt
+        );
+    }
+
+    async clearPasswordResetToken(userId: UserId): Promise<void> {
+        await this.pool.query(
+            `UPDATE users SET password_reset_token=NULL, password_reset_expires_at=NULL WHERE id=$1`,
+            [userId]
+        );
+    }
+
+    async updatePassword(userId: UserId, hashedPassword: string): Promise<void> {
+        await this.pool.query(
+            `UPDATE users SET password=$2 WHERE id=$1`,
+            [userId, hashedPassword]
         );
     }
 
@@ -336,6 +413,7 @@ export default class UserRepositoryPostgres implements IUserRepository {
                 row.id,
                 row.name,
                 row.lastname,
+                row.username ?? "",
                 new EmailAddress(row.email),
                 row.password,
                 new Date(row.created_at),

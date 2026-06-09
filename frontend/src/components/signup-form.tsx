@@ -31,6 +31,7 @@ function isPasswordValid(password: string) {
 interface RegisterForm {
     firstname: string;
     lastname: string;
+    username: string;
     email: string;
     password: string;
     confirm_password: string;
@@ -40,6 +41,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
     const [form, setForm] = useState<RegisterForm>({
         firstname: "",
         lastname: "",
+        username: "",
         email: "",
         password: "",
         confirm_password: ""
@@ -58,7 +60,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
         e.preventDefault();
         setFormError("");
 
-        if (!form.email || !form.firstname || !form.lastname || !form.password || !form.confirm_password) {
+        if (!form.email || !form.firstname || !form.lastname || !form.username || !form.password || !form.confirm_password) {
             setFormError("Please fill all the required fields");
             return;
         }
@@ -83,6 +85,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                 email: form.email,
                 name: form.firstname,
                 lastname: form.lastname,
+                username: form.username,
                 password: form.password
             })
         });
@@ -140,6 +143,10 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                         <Field>
                             <FieldLabel htmlFor="lastname">Last Name</FieldLabel>
                             <Input id="lastname" type="text" placeholder="Doe" required onChange={onFormChange} />
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="username">Username</FieldLabel>
+                            <Input id="username" type="text" placeholder="johndoe" required onChange={onFormChange} />
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="email">Email</FieldLabel>

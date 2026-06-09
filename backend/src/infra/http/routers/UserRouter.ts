@@ -1,6 +1,6 @@
 import { type UpdateUserRequestDto, type UserProfileResponseDto, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
-import { BiographyTooLong, MissingRequestFields, UserBlockedError, UserNotFound, WeakPasswordError } from "@/core/user/User";
+import { BiographyTooLong, MissingRequestFields, NoProfilePhotoError, UserBlockedError, UserNotFound, WeakPasswordError } from "@/core/user/User";
 import { type Request, type Response } from "express";
 import MatchaRouter from "./MatchaRouter";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
@@ -16,10 +16,12 @@ export default class UserRouter extends MatchaRouter {
         this.router.get("/profile", (req, res) => this.getProfile(req, res));
         this.router.post("/profile", (req, res) => this.updateUser(req, res));
         this.router.get("/visitors", (req, res) => this.getVisitors(req, res));
+        this.router.get("/likers", (req, res) => this.getLikers(req, res));
         this.router.post('/like/:userId', (req, res) => this.like(req, res));
         this.router.post('/unlike/:userId', (req, res) => this.unLike(req, res));
         this.router.post('/block/:userId', (req, res) => this.blockUser(req, res));
         this.router.post('/unblock/:userId', (req, res) => this.unblockUser(req, res));
+        this.router.post('/report/:userId', (req, res) => this.reportUser(req, res));
         this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.addUserPhotos(req, res));
         this.router.delete("/photos/:photoId", (req, res) => this.deleteUserPhoto(req, res));
         this.router.get("/:userId", (req, res) => this.getUser(req, res));
@@ -97,6 +99,16 @@ export default class UserRouter extends MatchaRouter {
         }
     }
 
+    async getLikers(req: Request, res: Response) {
+        try {
+            const likers = await this.userUseCases.getProfileLikers(req.session.userId!);
+            res.status(200).json(likers);
+        }
+        catch (e) {
+            throw e;
+        }
+    }
+
     async getUser(req: Request, res: Response) {
         try {
             if (!("userId" in req.params)) {
@@ -154,7 +166,7 @@ export default class UserRouter extends MatchaRouter {
         }
 
         try {
-            this.userUseCases.like(producerId, targetId);
+            await this.userUseCases.like(producerId, targetId);
             res.status(200).send();
         }
         catch(e) {
@@ -164,6 +176,10 @@ export default class UserRouter extends MatchaRouter {
             else if (e instanceof UserBlockedError) {
                 res.status(403).send(e.message);
             }
+            else if (e instanceof NoProfilePhotoError) {
+                res.status(403).send(e.message);
+            }
+            else throw e;
         }
     }
 
@@ -213,6 +229,20 @@ export default class UserRouter extends MatchaRouter {
         if (!blockerId || isNaN(targetId)) return res.status(400).send("Missing parameters");
         try {
             await this.userUseCases.unblockUser(blockerId, targetId);
+            res.status(200).send();
+        }
+        catch (e) {
+            if (e instanceof UserNotFound) res.status(404).send("User not found");
+            else throw e;
+        }
+    }
+
+    async reportUser(req: Request, res: Response) {
+        const reporterId = req.session.userId;
+        const reportedId = req.params.userId ? parseInt(req.params.userId) : NaN;
+        if (!reporterId || isNaN(reportedId)) return res.status(400).send("Missing parameters");
+        try {
+            await this.userUseCases.reportUser(reporterId, reportedId);
             res.status(200).send();
         }
         catch (e) {
