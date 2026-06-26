@@ -1,0 +1,28 @@
+- [ ] Check if you can reset password if account is not validated
+- [ ] Limit preference age on welcome page and profile page
+- [ ] Check if own user age is bigger than 18
+- [ ] Limit tag number per user to 10 & limit tag name characters
+- [ ] Populate all images of seed users
+- [ ] Commonly used dictionary words (regardless of language) should not be accepted as passwords
+    maybe use this https://ftp.gnu.org/gnu/aspell/dict/0index.html (aspell) || /usr/share/dict/words file
+- [ ] Improve chat, make it look better when there is no conversation. Like adding borders for example.
+- [ ] Improve profile photos dipslay. Put a grid or something
+- [ ] On search page if there is only one result, make it same size as if there were more. Right now is full width card. Same for browse page
+- [ ] Upload pictures ui form is borken
+- [ ] Change like button if was already pressed to show the action "Unlike".
+- [ ] On browse page set distance as default sorting property
+- [ ] Make search page cards consistent with browse page.
+    - [ ] Common tags must be highlited instead of showing text (n common tags)
+    - [ ] Show distance
+- [ ] Distance selecto not working on search page
+- [ ] Add a clear filters button on search page
+- [ ] Location sort on search page not working
+- [ ] Show username on profile page
+- [ ] Check chat notification, it is not working
+- [ ] User must select the chat, do not open the first one by default
+- [ ] Add link on chat page to go to user profile page
+- [ ] Fix unlike action, right now the users chats are not disabled
+- [ ] Add last connection to chat AND connection status (red, green dot). real time!
+- [ ] Fix title of login page, asks for email instead of username
+- [ ] Like notifications are not working
+- [ ] Ensure uploaded files are photos
