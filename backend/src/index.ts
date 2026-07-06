@@ -110,7 +110,7 @@ const suggestionService: SuggestionService = new SuggestionService(userRepositor
 // Use Cases
 const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, likeRepository, notificationService, tagsService, photosService, emailVerificationService, socketRegistry, profileVisitRepository, blockRepository, reportRepository);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
-const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository, userRepository, blockRepository);
+const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository, userRepository, blockRepository, socketRegistry);
 const searchUseCases: SearchUseCases = new SearchUseCases(searchRepository, userRepository, suggestionService);
 
 // Routers

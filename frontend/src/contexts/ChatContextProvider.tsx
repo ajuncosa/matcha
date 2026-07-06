@@ -16,6 +16,8 @@ export interface ChatUser {
     id: number;
     name: string;
     lastname: string;
+    lastConnection: string | null;
+    isOnline: boolean;
 }
 
 export interface Chat {
@@ -94,6 +96,23 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
         });
     }
 
+    function updatePresence(payload: { userId: number; isOnline: boolean; lastConnection: string | null }) {
+        setChats((prevChats) =>
+            prevChats.map((chat) =>
+                chat.otherUser.id === payload.userId
+                    ? {
+                        ...chat,
+                        otherUser: {
+                            ...chat.otherUser,
+                            isOnline: payload.isOnline,
+                            lastConnection: payload.lastConnection ?? chat.otherUser.lastConnection
+                        }
+                    }
+                    : chat
+            )
+        );
+    }
+
     async function receiveMessage(payload: Message) {
         setChats((prevChats) => {
             return prevChats.map((chat) => {
@@ -149,9 +168,15 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
             "ChatContextProvider",
             (message) => receiveMessage(message)
         );
+        const presenceSubId: number = socket.subscribeToEvent(
+            'presence:update',
+            "ChatContextProvider",
+            (payload) => updatePresence(payload)
+        );
 
         return () => {
             socket.unsubscribeFromEvent(subscriberId, 'chat:message', "ChatContextProvider");
+            socket.unsubscribeFromEvent(presenceSubId, 'presence:update', "ChatContextProvider");
         }
 
     }, [user.loggedIn]);

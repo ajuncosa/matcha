@@ -69,9 +69,11 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
         // YOU HAVE TO RESTART THE PROCESS IN THE TERMINAL "CTRL+C and the bun run dev"
         socket.onAny((event, payload: any) => this.onAnyEvent(event, userSock, payload));
 
-        socket.on('disconnect', (reason: DisconnectReason) => 
+        socket.on('disconnect', (reason: DisconnectReason) =>
             this.onSocketDisconnection(socket, reason)
         );
+
+        this.broadcastPresence(userId, true, null);
     }
 
     private onSocketDisconnection(socket: IORawSocket, reason: DisconnectReason) {
@@ -79,10 +81,24 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
 
         console.log("[SOCKET]: DISCONNECTED", socket.id, "User:", userId, "reason:", reason);
 
-        if (userId) this.usersSocketsMap.delete(userId);
+        if (!userId) return;
+
+        // Only clear presence if this exact socket is still the registered one.
+        // Prevents a replaced socket (e.g. user opened a second tab) from marking
+        // the still-online user as offline.
+        const currentSocket: Socket | undefined = this.usersSocketsMap.get(userId);
+        if (!currentSocket || currentSocket.id !== socket.id) return;
+
+        this.usersSocketsMap.delete(userId);
 
         // Mark user last_connection
         this.userRepo.setUserLastConnection(userId);
+
+        this.broadcastPresence(userId, false, new Date());
+    }
+
+    private broadcastPresence(userId: UserId, isOnline: boolean, lastConnection: Date | null) {
+        this.server.emit('presence:update', { userId, isOnline, lastConnection });
     }
 
     private onAnyEvent(event: EventName, socket: Socket, payload: any) {

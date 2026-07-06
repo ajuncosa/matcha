@@ -15,6 +15,8 @@ export interface ChatUser {
     id: UserId;
     name: string;
     lastname: string;
+    lastConnection: Date | null;
+    isOnline: boolean;
 }
 
 export interface Chat {

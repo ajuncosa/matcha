@@ -5,18 +5,32 @@ import type { Like } from "@/core/like/Like";
 import type { UserId } from "@/core/user/User";
 import type { IUserRepository } from "@/core/user/IUserRepository";
 import type { IBlockRepository } from "@/core/block/IBlockRepository";
+import type { IUserSocketRegistry } from "@/core/socket/IUserSocketRegistry";
+import type { User } from "@/core/user/User";
 
 export default class ChatUseCases {
     private messageRepo;
     private likeRepo;
     private userRepo;
     private blockRepo;
+    private socketRegistry;
 
-    constructor(messageRepository: IMessageRepository, likeRepo: ILikeRepository, userRepo: IUserRepository, blockRepo: IBlockRepository) {
+    constructor(messageRepository: IMessageRepository, likeRepo: ILikeRepository, userRepo: IUserRepository, blockRepo: IBlockRepository, socketRegistry: IUserSocketRegistry) {
         this.messageRepo = messageRepository;
         this.likeRepo = likeRepo;
         this.userRepo = userRepo;
         this.blockRepo = blockRepo;
+        this.socketRegistry = socketRegistry;
+    }
+
+    private toChatUser(otherUser: User): ChatUser {
+        return {
+            id: otherUser.id,
+            name: otherUser.name,
+            lastname: otherUser.lastname,
+            lastConnection: otherUser.details?.lastConnection ?? null,
+            isOnline: this.socketRegistry.getUserSocket(otherUser.id) ? true : false
+        };
     }
 
     async getUserChats(userId: UserId): Promise<Chat[]> {
@@ -47,11 +61,7 @@ export default class ChatUseCases {
             if (otherUser) {
                 chats.push({
                     myId: userId,
-                    otherUser: {
-                        id: otherUser.id,
-                        name: otherUser.name,
-                        lastname: otherUser.lastname
-                    },
+                    otherUser: this.toChatUser(otherUser),
                     messages: value
                 });
             }
@@ -70,11 +80,7 @@ export default class ChatUseCases {
             if (otherUser) {
                 chats.push({
                     myId: userId,
-                    otherUser: {
-                        id: otherUser.id,
-                        name: otherUser.name,
-                        lastname: otherUser.lastname
-                    },
+                    otherUser: this.toChatUser(otherUser),
                     messages: []
                 });
             }

@@ -26,6 +26,8 @@ export interface ChatUser {
     id: number;
     name: string;
     lastname: string;
+    lastConnection: string | null;
+    isOnline: boolean;
 }
 
 export interface Chat {
@@ -33,6 +35,13 @@ export interface Chat {
     otherUser: ChatUser;
     messages: Message[];
     unreadMessages: number;
+}
+
+function formatLastSeen(dateStr: string | null): string {
+    if (!dateStr) return "Offline";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "Offline";
+    return `Last seen ${date.toLocaleString()}`;
 }
 
 export default function ChatPage() {
@@ -149,6 +158,14 @@ export default function ChatPage() {
                                             {activeChat.otherUser.name} {activeChat.otherUser.lastname}
                                         </NavLink>
                                     </ItemTitle>
+                                    <ItemDescription className="flex items-center gap-2">
+                                        <span
+                                            className={`inline-block size-2 rounded-full ${activeChat.otherUser.isOnline ? "bg-green-500" : "bg-red-500"}`}
+                                        />
+                                        {activeChat.otherUser.isOnline
+                                            ? "Online"
+                                            : formatLastSeen(activeChat.otherUser.lastConnection)}
+                                    </ItemDescription>
                                 </ItemContent>
                             </Item>
                         </CardHeader>
