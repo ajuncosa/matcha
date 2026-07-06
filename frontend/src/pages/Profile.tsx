@@ -200,7 +200,7 @@ export default function ProfilePage() {
 
         const statusLabels: Record<string, string> = {
             "NOT_LIKED": "Like",
-            "LIKED": "Liked",
+            "LIKED": "Unlike",
             "LIKED_BACK": "Like Back",
             "MUTUAL": "Mutual ❤️"
         };
