@@ -18,7 +18,7 @@
 - [X] Show username on profile page
 - [x] Check chat notification, it is not working
 - [ ] User must select the chat, do not open the first one by default
-- [ ] Add link on chat page to go to user profile page
+- [X] Add link on chat page to go to user profile page
 - [ ] Fix unlike action, right now the users chats are not disabled
 - [ ] Add last connection to chat AND connection status (red, green dot). real time!
 - [ ] Fix title of login page, asks for email instead of username

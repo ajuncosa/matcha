@@ -11,6 +11,7 @@ import AuthContext from "@/contexts/AuthContextProvider";
 import ChatContext from "@/contexts/ChatContextProvider";
 import { ArrowLeft, MessageSquareOff, SendHorizonal } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
+import { NavLink } from "react-router";
 
 export interface Message {
     id: number;
@@ -143,7 +144,11 @@ export default function ChatPage() {
                                     </Avatar>
                                 </ItemMedia>
                                 <ItemContent>
-                                    <ItemTitle>{activeChat.otherUser.name} {activeChat.otherUser.lastname}</ItemTitle>
+                                    <ItemTitle>
+                                        <NavLink to={`/user/${activeChat.otherUser.id}`} className="hover:underline">
+                                            {activeChat.otherUser.name} {activeChat.otherUser.lastname}
+                                        </NavLink>
+                                    </ItemTitle>
                                 </ItemContent>
                             </Item>
                         </CardHeader>
