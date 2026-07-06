@@ -157,6 +157,19 @@ export default function SearchPage() {
         performSearch(1, false);
     };
 
+    const clearFilters = () => {
+        setSearchText("");
+        setMinAge("");
+        setMaxAge("");
+        setMinFame("");
+        setMaxFame("");
+        setMaxDistance("");
+        setTags("");
+        setMinCommonTags("");
+        setSortBy("");
+        setSortOrder("asc");
+    };
+
     const toggleSortOrder = () => {
         setSortOrder(prev => prev === "asc" ? "desc" : "asc");
     };
@@ -294,9 +307,14 @@ export default function SearchPage() {
                             </div>
                         </div>
                     </div>
-                    <Button onClick={handleSearchSubmit} className="mt-2">
-                        Search
-                    </Button>
+                    <div className="mt-2 flex gap-2">
+                        <Button onClick={handleSearchSubmit} className="flex-1">
+                            Search
+                        </Button>
+                        <Button variant="secondary" onClick={clearFilters}>
+                            Clear filters
+                        </Button>
+                    </div>
                 </div>
             </div>
 

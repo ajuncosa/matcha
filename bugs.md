@@ -9,13 +9,13 @@
 - [X] Upload pictures ui form is borken
 - [X] Change like button if was already pressed to show the action "Unlike".
 - [x] On browse page set distance as default sorting property
-- [ ] Make search page cards consistent with browse page.
-    - [ ] Common tags must be highlited instead of showing text (n common tags)
-    - [ ] Show distance
-- [ ] Distance selecto not working on search page
-- [ ] Add a clear filters button on search page
-- [ ] Location sort on search page not working
-- [ ] Show username on profile page
+- [X] Make search page cards consistent with browse page.
+    - [X] Common tags must be highlited instead of showing text (n common tags)
+    - [X] Show distance
+- [X] Distance selector not working on search page
+- [X] Add a clear filters button on search page
+- [X] Location sort on search page not working
+- [X] Show username on profile page
 - [ ] Check chat notification, it is not working
 - [ ] User must select the chat, do not open the first one by default
 - [ ] Add link on chat page to go to user profile page
