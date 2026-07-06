@@ -24,6 +24,7 @@ export interface SearchResultItemDto {
     profilePhoto: { id: number; filePath: string } | null;
     fameRating: number;
     distance: number | null;
+    commonTags: { id: number; name: string }[];
     commonTagsCount: number;
 }
 

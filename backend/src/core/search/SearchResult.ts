@@ -11,6 +11,7 @@ export interface SearchResultItem {
     profilePhoto: Photo | null;
     fameRating: number;
     distance: number | null;
+    commonTags: Tag[];
     commonTagsCount: number;
 }
 

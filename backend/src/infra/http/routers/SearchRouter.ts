@@ -84,6 +84,7 @@ export default class SearchRouter extends MatchaRouter {
                 : null,
             fameRating: item.fameRating,
             distance: item.distance,
+            commonTags: item.commonTags.map(tag => ({ id: tag.id, name: tag.name })),
             commonTagsCount: item.commonTagsCount
         };
     }

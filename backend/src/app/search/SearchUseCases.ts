@@ -27,6 +27,13 @@ export class SearchUseCases {
 
         const searcherTags = searcher.details?.tags || [];
 
+        // Default distance origin to the searcher's own location so distance is
+        // always computed, even when lat/lon are not passed as query params.
+        if (criteria.userLat === undefined && criteria.userLon === undefined && searcher.details) {
+            criteria.userLat = searcher.details.lat;
+            criteria.userLon = searcher.details.lon;
+        }
+
         const { users } = await this.searchRepo.searchUsers(searcherId, criteria);
 
         let resultItems = users.map((user) => this.mapToSearchResultItem(user, searcherTags, criteria));
@@ -60,7 +67,7 @@ export class SearchUseCases {
         const distance = criteria.userLat !== undefined && criteria.userLon !== undefined
             ? this.calculateDistance(criteria.userLat, criteria.userLon, user.lat, user.lon)
             : null;
-        const commonTagsCount = this.countCommonTags(user.tags, searcherTags);
+        const commonTags = this.getCommonTags(user.tags, searcherTags);
 
         const profilePhoto = user.profilePhotoId && user.profilePhotoPath
             ? new Photo(user.profilePhotoId, user.profilePhotoPath)
@@ -75,7 +82,8 @@ export class SearchUseCases {
             profilePhoto,
             fameRating: user.fameRating,
             distance,
-            commonTagsCount
+            commonTags,
+            commonTagsCount: commonTags.length
         };
     }
 
@@ -105,9 +113,9 @@ export class SearchUseCases {
         return degrees * (Math.PI / 180);
     }
 
-    private countCommonTags(userTags: Tag[], searcherTags: Tag[]): number {
+    private getCommonTags(userTags: Tag[], searcherTags: Tag[]): Tag[] {
         const searcherTagIds = new Set(searcherTags.map(t => t.id));
-        return userTags.filter(tag => searcherTagIds.has(tag.id)).length;
+        return userTags.filter(tag => searcherTagIds.has(tag.id));
     }
 
     private applyFilters(items: SearchResultItem[], criteria: SearchCriteria): SearchResultItem[] {

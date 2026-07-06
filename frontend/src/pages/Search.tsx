@@ -29,6 +29,7 @@ interface SearchResultItem {
     profilePhoto: { id: number; filePath: string } | null;
     fameRating: number;
     distance: number | null;
+    commonTags: { id: number; name: string }[];
     commonTagsCount: number;
 }
 
@@ -337,15 +338,22 @@ export default function SearchPage() {
                                 </div>
                                 <div className="text-sm text-muted-foreground">
                                     Fame: {item.fameRating}
-                                    {item.distance !== null && ` • ${item.distance} km`}
-                                    {item.commonTagsCount > 0 && ` • ${item.commonTagsCount} common tags`}
+                                    {' • '}{item.distance ?? 0} km
+                                    {item.commonTags.length > 0 && ` • ${item.commonTags.length} common tags`}
                                 </div>
                                 <div className="w-full mt-2 flex flex-wrap gap-1">
-                                    {item.tags.map(tag => (
-                                        <Badge key={tag.id} variant="outline" className="text-md">
-                                            {tag.name}
-                                        </Badge>
-                                    ))}
+                                    {item.tags.map(tag => {
+                                        const isCommon = item.commonTags.some(ct => ct.id === tag.id);
+                                        return (
+                                            <Badge
+                                                key={tag.id}
+                                                variant={isCommon ? "default" : "outline"}
+                                                className="text-md"
+                                            >
+                                                {tag.name}
+                                            </Badge>
+                                        );
+                                    })}
                                 </div>
                             </CardFooter>
                         </Card>
