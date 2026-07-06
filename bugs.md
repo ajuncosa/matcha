@@ -8,7 +8,7 @@
 - [x] On search page if there is only one result, make it same size as if there were more. Right now is full width card. Same for browse page
 - [X] Upload pictures ui form is borken
 - [X] Change like button if was already pressed to show the action "Unlike".
-- [ ] On browse page set distance as default sorting property
+- [x] On browse page set distance as default sorting property
 - [ ] Make search page cards consistent with browse page.
     - [ ] Common tags must be highlited instead of showing text (n common tags)
     - [ ] Show distance

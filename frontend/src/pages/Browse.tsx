@@ -62,7 +62,7 @@ export default function BrowsePage() {
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [sortBy, setSortBy] = useState<string>("");
+    const [sortBy, setSortBy] = useState<string>("location");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const [filterMinAge, setFilterMinAge] = useState<string>("");
     const [filterMaxAge, setFilterMaxAge] = useState<string>("");
