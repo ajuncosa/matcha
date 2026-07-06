@@ -16,7 +16,7 @@
 - [X] Add a clear filters button on search page
 - [X] Location sort on search page not working
 - [X] Show username on profile page
-- [ ] Check chat notification, it is not working
+- [x] Check chat notification, it is not working
 - [ ] User must select the chat, do not open the first one by default
 - [ ] Add link on chat page to go to user profile page
 - [ ] Fix unlike action, right now the users chats are not disabled

@@ -23,7 +23,7 @@ export class NotificationService implements INotificationService {
         const targetSocket: Socket | null = this.socketRegistry.getUserSocket(target.id);
 
         if (targetSocket) {
-            targetSocket.send('notification-like', notif);
+            targetSocket.send('notification:like', notif);
         }
 
         return notif;
@@ -33,7 +33,7 @@ export class NotificationService implements INotificationService {
         const notificationMessage: string = `${producer.name} ${producer.lastname} liked you back! You are now connected.`;
         const notif: LikeNotification = await this.notificationRepo.create(producer.id, target.id, NotificationType.LIKE, notificationMessage);
         const targetSocket: Socket | null = this.socketRegistry.getUserSocket(target.id);
-        if (targetSocket) targetSocket.send('notification-like', notif);
+        if (targetSocket) targetSocket.send('notification:like', notif);
         return notif;
     }
 
@@ -41,7 +41,7 @@ export class NotificationService implements INotificationService {
         const notificationMessage: string = `${producer.name} ${producer.lastname} sent you a message.`;
         const notif = await this.notificationRepo.create(producer.id, target.id, NotificationType.MESSAGE, notificationMessage) as MessageNotification;
         const targetSocket: Socket | null = this.socketRegistry.getUserSocket(target.id);
-        if (targetSocket) targetSocket.send('notification-message', notif);
+        if (targetSocket) targetSocket.send('notification:message', notif);
         return notif;
     }
 
@@ -49,7 +49,7 @@ export class NotificationService implements INotificationService {
         const notificationMessage: string = `${producer.name} ${producer.lastname} visited your profile.`;
         const notif = await this.notificationRepo.create(producer.id, target.id, NotificationType.PROFILE_VIEW, notificationMessage) as ProfileViewNotification;
         const targetSocket: Socket | null = this.socketRegistry.getUserSocket(target.id);
-        if (targetSocket) targetSocket.send('notification-profile-view', notif);
+        if (targetSocket) targetSocket.send('notification:profile-view', notif);
         return notif;
     }
 
@@ -59,7 +59,7 @@ export class NotificationService implements INotificationService {
 
         const targetSocket: Socket | null = this.socketRegistry.getUserSocket(target.id);
         if (targetSocket) {
-            targetSocket.send('notification-unlike', notif);
+            targetSocket.send('notification:unlike', notif);
         }
 
         return notif;
