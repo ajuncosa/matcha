@@ -240,7 +240,7 @@ export default function BrowsePage() {
                 </div>
             )}
 
-            <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4">
+            <div className="grid grid-cols-[repeat(auto-fill,_minmax(300px,_1fr))] gap-4">
                 {filteredRecommendations.map((rec) => (
                     <NavLink key={rec.user.id} to={`/user/${rec.user.id}`}>
                         <Card className="w-full rounded-md py-4 gap-3">

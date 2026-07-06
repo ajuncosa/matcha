@@ -309,7 +309,7 @@ export default function SearchPage() {
                 Found {total} results
             </div>
 
-            <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4 mt-4">
+            <div className="grid grid-cols-[repeat(auto-fill,_minmax(300px,_1fr))] gap-4 mt-4">
                 {results.map((item) => (
                     <NavLink to={`/user/${item.id}`}>
                         <Card key={item.id} className="w-full rounded-md py-4 gap-3">
