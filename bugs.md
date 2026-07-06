@@ -1,11 +1,10 @@
-- [ ] Check if you can reset password if account is not validated
-- [ ] Limit preference age on welcome page and profile page
-- [ ] Check if own user age is bigger than 18
-- [ ] Limit tag number per user to 10 & limit tag name characters
-- [ ] Populate all images of seed users
-- [ ] Commonly used dictionary words (regardless of language) should not be accepted as passwords
-    maybe use this https://ftp.gnu.org/gnu/aspell/dict/0index.html (aspell) || /usr/share/dict/words file
-- [ ] Improve chat, make it look better when there is no conversation. Like adding borders for example.
+- [X] Check if you can reset password if account is not validated
+    User can reset password if the account is not validated. But still cannot login
+
+- [X] Limit preference age on welcome page and profile page to a minimum of 18 years old
+- [X] Check if own user age is bigger than 18 on registration
+
+- [ ] Limit tag number per user to 10 & limit tag name characters to 30 chars
 - [ ] Improve profile photos dipslay. Put a grid or something
 - [ ] On search page if there is only one result, make it same size as if there were more. Right now is full width card. Same for browse page
 - [ ] Upload pictures ui form is borken
@@ -26,3 +25,7 @@
 - [ ] Fix title of login page, asks for email instead of username
 - [ ] Like notifications are not working
 - [ ] Ensure uploaded files are photos
+- [ ] Populate all images of seed users
+- [ ] Commonly used dictionary words (regardless of language) should not be accepted as passwords
+    maybe use this https://ftp.gnu.org/gnu/aspell/dict/0index.html (aspell) || /usr/share/dict/words file
+- [ ] Improve chat, make it look better when there is no conversation. Like adding borders for example.

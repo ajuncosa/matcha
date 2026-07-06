@@ -42,9 +42,24 @@ interface FormState {
     photos: [File | null, File | null, File | null, File | null];
 }
 
+const MINIMUM_AGE = 18;
+
+function calculateAge(birthday: Date): number {
+    const today = new Date();
+    let age = today.getFullYear() - birthday.getFullYear();
+    const monthDiff = today.getMonth() - birthday.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) {
+        age--;
+    }
+    return age;
+}
+
 export default function Welcome() {
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
+
+    const maxBirthday = new Date();
+    maxBirthday.setFullYear(maxBirthday.getFullYear() - MINIMUM_AGE);
 
     const welcomeSteps : string[] = ["preferences", "about-you", "location", "photos", "tags"];
     const [currentStep, setCurrentStep] = useState<number>(0);
@@ -80,15 +95,30 @@ export default function Welcome() {
         setFormError("");
         switch (welcomeSteps[currentStep])
         {
-            case "preferences":
+            case "preferences": {
                 if (!formState.preferredGender || !formState.preferredSex || !formState.preferredMinAge || !formState.preferredMaxAge) {
                     setFormError("Please fill all the required fields");
                     return;
                 }
+                const preferredMinAge = Number(formState.preferredMinAge);
+                const preferredMaxAge = Number(formState.preferredMaxAge);
+                if (preferredMinAge < MINIMUM_AGE) {
+                    setFormError(`Minimum age preference must be at least ${MINIMUM_AGE}`);
+                    return;
+                }
+                if (preferredMinAge >= preferredMaxAge) {
+                    setFormError("Minimum age must be smaller than maximum age");
+                    return;
+                }
                 break;
+            }
             case "about-you":
                 if (!formState.gender || !formState.sex || !formState.birthday || !formState.biography) {
                     setFormError("Please fill all the required fields");
+                    return;
+                }
+                if (calculateAge(formState.birthday) < MINIMUM_AGE) {
+                    setFormError(`You must be at least ${MINIMUM_AGE} years old to use this platform`);
                     return;
                 }
                 if (formState.biography.length > 300) {
@@ -307,6 +337,8 @@ export default function Welcome() {
                                         placeholder={`min (${formState.preferredMinAge})`}
                                         value={formState.preferredMinAge}
                                         className="h-8 flex-1"
+                                        type="number"
+                                        min={MINIMUM_AGE}
                                         onChange={setInputFormValue}
                                     />
                                     -
@@ -315,6 +347,8 @@ export default function Welcome() {
                                         placeholder={`max (${formState.preferredMaxAge})`}
                                         value={formState.preferredMaxAge}
                                         className="h-8 flex-1"
+                                        type="number"
+                                        min={MINIMUM_AGE}
                                         onChange={setInputFormValue}
                                     />
                                 </div>
@@ -346,6 +380,7 @@ export default function Welcome() {
                                         mode="single"
                                         selected={formState.birthday}
                                         captionLayout="dropdown"
+                                        disabled={{ after: maxBirthday }}
                                         onSelect={(date) => {
                                             setFormState({ ...formState, birthday: date })
                                             setOpenBirthdayCalendar(false)

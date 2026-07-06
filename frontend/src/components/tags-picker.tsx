@@ -11,6 +11,9 @@ interface TagsPickerProps {
     removeTag: CallableFunction
 }
 
+const MAX_TAGS = 10;
+const MAX_TAG_LENGTH = 30;
+
 export default function TagsPicker({tags, addTag, removeTag}: TagsPickerProps) {
     const [input, setInput] = useState<string>("");
     const [inputError, setInputError] = useState<string>("");
@@ -23,8 +26,16 @@ export default function TagsPicker({tags, addTag, removeTag}: TagsPickerProps) {
         e.preventDefault();
 
         setInputError("");
+        if (tags.length >= MAX_TAGS) {
+            setInputError(`Error: you can only add up to ${MAX_TAGS} tags`);
+            return;
+        }
         if (input.length < 3) {
             setInputError("Error: tag must be 3 or longer characters");
+            return;
+        }
+        if (input.length > MAX_TAG_LENGTH) {
+            setInputError(`Error: tag must be ${MAX_TAG_LENGTH} characters or fewer`);
             return;
         }
 
@@ -63,12 +74,18 @@ export default function TagsPicker({tags, addTag, removeTag}: TagsPickerProps) {
             </p>
             <Field className="mt-2" orientation="horizontal">
                 <InputGroup>
-                    <InputGroupInput placeholder="Tag" onChange={onInputchange} value={input} />
+                    <InputGroupInput
+                        placeholder="Tag"
+                        onChange={onInputchange}
+                        value={input}
+                        maxLength={MAX_TAG_LENGTH}
+                        disabled={tags.length >= MAX_TAGS}
+                    />
                     <InputGroupAddon>
                         <Hash />
                     </InputGroupAddon>
                 </InputGroup>
-                <Button type="submit" className="cursor-pointer" onClick={addClick}>Add</Button>
+                <Button type="submit" className="cursor-pointer" onClick={addClick} disabled={tags.length >= MAX_TAGS}>Add</Button>
             </Field>
         </form>
     );

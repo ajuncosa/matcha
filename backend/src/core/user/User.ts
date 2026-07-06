@@ -79,6 +79,30 @@ export class InvalidPasswordResetToken extends Error {
     }
 }
 
+export class UserUnderageError extends Error {
+    constructor() {
+        super("You must be at least 18 years old to use this platform");
+    }
+}
+
+export class InvalidAgePreferenceError extends Error {
+    constructor() {
+        super("Minimum age preference must be at least 18");
+    }
+}
+
+export class TooManyTagsError extends Error {
+    constructor() {
+        super("You can only have up to 10 tags");
+    }
+}
+
+export class TagTooLongError extends Error {
+    constructor() {
+        super("Tags must be 30 characters or fewer");
+    }
+}
+
 export class EmailAddress {
     private email: string;
 

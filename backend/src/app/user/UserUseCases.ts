@@ -1,5 +1,5 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidPasswordResetToken, InvalidUserValidationToken, MissingRequestFields, NoProfilePhotoError, User, UserAccountNotVerified, UserBlockedError, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserGender, UserNotFound, UserSex, WeakPasswordError, type UserId } from "@/core/user/User";
+import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidAgePreferenceError, InvalidPasswordResetToken, InvalidUserValidationToken, MissingRequestFields, NoProfilePhotoError, TagTooLongError, TooManyTagsError, User, UserAccountNotVerified, UserBlockedError, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserGender, UserNotFound, UserSex, UserUnderageError, WeakPasswordError, type UserId } from "@/core/user/User";
 import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserRequestDto, type UserProfileResponseDto, LikeStatus, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { IProfileVisitRepository } from "@/core/profileVisit/IProfileVisitRepository";
 import type { IBlockRepository } from "@/core/block/IBlockRepository";
@@ -57,6 +57,20 @@ export class UserUseCases {
 
     private adjustFame(userId: number, delta: number): void {
         this.userRepo.adjustFameRating(userId, delta).catch(() => {});
+    }
+
+    private readonly minimumAge = 18;
+    private readonly maxTags = 10;
+    private readonly maxTagLength = 30;
+
+    private calculateAge(birthday: Date): number {
+        const today = new Date();
+        let age = today.getFullYear() - birthday.getFullYear();
+        const monthDiff = today.getMonth() - birthday.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) {
+            age--;
+        }
+        return age;
     }
 
     private readonly commonPasswords = [
@@ -243,6 +257,21 @@ export class UserUseCases {
 
         if (dto.biography && dto.biography.length > 300)
             throw new BiographyTooLong();
+
+        if (dto.birthday && this.calculateAge(new Date(dto.birthday)) < this.minimumAge)
+            throw new UserUnderageError();
+
+        if (dto.preferredMinAge !== undefined && dto.preferredMinAge < this.minimumAge)
+            throw new InvalidAgePreferenceError();
+
+        const tagsToAdd = dto.tags.filter(tag => tag.action == "add");
+        if (tagsToAdd.some(tag => tag.value.length > this.maxTagLength))
+            throw new TagTooLongError();
+
+        const tagsToDeleteCount = dto.tags.filter(tag => tag.action == "delete").length;
+        const existingTagsCount = user.details?.tags.length ?? 0;
+        if (existingTagsCount - tagsToDeleteCount + tagsToAdd.length > this.maxTags)
+            throw new TooManyTagsError();
 
         if (!user.details)
         {

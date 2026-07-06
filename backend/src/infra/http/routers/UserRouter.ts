@@ -1,6 +1,6 @@
 import { type UpdateUserRequestDto, type UserProfileResponseDto, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
-import { BiographyTooLong, MissingRequestFields, NoProfilePhotoError, UserBlockedError, UserNotFound, WeakPasswordError } from "@/core/user/User";
+import { BiographyTooLong, InvalidAgePreferenceError, MissingRequestFields, NoProfilePhotoError, TagTooLongError, TooManyTagsError, UserBlockedError, UserNotFound, UserUnderageError, WeakPasswordError } from "@/core/user/User";
 import { type Request, type Response } from "express";
 import MatchaRouter from "./MatchaRouter";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
@@ -61,6 +61,18 @@ export default class UserRouter extends MatchaRouter {
                 res.status(422).send(e.message);
             }
             else if (e instanceof WeakPasswordError) {
+                res.status(422).send(e.message);
+            }
+            else if (e instanceof UserUnderageError) {
+                res.status(422).send(e.message);
+            }
+            else if (e instanceof InvalidAgePreferenceError) {
+                res.status(422).send(e.message);
+            }
+            else if (e instanceof TooManyTagsError) {
+                res.status(422).send(e.message);
+            }
+            else if (e instanceof TagTooLongError) {
                 res.status(422).send(e.message);
             }
             else {

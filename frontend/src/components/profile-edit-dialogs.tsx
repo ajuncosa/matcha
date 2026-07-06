@@ -10,6 +10,21 @@ const passwordRules = [
 function isPasswordValid(password: string) {
     return passwordRules.every(r => r.test(password));
 }
+
+const MINIMUM_AGE = 18;
+
+function calculateAge(birthday: Date): number {
+    const today = new Date();
+    let age = today.getFullYear() - birthday.getFullYear();
+    const monthDiff = today.getMonth() - birthday.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+const maxBirthday = new Date();
+maxBirthday.setFullYear(maxBirthday.getFullYear() - MINIMUM_AGE);
 import {
     Dialog,
     DialogClose,
@@ -130,6 +145,7 @@ function AboutYouEditForm({ form, setSelectValue, isCalendarOpen, setOpenBirthda
                             mode="single"
                             selected={form.birthday}
                             captionLayout="dropdown"
+                            disabled={{ after: maxBirthday }}
                             onSelect={(date) => {
                                 setSelectValue("birthday", date)
                                 setOpenBirthdayCalendar(false)
@@ -225,6 +241,8 @@ function PreferencesEditForm({ form, setSelectValue, setInputValue }: {
                         placeholder={`min (${form.preferredMinAge})`}
                         value={form.preferredMinAge}
                         className="h-8 flex-1"
+                        type="number"
+                        min={MINIMUM_AGE}
                         onChange={setInputValue}
                     />
                     -
@@ -233,6 +251,8 @@ function PreferencesEditForm({ form, setSelectValue, setInputValue }: {
                         placeholder={`max (${form.preferredMaxAge})`}
                         value={form.preferredMaxAge}
                         className="h-8 flex-1"
+                        type="number"
+                        min={MINIMUM_AGE}
                         onChange={setInputValue}
                     />
                 </div>
@@ -369,9 +389,13 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
 
     function setInputFormValue(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
     {
+        let value: string | number = e.target.value;
+        if ((e.target.id === "preferredMinAge" || e.target.id === "preferredMaxAge") && value !== "" && Number(value) < MINIMUM_AGE) {
+            value = MINIMUM_AGE;
+        }
         setUserForm({
             ...userForm,
-            [e.target.id]: e.target.value
+            [e.target.id]: value
         });
     }
 
@@ -417,6 +441,14 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
             || !userForm.gender || !userForm.sex || !userForm.birthday
             || !userForm.preferredGender || !userForm.preferredSex || !userForm.biography) {
             setFormError("Please fill all the required fields");
+            return;
+        }
+        if (calculateAge(userForm.birthday) < MINIMUM_AGE) {
+            setFormError(`You must be at least ${MINIMUM_AGE} years old to use this platform`);
+            return;
+        }
+        if (Number(userForm.preferredMinAge) < MINIMUM_AGE) {
+            setFormError(`Minimum age preference must be at least ${MINIMUM_AGE}`);
             return;
         }
         if (userForm.biography.length > 300) {
