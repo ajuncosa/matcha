@@ -3,9 +3,8 @@
 
 - [X] Limit preference age on welcome page and profile page to a minimum of 18 years old
 - [X] Check if own user age is bigger than 18 on registration
-
-- [ ] Limit tag number per user to 10 & limit tag name characters to 30 chars
-- [ ] Improve profile photos dipslay. Put a grid or something
+- [X] Limit tag number per user to 10 & limit tag name characters to 30 chars
+- [X] Improve profile photos dipslay. Put a grid or something
 - [ ] On search page if there is only one result, make it same size as if there were more. Right now is full width card. Same for browse page
 - [ ] Upload pictures ui form is borken
 - [ ] Change like button if was already pressed to show the action "Unlike".

@@ -60,6 +60,7 @@ export default function ProfilePage() {
     const [location, setLocation] = useState<{lat: number, lon: number}>({lat: 40.4168, lon: -3.7038});
     const [visitors, setVisitors] = useState<ProfileVisitorDto[]>([]);
     const [likers, setLikers] = useState<LikerDto[]>([]);
+    const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
     const navigate = useNavigate();
 
     async function fetchUserData(url: string, onError?: () => void): Promise<void> {
@@ -385,16 +386,45 @@ export default function ProfilePage() {
             
             <div className="w-full mt-4">
                 <h2 className="text-2xl">Photos</h2>
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {
-                        userProfileData?.photos.map((photo) => {
-                            return <div className="object-cover w-full">
-                                <img className="rounded-lg" src={`http://localhost/api/images/${photo.filePath}`} alt="#" />
-                            </div>
-                        })
-                    }
-                </div>
+                {userProfileData?.photos.length ? (
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        {
+                            userProfileData?.photos.map((photo) => {
+                                const url = `http://localhost/api/images/${photo.filePath}`;
+                                return (
+                                    <button
+                                        key={photo.id}
+                                        type="button"
+                                        onClick={() => setLightboxPhoto(url)}
+                                        className="group aspect-square overflow-hidden rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring"
+                                    >
+                                        <img
+                                            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                            src={url}
+                                            alt="Profile photo"
+                                        />
+                                    </button>
+                                );
+                            })
+                        }
+                    </div>
+                ) : (
+                    <p className="mt-2 text-muted-foreground text-sm">No photos yet.</p>
+                )}
             </div>
+
+            <Dialog open={!!lightboxPhoto} onOpenChange={(open) => !open && setLightboxPhoto(null)}>
+                <DialogContent className="max-w-3xl p-2 bg-transparent border-none shadow-none">
+                    <DialogTitle className="sr-only">Photo</DialogTitle>
+                    {lightboxPhoto && (
+                        <img
+                            className="w-full max-h-[85vh] object-contain rounded-lg"
+                            src={lightboxPhoto}
+                            alt="Full size photo"
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
             
             <div className="w-full mt-4">
                 <h2 className="text-2xl">Location</h2>

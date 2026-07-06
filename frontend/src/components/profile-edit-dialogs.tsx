@@ -283,8 +283,8 @@ function PhotosEditForm({ form, originalPhotos, setUserForm }: {
     }
 
     return (
-        <div className=" gap-4 pl-10 pr-10">
-            <Carousel className="w-full max-w-[12rem] sm:max-w-xs">
+        <div className="gap-4">
+            <Carousel className="w-full max-w-[12rem] sm:max-w-xs mx-auto">
                 <CarouselContent>
                     <CarouselItem>
                         <div className="p-1">
@@ -309,8 +309,8 @@ function PhotosEditForm({ form, originalPhotos, setUserForm }: {
                         </CarouselItem>
                     )}
                 </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
             </Carousel>
         </div>
     );
