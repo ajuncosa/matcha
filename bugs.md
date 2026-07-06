@@ -21,8 +21,8 @@
 - [X] Add link on chat page to go to user profile page
 - [ ] Fix unlike action, right now the users chats are not disabled
 - [X] Add last connection to chat AND connection status (red, green dot). real time!
-- [ ] Fix title of login page, asks for email instead of username
-- [ ] Like notifications are not working
+- [X] Fix title of login page, asks for email instead of username
+- [X] Like notifications are not working
 - [ ] Ensure uploaded files are photos
 - [ ] Populate all images of seed users
 - [ ] Commonly used dictionary words (regardless of language) should not be accepted as passwords
