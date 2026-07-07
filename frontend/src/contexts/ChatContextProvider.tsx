@@ -113,6 +113,10 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
         );
     }
 
+    function closeChat(payload: { userId: number }) {
+        setChats((prevChats) => prevChats.filter((chat) => chat.otherUser.id !== payload.userId));
+    }
+
     async function receiveMessage(payload: Message) {
         setChats((prevChats) => {
             return prevChats.map((chat) => {
@@ -173,10 +177,16 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
             "ChatContextProvider",
             (payload) => updatePresence(payload)
         );
+        const chatClosedSubId: number = socket.subscribeToEvent(
+            'chat:closed',
+            "ChatContextProvider",
+            (payload) => closeChat(payload)
+        );
 
         return () => {
             socket.unsubscribeFromEvent(subscriberId, 'chat:message', "ChatContextProvider");
             socket.unsubscribeFromEvent(presenceSubId, 'presence:update', "ChatContextProvider");
+            socket.unsubscribeFromEvent(chatClosedSubId, 'chat:closed', "ChatContextProvider");
         }
 
     }, [user.loggedIn]);

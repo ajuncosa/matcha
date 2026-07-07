@@ -389,6 +389,10 @@ export class UserUseCases {
         await this.likeRepository.delete(producerId, targetId);
         this.adjustFame(targetId, -2);
         this.notificationService.notifyUnlikeNotification(producer, target).catch(() => {});
+
+        // Connection is broken: close the chat in real time for both users.
+        this.socketRegistry.getUserSocket(targetId)?.send('chat:closed', { userId: producerId });
+        this.socketRegistry.getUserSocket(producerId)?.send('chat:closed', { userId: targetId });
     }
 
     async getLikeStatus(userId: UserId, targetId: UserId): Promise<LikeStatus> {

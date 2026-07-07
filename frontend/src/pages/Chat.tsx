@@ -51,7 +51,8 @@ export default function ChatPage() {
     const [currentChat, setCurrentChat] = useState(0);
     const [inputMessage, setInputMessage] = useState("");
     const scrollAreaRef = useRef<HTMLDivElement>(null);
-    
+    const openChatUserId = useRef<number | null>(null);
+
     async function changeChat(index: number) {
         // Mark messages of selected chat as viewed
         const unreadMessagesIds: number[] = chats[index].messages.filter((message) => {
@@ -66,7 +67,25 @@ export default function ChatPage() {
         // Set the chat
         setHiddenChat(false);
         setCurrentChat(index);
+        openChatUserId.current = chats[index].otherUser.id;
     }
+
+    // Keep the open conversation stable when the chat list changes (e.g. a chat
+    // is closed in real time after an unlike). Re-sync the index to the tracked
+    // user, or close the panel if that chat no longer exists.
+    useEffect(() => {
+        const openUserId = openChatUserId.current;
+        if (openUserId === null) return;
+
+        const newIndex = chats.findIndex((chat) => chat.otherUser.id === openUserId);
+        if (newIndex === -1) {
+            openChatUserId.current = null;
+            setHiddenChat(true);
+            setCurrentChat(0);
+        } else if (newIndex !== currentChat) {
+            setCurrentChat(newIndex);
+        }
+    }, [chats]);
 
     async function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
         setInputMessage(e.target.value);

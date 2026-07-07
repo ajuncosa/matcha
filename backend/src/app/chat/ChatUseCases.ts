@@ -42,6 +42,9 @@ export default class ChatUseCases {
         const otherUsersIds: UserId[] = userConnections
             .map((like) => like.liked)
             .filter(id => !blockedIds.has(id));
+        // Only mutually-connected users may have a chat. Message history alone
+        // must NOT keep a chat alive after a like is removed.
+        const connectedIds = new Set(otherUsersIds);
         const userMessages: Message[] = await this.messageRepo.getUserMessages(userId);
         let messagesByUser: Map<UserId, Message[]> = new Map();
 
@@ -56,7 +59,7 @@ export default class ChatUseCases {
 
         let chats: Chat[] = [];
         for (let [key, value] of messagesByUser.entries()) {
-            if (blockedIds.has(key)) continue;
+            if (!connectedIds.has(key)) continue;
             const otherUser = await this.userRepo.findUserById(key);
             if (otherUser) {
                 chats.push({
