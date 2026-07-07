@@ -3,10 +3,21 @@ import type { IPhotoService } from "@/core/photos/IPhotoService";
 import { Photo } from "@/core/photos/Photo";
 import multer, { type Multer } from "multer";
 import PlatformPath from "path"
+import { fileTypeFromFile } from "file-type";
+import { unlink } from "node:fs/promises";
+import type { Request, Response, NextFunction } from "express";
+
+// Real image formats we accept, verified by magic bytes (not the client-provided mime).
+const ALLOWED_IMAGE_MIMES = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+]);
 
 export class PhotoService implements IPhotoService {
     private repo: IPhotoRepository;
-    private uploader: Multer; 
+    private uploader: Multer;
 
     constructor(repo: IPhotoRepository) {
         this.repo = repo;
@@ -52,6 +63,36 @@ export class PhotoService implements IPhotoService {
             { name: profilePhotoFieldName, maxCount: 1 },
             { name: photosFieldName, maxCount: 5 }
         ]);
+    }
+
+    // Express middleware that runs AFTER multer has written the files to disk.
+    // It reads each file's magic bytes to confirm it is a genuine image, and
+    // rejects (deleting every uploaded file) if any is not. This defends against
+    // spoofed extensions / mime types, since multer's fileFilter only sees the
+    // client-provided mimetype.
+    validateImages()
+    {
+        return async (req: Request, res: Response, next: NextFunction) => {
+            const files: Express.Multer.File[] = [];
+            if (req.file)
+                files.push(req.file);
+            if (Array.isArray(req.files))
+                files.push(...req.files);
+            else if (req.files)
+                for (const group of Object.values(req.files as { [field: string]: Express.Multer.File[] }))
+                    files.push(...group);
+
+            for (const file of files) {
+                const detected = await fileTypeFromFile(file.path);
+                if (!detected || !ALLOWED_IMAGE_MIMES.has(detected.mime)) {
+                    // Reject the whole request and clean up every uploaded file.
+                    await Promise.all(files.map((f) => unlink(f.path).catch(() => {})));
+                    return res.status(422).send("Uploaded files must be valid images (jpeg, png, webp or gif)");
+                }
+            }
+
+            next();
+        };
     }
 
     // stores the photo in the database

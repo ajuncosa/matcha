@@ -22,7 +22,7 @@ export default class UserRouter extends MatchaRouter {
         this.router.post('/block/:userId', (req, res) => this.blockUser(req, res));
         this.router.post('/unblock/:userId', (req, res) => this.unblockUser(req, res));
         this.router.post('/report/:userId', (req, res) => this.reportUser(req, res));
-        this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), (req, res) => this.addUserPhotos(req, res));
+        this.router.post("/photos", this.photoService.uploadPhotos("profile_photo", "photos"), this.photoService.validateImages(), (req, res) => this.addUserPhotos(req, res));
         this.router.delete("/photos/:photoId", (req, res) => this.deleteUserPhoto(req, res));
         this.router.get("/:userId", (req, res) => this.getUser(req, res));
     }
