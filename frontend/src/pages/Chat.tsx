@@ -48,7 +48,7 @@ export default function ChatPage() {
     const {user} = useContext(AuthContext);
     const {chats, sendMessage, setMessagesAsViewed, refreshChats} = useContext(ChatContext);
     const [hiddenChat, setHiddenChat] = useState<boolean>(true);
-    const [currentChat, setCurrentChat] = useState(0);
+    const [currentChat, setCurrentChat] = useState(-1);
     const [inputMessage, setInputMessage] = useState("");
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const openChatUserId = useRef<number | null>(null);
@@ -81,7 +81,7 @@ export default function ChatPage() {
         if (newIndex === -1) {
             openChatUserId.current = null;
             setHiddenChat(true);
-            setCurrentChat(0);
+            setCurrentChat(-1);
         } else if (newIndex !== currentChat) {
             setCurrentChat(newIndex);
         }
