@@ -1,69 +1,26 @@
 import { Client } from "pg";
 import * as bcrypt from "bcryptjs";
+import { faker } from "@faker-js/faker";
+import { mkdir } from "node:fs/promises";
+import PlatformPath from "node:path";
 
-const firstNames = [
-    "James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda",
-    "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica",
-    "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Nancy", "Daniel", "Lisa",
-    "Matthew", "Betty", "Anthony", "Margaret", "Mark", "Sandra", "Donald", "Ashley",
-    "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle",
-    "Kenneth", "Dorothy", "Kevin", "Carol", "Brian", "Amanda", "George", "Melissa",
-    "Edward", "Deborah", "Ronald", "Stephanie", "Timothy", "Rebecca", "Jason", "Sharon",
-    "Jeffrey", "Laura", "Ryan", "Cynthia", "Jacob", "Kathleen", "Gary", "Amy",
-    "Nicholas", "Shirley", "Eric", "Angela", "Jonathan", "Helen", "Stephen", "Anna",
-    "Larry", "Brenda", "Justin", "Pamela", "Scott", "Nicole", "Brandon", "Emma",
-    "Benjamin", "Samantha", "Samuel", "Katherine", "Gregory", "Christine", "Frank", "Debra",
-    "Alexander", "Rachel", "Raymond", "Catherine", "Patrick", "Carolyn", "Jack", "Janet"
-];
+// --- Photo seeding config ---
+// IMAGES_DIR is relative to the app root (cwd when running `bun run seed`), which
+// matches how the server serves them: express.static('images') -> /api/images/<file>.
+const IMAGES_DIR = "images";
+const PHOTOS_PER_USER_MIN = 3;
+const PHOTOS_PER_USER_MAX = 5;
+// Image resolution. Portrait 4:5 for the gallery photos; a large square for avatars.
+const MIN_PHOTO_WIDTH = 940;
+const MIN_PHOTO_HEIGHT = 800;
+const MAX_PHOTO_WIDTH = 1240;
+const MAX_PHOTO_HEIGHT = 1800;
 
-const lastNames = [
-    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
-    "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas",
-    "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White",
-    "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young",
-    "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores",
-    "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell",
-    "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker",
-    "Cruz", "Edwards", "Collins", "Reyes", "Stewart", "Morris", "Morales", "Murphy",
-    "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey",
-    "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson",
-    "Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza",
-    "Ruiz", "Hughes", "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers"
-];
+const AVATAR_SIZE = 512;
 
-const biographies = [
-    "Love hiking and outdoor adventures. Always looking for new trails to explore!",
-    "Coffee enthusiast and book lover. Let's discuss philosophy over espresso.",
-    "Software developer by day, musician by night. I play guitar and piano.",
-    "Foodie who loves trying new restaurants. Sushi is my weakness!",
-    "Fitness junkie and yoga instructor. Mind, body, and soul connection.",
-    "Travel addict with 20+ countries visited. Where to next?",
-    "Dog parent to two golden retrievers. Animal lover for life!",
-    "Art gallery hopper and museum enthusiast. Contemporary art is my passion.",
-    "Beach volleyball player and sun chaser. Summer is my season!",
-    "Board game collector and strategy game master. Game night anyone?",
-    "Photography hobbyist capturing moments. Nature and portrait photography.",
-    "Wine tasting enthusiast and amateur sommelier. Red or white?",
-    "Marathon runner training for my 10th race. Never stop moving!",
-    "Movie buff and cinema lover. Classics, indie, and blockbusters!",
-    "Gardening enthusiast with a green thumb. My plants are my babies.",
-    "Cooking experimentalist. Always trying new recipes from around the world.",
-    "Tech startup founder working on something big. Entrepreneur life!",
-    "Volunteer at local animal shelter. Making a difference, one paw at a time.",
-    "Meditation practitioner finding inner peace. Namaste!",
-    "Sports fanatic - football, basketball, soccer. Love them all!",
-    "Craft beer connoisseur. Always on the hunt for the perfect IPA.",
-    "Dancing through life - salsa, bachata, and tango. Let's dance!",
-    "Vintage vinyl collector. Nothing beats the sound of a record player.",
-    "Scuba diver exploring underwater worlds. The ocean is my happy place.",
-    "Podcast host discussing true crime and mysteries. Listen in!",
-    "Pottery maker creating functional art. Each piece is unique.",
-    "Language learner currently studying Japanese. Konnichiwa!",
-    "Rock climber always looking for new challenges. Reach new heights!",
-    "Stand-up comedy fan and amateur comedian. Laughter is the best medicine.",
-    "Sustainable living advocate. Small changes make a big difference!"
-];
-
+// Interests are a *shared vocabulary*: users need overlapping tags for matching and
+// suggestions to work, so this stays a controlled pool (unlike the free-text fields,
+// which now come from faker for maximum variety).
 const tagNames = [
     "hiking", "coffee", "reading", "music", "gaming", "foodie", "fitness", "yoga",
     "travel", "dogs", "cats", "art", "photography", "beach", "movies", "cooking",
@@ -73,6 +30,9 @@ const tagNames = [
     "skiing", "surfing", "cycling", "karaoke", "brunch", "tattoos", "astrology",
     "chess", "board-games", "hockey", "basketball", "soccer", "tennis"
 ];
+
+// Madrid centre, used as the origin to scatter users around.
+const MADRID: [number, number] = [40.4168, -3.7038];
 
 interface CompatibleProfile {
     gender: string;
@@ -99,6 +59,7 @@ interface SeedUser {
     name: string;
     lastname: string;
     email: string;
+    username: string;
     password: string;
     gender: string;
     sex: string;
@@ -114,124 +75,82 @@ interface SeedUser {
     tags: string[];
 }
 
-function randomInt(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function randomItem<T>(arr: T[]): T {
-    return arr[randomInt(0, arr.length - 1)] as T;
-}
-
-function generateBirthday(age: number): Date {
-    const now = new Date();
-    const year = now.getFullYear() - age;
-    const month = randomInt(0, 11);
-    const day = randomInt(1, 28);
-    return new Date(year, month, day);
-}
-
-function generateLocation(): { lat: number; lon: number } {
-    // Scatter users around Madrid centre within ~15 km radius
-    const MADRID_LAT = 40.4168;
-    const MADRID_LON = -3.7038;
-    const RADIUS = 0.15; // ~15 km in degrees
-
-    const offsetLat = (Math.random() * 2 - 1) * RADIUS;
-    const offsetLon = (Math.random() * 2 - 1) * RADIUS;
-
-    return {
-        lat: Math.round((MADRID_LAT + offsetLat) * 10000) / 10000,
-        lon: Math.round((MADRID_LON + offsetLon) * 10000) / 10000,
-    };
-}
-
 function generateUsers(count: number): SeedUser[] {
     const users: SeedUser[] = [];
-    
-    for (let i = 0; i < count; i++) {
-        const name = randomItem(firstNames);
-        const lastname = randomItem(lastNames);
-        const age = randomInt(20, 45);
-        const birthday = generateBirthday(age);
-        const location = generateLocation();
-        const profile = generateCompatibleProfile();
-        const numTags = randomInt(2, 6);
-        const userTags: string[] = [];
 
-        while (userTags.length < numTags) {
-            const tag = randomItem(tagNames);
-            if (!userTags.includes(tag)) {
-                userTags.push(tag);
-            }
-        }
+    for (let i = 0; i < count; i++) {
+        const profile = generateCompatibleProfile();
+        // Bias faker's name generation to the profile's sex where it maps cleanly.
+        const fakerSex = profile.sex === "male" ? "male" : profile.sex === "female" ? "female" : undefined;
+        const name = faker.person.firstName(fakerSex);
+        const lastname = faker.person.lastName(fakerSex);
+
+        const [lat, lon] = faker.location.nearbyGPSCoordinate({ origin: MADRID, radius: 15, isMetric: true });
+
+        const preferredMinAge = faker.number.int({ min: 18, max: 30 });
+        const preferredMaxAge = faker.number.int({ min: preferredMinAge + 5, max: 75 });
 
         users.push({
             name,
             lastname,
-            email: `${name.toLowerCase()}.${lastname.toLowerCase()}${randomInt(1, 999)}@example.com`,
+            // email has no unique constraint, so faker variety is fine as-is.
+            email: faker.internet.email({ firstName: name, lastName: lastname }).toLowerCase(),
+            // username IS unique in the DB -> append the index to guarantee uniqueness.
+            username: (faker.internet.username({ firstName: name, lastName: lastname }) + i).toLowerCase().slice(0, 50),
             password: "password123",
             gender: profile.gender,
             sex: profile.sex,
             preferredGender: profile.preferredGender,
             preferredSex: profile.preferredSex,
-            preferredMinAge: 18,
-            preferredMaxAge: 60,
-            lat: location.lat,
-            lon: location.lon,
-            biography: randomItem(biographies),
-            fameRating: randomInt(0, 100),
-            birthday,
-            tags: userTags,
+            preferredMinAge,
+            preferredMaxAge,
+            lat: Math.round(lat * 10000) / 10000,
+            lon: Math.round(lon * 10000) / 10000,
+            biography: faker.person.bio(),
+            fameRating: faker.number.int({ min: 0, max: 100 }),
+            birthday: faker.date.birthdate({ min: 18, max: 60, mode: "age" }),
+            tags: faker.helpers.arrayElements(tagNames, { min: 2, max: 6 }),
         });
     }
-    
+
     return users;
 }
 
 async function seedTags(client: Client): Promise<Map<string, number>> {
     const tagMap = new Map<string, number>();
-    
+
     for (const tagName of tagNames) {
-        // Check if tag already exists
-        const existingResult = await client.query(
-            "SELECT id FROM tags WHERE name = $1",
-            [tagName]
-        );
-        
+        const existingResult = await client.query("SELECT id FROM tags WHERE name = $1", [tagName]);
         if (existingResult.rows.length > 0) {
             tagMap.set(tagName, existingResult.rows[0].id);
         } else {
-            const result = await client.query(
-                "INSERT INTO tags(name) VALUES($1) RETURNING id",
-                [tagName]
-            );
+            const result = await client.query("INSERT INTO tags(name) VALUES($1) RETURNING id", [tagName]);
             tagMap.set(tagName, result.rows[0].id);
         }
     }
-    
+
     console.log(`Seeded ${tagNames.length} tags`);
     return tagMap;
 }
 
-async function seedUsers(client: Client, count: number, tagMap: Map<string, number>): Promise<void> {
+async function seedUsers(client: Client, count: number, tagMap: Map<string, number>): Promise<number[]> {
     const users = generateUsers(count);
+    const userIds: number[] = [];
     let seededCount = 0;
-    
+
     for (const user of users) {
-        // Hash password
         const hashedPassword = await bcrypt.hash(user.password, 10);
-        
-        // Insert user
+
         const userResult = await client.query(
             `INSERT INTO users(name, lastname, email, email_validated_at, password, username, created_at)
-             VALUES($1, $2, $3, CURRENT_TIMESTAMP, $4, LOWER($1) || (RANDOM()*10000)::int::text, CURRENT_TIMESTAMP)
+             VALUES($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, CURRENT_TIMESTAMP)
              RETURNING id`,
-            [user.name, user.lastname, user.email, hashedPassword]
+            [user.name, user.lastname, user.email, hashedPassword, user.username]
         );
-        
+
         const userId = userResult.rows[0].id;
-        
-        // Insert user details
+        userIds.push(userId);
+
         await client.query(
             `INSERT INTO users_details(user_id, gender, sex, preferred_gender, preferred_sex,
              preferred_min_age, preferred_max_age, lat, lon, biography, fame_rating,
@@ -252,8 +171,7 @@ async function seedUsers(client: Client, count: number, tagMap: Map<string, numb
                 user.birthday,
             ]
         );
-        
-        // Insert tags for user
+
         for (const tagName of user.tags) {
             const tagId = tagMap.get(tagName);
             if (tagId) {
@@ -263,83 +181,132 @@ async function seedUsers(client: Client, count: number, tagMap: Map<string, numb
                 );
             }
         }
-        
+
         seededCount++;
         if (seededCount % 10 === 0) {
             console.log(`Seeded ${seededCount}/${count} users...`);
         }
     }
-    
+
     console.log(`Successfully seeded ${seededCount} users`);
+    return userIds;
 }
 
-async function seedPhotos(client: Client): Promise<void> {
-    // Create some placeholder photo entries
-    const photoPaths = [
-        "profiles/user1.jpg",
-        "profiles/user2.jpg",
-        "profiles/user3.jpg",
-        "profiles/user4.jpg",
-        "profiles/user5.jpg",
-        "profiles/user6.jpg",
-        "profiles/user7.jpg",
-        "profiles/user8.jpg",
-        "profiles/user9.jpg",
-        "profiles/user10.jpg",
-    ];
-    
-    for (const path of photoPaths) {
-        // Check if photo already exists
-        const existingResult = await client.query(
-            "SELECT id FROM photos WHERE file_path = $1",
-            [path]
-        );
-        
-        if (existingResult.rows.length === 0) {
+async function downloadImage(url: string, destPath: string): Promise<boolean> {
+    try {
+        const res = await fetch(url, {
+            headers: { "User-Agent": "Mozilla/5.0 (matcha-seed)" },
+            redirect: "follow",
+        });
+        if (!res.ok) return false;
+        // Guard against endpoints that answer 200 with an HTML page: only save
+        // genuine image responses (never HTML-as-.jpg).
+        const contentType = res.headers.get("content-type") ?? "";
+        if (!contentType.startsWith("image/")) return false;
+        await Bun.write(destPath, res);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+// faker's avatar URLs (GitHub) default to a small size; request a larger one via
+// the `s` (size) query param for a higher-resolution profile photo.
+function highResAvatarUrl(): string {
+    const url = new URL(faker.image.personPortrait());
+    url.searchParams.set("s", String(AVATAR_SIZE));
+    return url.toString();
+}
+
+// Downloads 3-5 images per user (a faker avatar as the profile photo + random
+// real photos), stores them on disk and links them in the DB. Runs OUTSIDE the
+// main transaction because it is network-bound and slow.
+async function seedUserPhotos(client: Client, userIds: number[]): Promise<void> {
+    await mkdir(IMAGES_DIR, { recursive: true });
+    let usersDone = 0;
+    let photoCount = 0;
+
+    for (const userId of userIds) {
+        const n = faker.number.int({ min: PHOTOS_PER_USER_MIN, max: PHOTOS_PER_USER_MAX });
+        let profilePhotoId: number | null = null;
+
+        for (let i = 0; i < n; i++) {
+            const fileName = `seed-${userId}-${i}-${Date.now()}.jpg`;
+            const destPath = PlatformPath.join(IMAGES_DIR, fileName);
+            const width = faker.number.int({min: MIN_PHOTO_WIDTH, max: MAX_PHOTO_WIDTH});
+            const height = faker.number.int({min: MIN_PHOTO_HEIGHT, max: MAX_PHOTO_HEIGHT});
+
+            // Profile photo (i === 0) = faker avatar URL; the rest = random real photos.
+            const url = i === 0
+                ? highResAvatarUrl()
+                : faker.image.urlPicsumPhotos({ width: width, height: height, blur: 0 });
+
+            let ok = await downloadImage(url, destPath);
+            // Fallback so the profile photo is never missing if the avatar host fails.
+
+            if (!ok && i === 0)
+                ok = await downloadImage(faker.image.urlPicsumPhotos({ width: width, height: height, blur: 0 }), destPath);
+            if (!ok) continue;
+
+            const photoRes = await client.query(
+                "INSERT INTO photos(file_path) VALUES($1) RETURNING id",
+                [fileName]
+            );
+            const photoId = photoRes.rows[0].id as number;
             await client.query(
-                "INSERT INTO photos(file_path) VALUES($1)",
-                [path]
+                "INSERT INTO users_photos(user_id, photo_id) VALUES($1, $2)",
+                [userId, photoId]
+            );
+            if (profilePhotoId === null) profilePhotoId = photoId;
+            photoCount++;
+        }
+
+        if (profilePhotoId !== null) {
+            await client.query(
+                "UPDATE users_details SET profile_photo_id=$1 WHERE user_id=$2",
+                [profilePhotoId, userId]
             );
         }
+
+        usersDone++;
+        if (usersDone % 10 === 0) {
+            console.log(`Seeded photos for ${usersDone}/${userIds.length} users (${photoCount} images so far)...`);
+        }
     }
-    
-    console.log(`Seeded ${photoPaths.length} photos`);
+
+    console.log(`Seeded ${photoCount} photos across ${userIds.length} users`);
 }
 
 async function main() {
     const args = process.argv.slice(2);
     const userCount = parseInt(args[0] ?? "") || 50;
-    
+
     console.log(`Starting database seeding with ${userCount} users...`);
-    
+
     const client = new Client();
-    
+
     try {
         await client.connect();
         console.log("Connected to database");
-        
-        // Start transaction
+
+        // Seed tags + users in one transaction (fast, no network I/O).
         await client.query("BEGIN");
-        
-        // Seed tags first
         const tagMap = await seedTags(client);
-        
-        // Seed photos
-        await seedPhotos(client);
-        
-        // Seed users
-        await seedUsers(client, userCount, tagMap);
-        
-        // Commit transaction
+        const userIds = await seedUsers(client, userCount, tagMap);
         await client.query("COMMIT");
-        
+
+        // Seed photos separately: network-bound and slow, so it runs on
+        // auto-committed statements rather than holding the transaction open.
+        console.log("\nDownloading and linking profile photos (this can take a while)...");
+        await seedUserPhotos(client, userIds);
+
         console.log("\nDatabase seeding completed successfully!");
         console.log(`Created:`);
-        console.log(`  - ${userCount} users`);
+        console.log(`  - ${userCount} users (${PHOTOS_PER_USER_MIN}-${PHOTOS_PER_USER_MAX} photos each)`);
         console.log(`  - ${tagNames.length} tags`);
         console.log(`All users have password: "password123"`);
     } catch (error) {
-        await client.query("ROLLBACK");
+        try { await client.query("ROLLBACK"); } catch { /* no active tx */ }
         console.error("Error seeding database:", error);
         process.exit(1);
     } finally {

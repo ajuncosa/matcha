@@ -14,6 +14,7 @@ import crypto from "node:crypto";
 import type { ILikeRepository, LikerInfo } from "@/core/like/ILikeRepository";
 import type { LikePair } from "@/core/like/Like";
 import type { IUserSocketRegistry } from "@/core/socket/IUserSocketRegistry";
+import type { ICommonPasswordRepository } from "@/core/password/ICommonPasswordRepository";
 
 export class UserUseCases {
     private userRepo: IUserRepository;
@@ -27,6 +28,7 @@ export class UserUseCases {
     private profileVisitRepository: IProfileVisitRepository;
     private blockRepository: IBlockRepository;
     private reportRepository: IReportRepository;
+    private commonPasswordRepository: ICommonPasswordRepository;
 
     constructor(
         userRepo: IUserRepository,
@@ -39,7 +41,8 @@ export class UserUseCases {
         socketRegistry: IUserSocketRegistry,
         profileVisitRepository: IProfileVisitRepository,
         blockRepository: IBlockRepository,
-        reportRepository: IReportRepository
+        reportRepository: IReportRepository,
+        commonPasswordRepository: ICommonPasswordRepository
     )
     {
         this.userRepo = userRepo;
@@ -53,6 +56,7 @@ export class UserUseCases {
         this.profileVisitRepository = profileVisitRepository;
         this.blockRepository = blockRepository;
         this.reportRepository = reportRepository;
+        this.commonPasswordRepository = commonPasswordRepository;
     }
 
     private adjustFame(userId: number, delta: number): void {
@@ -79,7 +83,7 @@ export class UserUseCases {
         "admin", "welcome", "login", "passw0rd", "master", "hello", "sunshine", "dragon"
     ];
 
-    private validatePassword(password: string): void {
+    private async validatePassword(password: string): Promise<void> {
         if (
             password.length < 8 ||
             !/[A-Z]/.test(password) ||
@@ -89,6 +93,10 @@ export class UserUseCases {
             throw new WeakPasswordError();
         }
         if (this.commonPasswords.includes(password.toLowerCase())) {
+            throw new WeakPasswordError();
+        }
+        // Reject passwords present in the known common/breached passwords table.
+        if (await this.commonPasswordRepository.isCommon(password)) {
             throw new WeakPasswordError();
         }
     }
@@ -101,7 +109,7 @@ export class UserUseCases {
         const usernameExists: User | null = await this.userRepo.findUserByUsername(dto.username);
         if (usernameExists) throw new UsernameAlreadyExistsError();
 
-        this.validatePassword(dto.password);
+        await this.validatePassword(dto.password);
 
         const hashedPassword: string = await this.passwordHasher.hash(dto.password);
         const createdUser: User = await this.userRepo.createUser(dto.name, dto.lastname, userEmail, hashedPassword, dto.username);
@@ -231,7 +239,7 @@ export class UserUseCases {
                     throw new UserEmailAlreadyExists();
             }
             if (dto.password) {
-                this.validatePassword(dto.password);
+                await this.validatePassword(dto.password);
                 newPassword = await this.passwordHasher.hash(dto.password);
             }
             await this.userRepo.updateUser(userId, newName, newLastname, newEmail, newPassword);
@@ -446,7 +454,7 @@ export class UserUseCases {
         const user = await this.userRepo.getUserByPasswordResetToken(token);
         if (!user) throw new InvalidPasswordResetToken();
 
-        this.validatePassword(newPassword);
+        await this.validatePassword(newPassword);
         const hashed = await this.passwordHasher.hash(newPassword);
         await this.userRepo.updatePassword(user.id, hashed);
         await this.userRepo.clearPasswordResetToken(user.id);

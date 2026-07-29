@@ -50,6 +50,8 @@ import type { IBlockRepository } from "./core/block/IBlockRepository";
 import { BlockRepositoryPostgres } from "./infra/repositories/BlockRepositoryPostgres";
 import type { IReportRepository } from "./core/report/IReportRepository";
 import { ReportRepositoryPostgres } from "./infra/repositories/ReportRepositoryPostgres";
+import { CommonPasswordRepositoryPostgres } from "./infra/repositories/CommonPasswordRepositoryPostgres";
+import type { ICommonPasswordRepository } from "@/core/password/ICommonPasswordRepository";
 
 const expressApp = express();
 const expressSession: RequestHandler = session({
@@ -81,6 +83,7 @@ const suggestionRepository: ISuggestionRepository = new SuggestionRepositoryPost
 const profileVisitRepository: IProfileVisitRepository = new ProfileVisitRepositoryPostgres(pgPool);
 const blockRepository: IBlockRepository = new BlockRepositoryPostgres(pgPool);
 const reportRepository: IReportRepository = new ReportRepositoryPostgres(pgPool);
+const commonPasswordRepository: ICommonPasswordRepository = new CommonPasswordRepositoryPostgres(pgPool);
 
 //Email Senders
 const nodeMailerConfig: EmailSenderConfiguration = {
@@ -108,7 +111,7 @@ const emailVerificationService: EmailVerificationService = new EmailVerification
 const suggestionService: SuggestionService = new SuggestionService(userRepository, suggestionRepository, tagRespository);
 
 // Use Cases
-const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, likeRepository, notificationService, tagsService, photosService, emailVerificationService, socketRegistry, profileVisitRepository, blockRepository, reportRepository);
+const userUseCases: UserUseCases = new UserUseCases(userRepository, passwordHasher, likeRepository, notificationService, tagsService, photosService, emailVerificationService, socketRegistry, profileVisitRepository, blockRepository, reportRepository, commonPasswordRepository);
 const notificationUserCases: NotificationUseCases = new NotificationUseCases(notificationRepository);
 const chatUseCases: ChatUseCases = new ChatUseCases(messageRepository, likeRepository, userRepository, blockRepository, socketRegistry);
 const searchUseCases: SearchUseCases = new SearchUseCases(searchRepository, userRepository, suggestionService);

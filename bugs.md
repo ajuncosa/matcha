@@ -24,7 +24,7 @@
 - [X] Fix title of login page, asks for email instead of username
 - [X] Like notifications are not working
 - [X] Ensure uploaded files are photos
-- [ ] Populate all images of seed users
-- [ ] Commonly used dictionary words (regardless of language) should not be accepted as passwords
+- [X] Populate all images of seed users
+- [X] Commonly used dictionary words (regardless of language) should not be accepted as passwords
     maybe use this https://ftp.gnu.org/gnu/aspell/dict/0index.html (aspell) || /usr/share/dict/words file
-- [ ] Improve chat, make it look better when there is no conversation. Like adding borders for example.
+- [X] Improve chat, make it look better when there is no conversation. Like adding borders for example.
