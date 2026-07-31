@@ -108,57 +108,75 @@ export default function ChatPage() {
         refreshChats();
     }, []);
 
+    const activeChat = chats[currentChat];
+
+    // Scroll to the latest message when a chat opens or a new message arrives.
     useEffect(() => {
         const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
         if (viewport) {
             viewport.scrollTop = viewport.scrollHeight;
         }
-    });
+    }, [currentChat, activeChat?.messages.length]);
 
-    const activeChat = chats[currentChat];
+    // If a message arrives while its chat is open, mark it read so the unread
+    // badges (sidebar + list) don't stick for a conversation the user is viewing.
+    useEffect(() => {
+        if (!activeChat) return;
+        const unreadIncoming = activeChat.messages
+            .filter((m) => m.sender !== user.id && !m.viewed_at)
+            .map((m) => m.id);
+        if (unreadIncoming.length > 0) {
+            setMessagesAsViewed(currentChat, unreadIncoming);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentChat, activeChat?.messages.length]);
 
     return (
-        <div className="w-full flex gap-2 h-[calc(100svh-4rem)]">
-            {/* Chat list */}
-            <div className={`w-full lg:w-1/3 lg:flex flex-col gap-2 overflow-y-auto ${hiddenChat ? "flex" : "hidden"}`}>
+        <div className="w-full flex gap-2 h-full">
+            {/* Chat list (connected users) */}
+            <Card className={`w-full lg:w-1/3 h-full rounded-md p-0 overflow-hidden flex-col ${hiddenChat ? "flex" : "hidden"} lg:flex`}>
                 {chats.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground py-16">
+                    <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground p-6">
                         <MessageSquareOff size={40} />
                         <p className="text-base font-medium">No conversations yet</p>
                         <p className="text-sm text-center">Match with someone to start chatting!</p>
                     </div>
                 ) : (
-                    chats.map((chat, index) =>
-                        <Item key={index} variant="outline" className="cursor-pointer" onClick={() => changeChat(index)}>
-                            <ItemMedia>
-                                <Avatar className="rounded-lg size-10">
-                                    <AvatarFallback className="rounded-lg font-semibold">
-                                        {chat.otherUser.name[0]}{chat.otherUser.lastname[0]}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle>{chat.otherUser.name} {chat.otherUser.lastname}</ItemTitle>
-                                <ItemDescription>
-                                    {chat.messages.length > 0
-                                        ? chat.messages[chat.messages.length - 1].message.slice(0, 40)
-                                        : "No messages yet"}
-                                </ItemDescription>
-                            </ItemContent>
-                            {chat.unreadMessages > 0 &&
-                                <ItemActions>
-                                    <Badge variant="destructive">{chat.unreadMessages}</Badge>
-                                </ItemActions>
-                            }
-                        </Item>
-                    )
+                    <ScrollArea className="h-full w-full">
+                        <div className="flex flex-col gap-2 p-2">
+                            {chats.map((chat, index) =>
+                                <Item key={index} variant="outline" className="cursor-pointer" onClick={() => changeChat(index)}>
+                                    <ItemMedia>
+                                        <Avatar className="rounded-lg size-10">
+                                            <AvatarFallback className="rounded-lg font-semibold">
+                                                {chat.otherUser.name[0]}{chat.otherUser.lastname[0]}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </ItemMedia>
+                                    <ItemContent>
+                                        <ItemTitle>{chat.otherUser.name} {chat.otherUser.lastname}</ItemTitle>
+                                        <ItemDescription>
+                                            {chat.messages.length > 0
+                                                ? chat.messages[chat.messages.length - 1].message.slice(0, 40)
+                                                : "No messages yet"}
+                                        </ItemDescription>
+                                    </ItemContent>
+                                    {chat.unreadMessages > 0 &&
+                                        <ItemActions>
+                                            <Badge variant="destructive">{chat.unreadMessages}</Badge>
+                                        </ItemActions>
+                                    }
+                                </Item>
+                            )}
+                        </div>
+                    </ScrollArea>
                 )}
-            </div>
+            </Card>
 
-            {/* Chat panel */}
+            {/* Chat panel (messages) */}
             <div className={`w-full min-h-0 lg:w-2/3 lg:block ${hiddenChat ? "hidden" : "block"}`}>
                 {activeChat ? (
-                    <Card className="w-full h-full pt-0 rounded-md flex flex-col">
+                    <Card className="w-full h-full pt-0 rounded-md flex flex-col overflow-hidden">
                         <CardHeader className="p-0 m-0 shrink-0">
                             <Item className="px-6">
                                 <ItemMedia className="flex items-center">
@@ -209,9 +227,9 @@ export default function ChatPage() {
                         </CardFooter>
                     </Card>
                 ) : (
-                    <div className="hidden lg:flex h-full items-center justify-center text-muted-foreground">
+                    <Card className="hidden lg:flex h-full w-full rounded-md items-center justify-center text-muted-foreground">
                         <p>Select a conversation to start chatting</p>
-                    </div>
+                    </Card>
                 )}
             </div>
         </div>

@@ -1,5 +1,5 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { BiographyTooLong, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidAgePreferenceError, InvalidPasswordResetToken, InvalidUserValidationToken, MissingRequestFields, NoProfilePhotoError, TagTooLongError, TooManyTagsError, User, UserAccountNotVerified, UserBlockedError, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserGender, UserNotFound, UserSex, UserUnderageError, WeakPasswordError, type UserId } from "@/core/user/User";
+import { BiographyTooLong, CommonPasswordError, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidAgePreferenceError, InvalidEmailFormatError, InvalidPasswordResetToken, InvalidUserValidationToken, MissingRequestFields, NoProfilePhotoError, TagTooLongError, TooManyTagsError, User, UserAccountNotVerified, UserBlockedError, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserGender, UserNotFound, UserSex, UserUnderageError, WeakPasswordError, type UserId } from "@/core/user/User";
 import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserRequestDto, type UserProfileResponseDto, LikeStatus, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { IProfileVisitRepository } from "@/core/profileVisit/IProfileVisitRepository";
 import type { IBlockRepository } from "@/core/block/IBlockRepository";
@@ -83,6 +83,13 @@ export class UserUseCases {
         "admin", "welcome", "login", "passw0rd", "master", "hello", "sunshine", "dragon"
     ];
 
+    private validateEmailFormat(email: string): void {
+        // Standard, reasonably strict email format check.
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email))
+            throw new InvalidEmailFormatError();
+    }
+
     private async validatePassword(password: string): Promise<void> {
         if (
             password.length < 8 ||
@@ -93,15 +100,16 @@ export class UserUseCases {
             throw new WeakPasswordError();
         }
         if (this.commonPasswords.includes(password.toLowerCase())) {
-            throw new WeakPasswordError();
+            throw new CommonPasswordError();
         }
         // Reject passwords present in the known common/breached passwords table.
         if (await this.commonPasswordRepository.isCommon(password)) {
-            throw new WeakPasswordError();
+            throw new CommonPasswordError();
         }
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
+        this.validateEmailFormat(dto.email);
         const userEmail = new EmailAddress(dto.email);
         const userExists: User | null = await this.userRepo.findUserByEmail(userEmail);
         if (userExists) throw new UserEmailAlreadyExists();
@@ -230,6 +238,8 @@ export class UserUseCases {
         if (dto.firstname || dto.lastname || dto.email || dto.password) {
             const newName = dto.firstname ?? user.name;
             const newLastname = dto.lastname ?? user.lastname;
+            if (dto.email)
+                this.validateEmailFormat(dto.email);
             const newEmail = dto.email ? new EmailAddress(dto.email) : user.email;
             let newPassword = user.password;
 
@@ -396,7 +406,8 @@ export class UserUseCases {
 
         await this.likeRepository.delete(producerId, targetId);
         this.adjustFame(targetId, -2);
-        this.notificationService.notifyUnlikeNotification(producer, target).catch(() => {});
+        this.notificationService.notifyUnlikeNotification(producer, target)
+            .catch((e) => console.error("Failed to send unlike notification:", e));
 
         // Connection is broken: close the chat in real time for both users.
         this.socketRegistry.getUserSocket(targetId)?.send('chat:closed', { userId: producerId });

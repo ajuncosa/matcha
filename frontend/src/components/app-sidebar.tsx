@@ -18,6 +18,7 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
+	useSidebar,
 } from "@/components/ui/sidebar"
 import { NavLink } from "react-router"
 import { useContext, useMemo } from "react"
@@ -27,6 +28,7 @@ import ChatContext from "@/contexts/ChatContextProvider"
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { user } = useContext(AuthContext);
     const { chats } = useContext(ChatContext);
+    const { setOpenMobile, isMobile } = useSidebar();
     const totalUnread = useMemo(() => chats.reduce((acc, c) => acc + c.unreadMessages, 0), [chats]);
     const navMain = [
         { title: "Browser", url: "/browser", icon: Compass },
@@ -45,7 +47,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton size="lg" asChild>
-							<NavLink to="/browser">
+							<NavLink to="/browser" onClick={() => { if (isMobile) setOpenMobile(false); }}>
 								<div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
 									<Heart className="size-4" />
 								</div>

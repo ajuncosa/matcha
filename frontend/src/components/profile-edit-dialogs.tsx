@@ -505,7 +505,13 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
         });
 
         if (resp.status != 200) {
-            setFormError(resp.body ? await resp.text() : `Server error (${resp.status})`);
+            const message = resp.body ? await resp.text() : `Server error (${resp.status})`;
+            // Email already in use (409): revert the email field to the current one so
+            // the leftover conflicting email doesn't block editing other fields.
+            if (resp.status === 409) {
+                setUserForm(prev => ({ ...prev, email: profileData.email }));
+            }
+            setFormError(message);
             return;
         }
 
@@ -567,7 +573,11 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
                             Make changes to your profile here. Click save when you&apos;re
                             done.
                         </DialogDescription>
-                            <div className="text-red-600">{formError}</div>
+                            {formError && (
+                                <div className="mt-1 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+                                    {formError}
+                                </div>
+                            )}
                     </DialogHeader>
                     <Tabs defaultValue="basic" className="w-full" orientation="vertical">
                         <TabsList>

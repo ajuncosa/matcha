@@ -12,7 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { ArrowDownNarrowWide, ArrowUpNarrowWide, Funnel } from "lucide-react";
+import { ArrowDownNarrowWide, ArrowUpNarrowWide, Funnel, HeartOff } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { NavLink } from "react-router";
 
@@ -309,6 +309,26 @@ export default function BrowsePage() {
                         </Card>
                     ))}
                 </>
+            )}
+
+            {!loading && !error && filteredRecommendations.length === 0 && (
+                <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground py-16 text-center">
+                    <HeartOff size={40} />
+                    {recommendations.length === 0 ? (
+                        <>
+                            <p className="text-base font-medium">There are no matches available for you</p>
+                            <p className="text-sm">Try updating your interests to discover more people.</p>
+                            <Button asChild variant="outline" className="mt-2">
+                                <NavLink to="/profile">Update my interests</NavLink>
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-base font-medium">No profiles match your filters</p>
+                            <p className="text-sm">Try adjusting or clearing your filters.</p>
+                        </>
+                    )}
+                </div>
             )}
         </div>
     )

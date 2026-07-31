@@ -55,6 +55,12 @@ export class WeakPasswordError extends Error {
     }
 }
 
+export class CommonPasswordError extends Error {
+    constructor() {
+        super("This password is too common. Please choose a more unique password.");
+    }
+}
+
 export class UserBlockedError extends Error {
     constructor() {
         super("This profile is not available");

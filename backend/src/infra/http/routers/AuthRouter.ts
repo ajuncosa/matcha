@@ -2,7 +2,7 @@ import { type Request, type Response } from "express";
 import type { UserUseCases } from "@/app/user/UserUseCases";
 import MatchaRouter from "./MatchaRouter";
 import type { UserLoginRequestDto, UserRegisterRequestDto, UserProfileResponseDto } from "@/app/user/UserDto";
-import { IncorrectPassword, InvalidEmailFormatError, InvalidPasswordResetToken, InvalidUserValidationToken, UserAccountNotVerified, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserNotFound, WeakPasswordError, type User } from "@/core/user/User";
+import { CommonPasswordError, IncorrectPassword, InvalidEmailFormatError, InvalidPasswordResetToken, InvalidUserValidationToken, UserAccountNotVerified, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserNotFound, WeakPasswordError, type User } from "@/core/user/User";
 
 export default class AuthRouter extends MatchaRouter {
     private userUseCases: UserUseCases;
@@ -88,6 +88,9 @@ export default class AuthRouter extends MatchaRouter {
             else if (e instanceof WeakPasswordError) {
                 res.status(422).send(e.message);
             }
+            else if (e instanceof CommonPasswordError) {
+                res.status(422).send(e.message);
+            }
             else {
                 throw e;
             }
@@ -124,6 +127,7 @@ export default class AuthRouter extends MatchaRouter {
         catch (e) {
             if (e instanceof InvalidPasswordResetToken) res.status(400).send(e.message);
             else if (e instanceof WeakPasswordError) res.status(422).send(e.message);
+            else if (e instanceof CommonPasswordError) res.status(422).send(e.message);
             else throw e;
         }
     }

@@ -123,7 +123,9 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
                 if (chat.otherUser.id == payload.sender) {
                     return {
                         ...chat,
-                        messages: [...chat.messages, payload]
+                        messages: [...chat.messages, payload],
+                        // Bump the unread counter so the sidebar/list badge updates live.
+                        unreadMessages: chat.unreadMessages + 1
                     }
                 }
                 else {

@@ -58,6 +58,7 @@ export class NotificationService implements INotificationService {
         const notif = await this.notificationRepo.create(producer.id, target.id, NotificationType.UNLIKE, notificationMessage) as UnlikeNotification;
 
         const targetSocket: Socket | null = this.socketRegistry.getUserSocket(target.id);
+        console.log(`[NOTIFY] unlike: producer=${producer.id} target=${target.id} notifId=${notif.id} targetOnline=${!!targetSocket}`);
         if (targetSocket) {
             targetSocket.send('notification:unlike', notif);
         }

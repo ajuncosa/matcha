@@ -14,6 +14,7 @@ import {
 	SidebarMenuSub,
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
+	useSidebar,
 } from "@/components/ui/sidebar"
 import { NavLink } from "react-router"
 import { Badge } from "@/components/ui/badge"
@@ -33,6 +34,10 @@ export function NavMain({
 		}[]
 	}[]
 }) {
+	const { setOpenMobile, isMobile } = useSidebar();
+	const closeMobileSidebar = () => {
+		if (isMobile) setOpenMobile(false);
+	};
 	return (
 		<SidebarGroup>
 			<SidebarMenu>
@@ -40,7 +45,7 @@ export function NavMain({
 					<Collapsible key={item.title} asChild defaultOpen={item.isActive}>
 						<SidebarMenuItem>
 							<SidebarMenuButton asChild tooltip={item.title}>
-								<NavLink to={item.url}>
+								<NavLink to={item.url} onClick={closeMobileSidebar}>
 									<item.icon />
 									<span>{item.title}</span>
 									{item.badge ? <Badge variant="destructive" className="ml-auto text-xs px-1.5 py-0">{item.badge}</Badge> : null}
@@ -59,7 +64,7 @@ export function NavMain({
 											{item.items?.map((subItem) => (
 												<SidebarMenuSubItem key={subItem.title}>
 													<SidebarMenuSubButton asChild>
-														<NavLink to={subItem.url}>
+														<NavLink to={subItem.url} onClick={closeMobileSidebar}>
 															<span>{subItem.title}</span>
 														</NavLink>
 													</SidebarMenuSubButton>

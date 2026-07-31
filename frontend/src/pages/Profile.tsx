@@ -22,7 +22,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, NavLink } from "react-router";
 
 interface ProfileVisitorDto {
@@ -61,6 +61,7 @@ export default function ProfilePage() {
     const [visitors, setVisitors] = useState<ProfileVisitorDto[]>([]);
     const [likers, setLikers] = useState<LikerDto[]>([]);
     const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
+    const fetchedKey = useRef<string | null>(null);
     const navigate = useNavigate();
 
     async function fetchUserData(url: string, onError?: () => void): Promise<void> {
@@ -144,8 +145,13 @@ export default function ProfilePage() {
         });
 
         if (resp.status == 200) {
-            setUserProfileData({...userProfileData, likeStatus: "LIKED"} as UserProfileResponseDto);
-            toast.success(`You liked ${userProfileData!.name}`);
+            // If the other user already liked us, liking back creates a mutual connection.
+            const isNowMutual = userProfileData?.likeStatus === "LIKED_BACK";
+            const newStatus: LikeStatus = isNowMutual ? "MUTUAL" : "LIKED";
+            setUserProfileData({...userProfileData, likeStatus: newStatus} as UserProfileResponseDto);
+            toast.success(isNowMutual
+                ? `It's a match! You and ${userProfileData!.name} are now connected 🎉`
+                : `You liked ${userProfileData!.name}`);
         }
         else {
             toast.error(`Error liking ${userProfileData!.name}`);
@@ -247,17 +253,22 @@ export default function ProfilePage() {
 
         if (isMutual) {
             return (
-                <div className="flex gap-2">
-                    <Button variant="default" size="lg" disabled>
-                        <ThumbsUpIcon className="mr-2" />
-                        {statusLabels[likeStatus || ""]}
-                    </Button>
-                    <Button variant="destructive" size="lg" className="cursor-pointer" onClick={() => onUnlike(Number(userId))}>
-                        <ThumbsDown className="mr-2" />
-                        Remove
-                    </Button>
-                    {blockButton}
-                    {reportButton}
+                <div className="flex gap-2 flex-col">
+                    <div className="flex gap-2">
+                        <Button variant="default" size="lg" disabled>
+                            <ThumbsUpIcon className="mr-2" />
+                            {statusLabels[likeStatus || ""]}
+                        </Button>
+                        <Button variant="destructive" size="lg" className="cursor-pointer" onClick={() => onUnlike(Number(userId))}>
+                            <ThumbsDown className="mr-2" />
+                            Remove
+                        </Button>
+                    </div>
+                    <div className="flex gap-2">
+                       {blockButton}
+                        {reportButton}
+                    </div>
+
                 </div>
             );
         }
@@ -282,6 +293,11 @@ export default function ProfilePage() {
     }
 
     useEffect(() => {
+        // Guard against React StrictMode's double-invoke
+        const key = id ?? "self";
+        if (fetchedKey.current === key) return;
+        fetchedKey.current = key;
+
         setUserProfileData(undefined);
         setVisitors([]);
         setLikers([]);
@@ -294,7 +310,7 @@ export default function ProfilePage() {
     }, [id]);
 
     return (
-        <div className="w-full">
+        <div className="w-full mt-4">
             {/* Header */}
             <div className="flex justify-between items-stretch gap-4 h-32">
                 <div className="flex flex-start gap-4">

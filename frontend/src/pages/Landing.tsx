@@ -2,12 +2,15 @@ import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import HeartsBackground from '@/components/hearts-background';
 
 export default function LandingPage() {
     return (
-        <div className="min-h-screen flex flex-col bg-background text-foreground">
+        <div className="relative min-h-screen flex flex-col bg-background text-foreground overflow-hidden">
+            <HeartsBackground />
+
             {/* Nav */}
-            <header className="flex items-center justify-between px-8 py-5">
+            <header className="relative z-10 flex items-center justify-between px-8 py-5">
                 <span className="text-xl font-semibold tracking-tight">matcha</span>
                 <div className="flex gap-3">
                     <Button variant="ghost" asChild>
@@ -19,10 +22,10 @@ export default function LandingPage() {
                 </div>
             </header>
 
-            <Separator />
+            <Separator className="relative z-10" />
 
             {/* Hero */}
-            <main className="flex flex-1 flex-col items-center justify-center text-center px-6 py-24 gap-6">
+            <main className="relative z-10 flex flex-1 flex-col items-center justify-center text-center px-6 py-24 gap-6">
                 <Badge variant="secondary" className="text-sm px-3 py-1">
                     Find your match
                 </Badge>
@@ -46,7 +49,7 @@ export default function LandingPage() {
             </main>
 
             {/* Footer */}
-            <footer className="text-center text-muted-foreground text-sm py-6">
+            <footer className="relative z-10 text-center text-muted-foreground text-sm py-6">
                 &copy; {new Date().getFullYear()} matcha
             </footer>
         </div>

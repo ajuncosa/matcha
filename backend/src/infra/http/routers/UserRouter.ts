@@ -1,6 +1,6 @@
 import { type UpdateUserRequestDto, type UserProfileResponseDto, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { UserUseCases } from "@/app/user/UserUseCases";
-import { BiographyTooLong, InvalidAgePreferenceError, MissingRequestFields, NoProfilePhotoError, TagTooLongError, TooManyTagsError, UserBlockedError, UserNotFound, UserUnderageError, WeakPasswordError } from "@/core/user/User";
+import { BiographyTooLong, CommonPasswordError, InvalidAgePreferenceError, InvalidEmailFormatError, MissingRequestFields, NoProfilePhotoError, TagTooLongError, TooManyTagsError, UserBlockedError, UserEmailAlreadyExists, UserNotFound, UserUnderageError, WeakPasswordError } from "@/core/user/User";
 import { type Request, type Response } from "express";
 import MatchaRouter from "./MatchaRouter";
 import type { IPhotoService } from "@/core/photos/IPhotoService";
@@ -62,6 +62,15 @@ export default class UserRouter extends MatchaRouter {
             }
             else if (e instanceof WeakPasswordError) {
                 res.status(422).send(e.message);
+            }
+            else if (e instanceof CommonPasswordError) {
+                res.status(422).send(e.message);
+            }
+            else if (e instanceof UserEmailAlreadyExists) {
+                res.status(409).send("This email is already in use");
+            }
+            else if (e instanceof InvalidEmailFormatError) {
+                res.status(422).send("Invalid email format");
             }
             else if (e instanceof UserUnderageError) {
                 res.status(422).send(e.message);
@@ -208,16 +217,18 @@ export default class UserRouter extends MatchaRouter {
 
         if (!targetId) {
             res.status(400).send("Invalid parameter format");
+            return;
         }
 
         try {
-            this.userUseCases.unLike(producerId, targetId);
+            await this.userUseCases.unLike(producerId, targetId);
             res.status(200).send();
         }
         catch(e) {
             if (e instanceof UserNotFound) {
                 res.status(401).send(`User with ID \"${req.session.userId}\" was not found`);
             }
+            else throw e;
         }
     }
 
