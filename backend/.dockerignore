@@ -1,0 +1,10 @@
+node_modules
+.env
+.git
+.gitignore
+dist
+out
+*.log
+*.tsbuildinfo
+# Uploaded images are kept in a volume, not baked into the image.
+images
