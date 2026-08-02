@@ -66,7 +66,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
         }
 
         if (!isPasswordValid(form.password)) {
-            setFormError("Password does not meet the requirements below");
+            setFormError("Password does not meet the requirements");
             return;
         }
 

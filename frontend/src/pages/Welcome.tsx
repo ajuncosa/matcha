@@ -106,8 +106,8 @@ export default function Welcome() {
                     setFormError(`Minimum age preference must be at least ${MINIMUM_AGE}`);
                     return;
                 }
-                if (preferredMinAge >= preferredMaxAge) {
-                    setFormError("Minimum age must be smaller than maximum age");
+                if (preferredMinAge > preferredMaxAge) {
+                    setFormError("Minimum age cannot be larger than maximum age");
                     return;
                 }
                 break;
