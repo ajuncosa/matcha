@@ -44,25 +44,39 @@ export class PhotoService implements IPhotoService {
                 if (file.mimetype.startsWith('image/')) {
                     cb(null, true);
                 } else {
-                    cb(new Error('Only images allowed'));
+                    cb(new Error('Only image files are allowed'));
                 }
             }
         });
     }
 
+    // Wraps a multer middleware so upload errors (wrong file type, too large, too
+    // many files) return a clean 422 message instead of Express's default HTML
+    // error page with a stack trace.
+    private withUploadErrorHandling(middleware: ReturnType<Multer["fields"]>) {
+        return (req: Request, res: Response, next: NextFunction) => {
+            middleware(req, res, (err: any) => {
+                if (err) {
+                    return res.status(422).send(err.message || "Invalid file upload");
+                }
+                next();
+            });
+        };
+    }
+
     // saves the image to disk
     uploadPhoto(fieldName: string)
     {
-        return this.uploader.single(fieldName); // fieldName must match your form field name
+        return this.withUploadErrorHandling(this.uploader.single(fieldName) as any);
     }
 
     // saves the images to disk
     uploadPhotos(profilePhotoFieldName: string, photosFieldName: string)
     {
-        return this.uploader.fields([
+        return this.withUploadErrorHandling(this.uploader.fields([
             { name: profilePhotoFieldName, maxCount: 1 },
             { name: photosFieldName, maxCount: 5 }
-        ]);
+        ]));
     }
 
     // Express middleware that runs AFTER multer has written the files to disk.

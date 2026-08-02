@@ -51,8 +51,11 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
 
     async function fetchChats() {
         const request = await fetch("http://localhost/api/chat");
+        // Not authenticated (or any error): the body isn't chat JSON, so bail out.
+        if (!request.ok)
+            return;
         const chatsResponse: Chat[] = await request.json();
-        
+
         if (chatsResponse.length < 0)
             return;
 
@@ -168,7 +171,12 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
     }
 
     useEffect(() => {
-        fetchChats();
+        // Only load chats for an authenticated user; clear them on logout.
+        if (user.loggedIn) {
+            fetchChats();
+        } else {
+            setChats([]);
+        }
         const subscriberId: number = socket.subscribeToEvent(
             'chat:message',
             "ChatContextProvider",

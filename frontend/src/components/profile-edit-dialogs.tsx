@@ -322,26 +322,33 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
 {
     const { user } = useContext(AuthContext);
 
-    const [userForm, setUserForm] = useState<UserForm>({
-        firstname: profileData.name,
-        lastname: profileData.lastname,
-        email: profileData.email,
-        password: "",
-        confirm_password: "",
-        gender: profileData.gender,
-        sex: profileData.sex,
-        birthday: new Date(profileData.birthday),
-        lat: profileData.lat,
-        lon: profileData.lon,
-        preferredGender: profileData.preferredGender,
-        preferredSex: profileData.preferredSex,
-        preferredMinAge: profileData.preferredMinAge,
-        preferredMaxAge: profileData.preferredMaxAge,
-        biography: profileData.biography,
-        tags: profileData.tags.map((t) => t.name),
-        profilePhoto: { action: "none", file: null },
-        photos: [{ action: "none", file: null }, { action: "none", file: null }, { action: "none", file: null }, { action: "none", file: null }]
-    });
+    // Builds a fresh form state from the current profile data (photos are loaded
+    // separately by loadPhotos). Used for both the initial state and for resetting
+    // when the dialog is closed without saving.
+    function buildFormFromProfile(): UserForm {
+        return {
+            firstname: profileData.name,
+            lastname: profileData.lastname,
+            email: profileData.email,
+            password: "",
+            confirm_password: "",
+            gender: profileData.gender,
+            sex: profileData.sex,
+            birthday: new Date(profileData.birthday),
+            lat: profileData.lat,
+            lon: profileData.lon,
+            preferredGender: profileData.preferredGender,
+            preferredSex: profileData.preferredSex,
+            preferredMinAge: profileData.preferredMinAge,
+            preferredMaxAge: profileData.preferredMaxAge,
+            biography: profileData.biography,
+            tags: profileData.tags.map((t) => t.name),
+            profilePhoto: { action: "none", file: null },
+            photos: [{ action: "none", file: null }, { action: "none", file: null }, { action: "none", file: null }, { action: "none", file: null }]
+        };
+    }
+
+    const [userForm, setUserForm] = useState<UserForm>(buildFormFromProfile);
 
     const [formError, setFormError] = useState<string>("");
 
@@ -356,31 +363,39 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
         return new File([data], name, metadata);
     }
 
-    useEffect(() => {
-        const loadPhotos = async () => {
-            const loadedProfilePhoto : PhotoAction = {
-                action: "none",
-                file: profileData.profilePhoto ? await createFile(`http://localhost/api/images/${profileData.profilePhoto.filePath}`, profileData.profilePhoto.filePath) : null
-            }
-            const loadedPhotos : PhotoAction[] = await Promise.all(
-                profileData.photos.map(async (p) => {
-                    return {
-                        action: "none",
-                        file: await createFile(`http://localhost/api/images/${p.filePath}`, p.filePath)
-                    }
-                })
-            )
-            setUserForm({
-                ...userForm,
-                profilePhoto: loadedProfilePhoto,
-                photos: [
-                    loadedPhotos[0] ?? { action: "none", file: null },
-                    loadedPhotos[1] ?? { action: "none", file: null },
-                    loadedPhotos[2] ?? { action: "none", file: null },
-                    loadedPhotos[3] ?? { action: "none", file: null },
-                ]
-            })
+    async function loadPhotos() {
+        const loadedProfilePhoto : PhotoAction = {
+            action: "none",
+            file: profileData.profilePhoto ? await createFile(`http://localhost/api/images/${profileData.profilePhoto.filePath}`, profileData.profilePhoto.filePath) : null
         }
+        const loadedPhotos : PhotoAction[] = await Promise.all(
+            profileData.photos.map(async (p) => {
+                return {
+                    action: "none",
+                    file: await createFile(`http://localhost/api/images/${p.filePath}`, p.filePath)
+                }
+            })
+        )
+        setUserForm((prev) => ({
+            ...prev,
+            profilePhoto: loadedProfilePhoto,
+            photos: [
+                loadedPhotos[0] ?? { action: "none", file: null },
+                loadedPhotos[1] ?? { action: "none", file: null },
+                loadedPhotos[2] ?? { action: "none", file: null },
+                loadedPhotos[3] ?? { action: "none", file: null },
+            ]
+        }))
+    }
+
+    // Discards any unsaved edits, restoring the form to the current profile data.
+    function resetForm() {
+        setFormError("");
+        setUserForm(buildFormFromProfile());
+        loadPhotos();
+    }
+
+    useEffect(() => {
         loadPhotos();
     }, [])
 
@@ -389,13 +404,9 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
 
     function setInputFormValue(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>)
     {
-        let value: string | number = e.target.value;
-        if ((e.target.id === "preferredMinAge" || e.target.id === "preferredMaxAge") && value !== "" && Number(value) < MINIMUM_AGE) {
-            value = MINIMUM_AGE;
-        }
         setUserForm({
             ...userForm,
-            [e.target.id]: value
+            [e.target.id]: e.target.value
         });
     }
 
@@ -447,8 +458,18 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
             setFormError(`You must be at least ${MINIMUM_AGE} years old to use this platform`);
             return;
         }
-        if (Number(userForm.preferredMinAge) < MINIMUM_AGE) {
+        const preferredMinAge = Number(userForm.preferredMinAge);
+        const preferredMaxAge = Number(userForm.preferredMaxAge);
+        if (!preferredMinAge || !preferredMaxAge) {
+            setFormError("Please provide a minimum and maximum age preference");
+            return;
+        }
+        if (preferredMinAge < MINIMUM_AGE) {
             setFormError(`Minimum age preference must be at least ${MINIMUM_AGE}`);
+            return;
+        }
+        if (preferredMinAge >= preferredMaxAge) {
+            setFormError("Minimum age must be smaller than maximum age");
             return;
         }
         if (userForm.biography.length > 300) {
@@ -559,7 +580,11 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
     }
 
     return (
-        <Dialog open={openDialog} onOpenChange={setOpenDialog} >
+        <Dialog open={openDialog} onOpenChange={(open) => {
+            // Closing the dialog (Esc, outside click, Cancel) discards unsaved edits.
+            if (!open) resetForm();
+            setOpenDialog(open);
+        }} >
             <form>
                 <DialogTrigger asChild>
                     <Button variant="outline" size="lg" className="cursor-pointer">

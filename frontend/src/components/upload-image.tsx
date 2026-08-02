@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { CirclePlus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+// Keep this comfortably below the server (multer 50MB) and nginx (100MB) limits so
+// oversized files are rejected here instead of failing with a raw 413/500 page.
+const MAX_IMAGE_SIZE_MB = 5;
 
 const UploadAndDisplayImage = (
     { uploadedImage, onImageUpload, onImageRemove, deletable}: {
@@ -25,11 +30,21 @@ const UploadAndDisplayImage = (
                     :
                     <CirclePlus className="size-sm" />
                 }
-                <input type="file" id="picture" className="cursor-pointer absolute inset-0 opacity-0"
+                <input type="file" id="picture" accept="image/*" className="cursor-pointer absolute inset-0 opacity-0"
                     onChange={(event) => {
                         const file: File | undefined = event.target.files?.[0];
                         if (!file)
                             return;
+                        if (!file.type.startsWith("image/")) {
+                            toast.error("Please select an image file");
+                            event.target.value = "";
+                            return;
+                        }
+                        if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+                            toast.error(`Image must be smaller than ${MAX_IMAGE_SIZE_MB}MB`);
+                            event.target.value = "";
+                            return;
+                        }
                         setSelectedImage(file);
                         onImageUpload(file);
                     }}

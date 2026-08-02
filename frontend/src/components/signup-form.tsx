@@ -65,6 +65,11 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             return;
         }
 
+        if (!/^[A-Za-z0-9._-]+$/.test(form.username)) {
+            setFormError("Username can only contain letters, numbers, dashes, underscores and dots");
+            return;
+        }
+
         if (!isPasswordValid(form.password)) {
             setFormError("Password does not meet the requirements");
             return;

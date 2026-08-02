@@ -59,8 +59,8 @@ export default function TagsPicker({tags, addTag, removeTag}: TagsPickerProps) {
     return (
         <form>
             <div className="flex w-full flex-wrap justify-start gap-1 mt-3">
-                {tags.map((t) => 
-                    <Badge variant="outline" className="hover:border-gray-500">
+                {tags.map((t, i) => 
+                    <Badge key={i} variant="outline" className="hover:border-gray-500">
                         <span className="text-md">#{t}</span>
                         <span className="cursor-pointer" onClick={(e: any) => {e.preventDefault(); removeTag(t)}}>
                             <X width={"20px"}/>

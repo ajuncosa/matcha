@@ -378,8 +378,8 @@ export default function ProfilePage() {
                 <h2 className="text-2xl">Interests</h2>
                 <div className="w-full mt-2 flex flex-wrap gap-1">
                     {
-                        userProfileData?.tags.map((tag) => {
-                            return <Badge variant="outline" className="text-md">#{`${tag.name}`}</Badge>
+                        userProfileData?.tags.map((tag, i) => {
+                            return <Badge key={i} variant="outline" className="text-md">#{`${tag.name}`}</Badge>
                         })
                     }
                 </div>

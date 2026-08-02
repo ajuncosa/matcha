@@ -79,6 +79,12 @@ export class UsernameAlreadyExistsError extends Error {
     }
 }
 
+export class InvalidUsernameFormatError extends Error {
+    constructor() {
+        super("Username can only contain letters, numbers, dashes, underscores and dots");
+    }
+}
+
 export class InvalidPasswordResetToken extends Error {
     constructor() {
         super("Invalid or expired password reset link");

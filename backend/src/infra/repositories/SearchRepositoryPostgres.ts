@@ -24,8 +24,10 @@ export default class SearchRepositoryPostgres implements ISearchRepository {
         let paramIndex = 2;
 
         if (criteria.searchText) {
-            conditions.push(`(LOWER(u.name) LIKE LOWER($${paramIndex}) OR LOWER(u.lastname) LIKE LOWER($${paramIndex}))`);
-            params.push(`%${criteria.searchText}%`);
+            // Match first name, last name, or the full "name lastname" so a query
+            // with a space (e.g. "John Doe") works too.
+            conditions.push(`(LOWER(u.name) LIKE LOWER($${paramIndex}) OR LOWER(u.lastname) LIKE LOWER($${paramIndex}) OR LOWER(u.name || ' ' || u.lastname) LIKE LOWER($${paramIndex}))`);
+            params.push(`%${criteria.searchText.trim()}%`);
             paramIndex++;
         }
 

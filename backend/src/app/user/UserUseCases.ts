@@ -1,5 +1,5 @@
 import type { IUserRepository } from "@/core/user/IUserRepository";
-import { BiographyTooLong, CommonPasswordError, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidAgePreferenceError, InvalidEmailFormatError, InvalidPasswordResetToken, InvalidUserValidationToken, MissingRequestFields, NoProfilePhotoError, TagTooLongError, TooManyTagsError, User, UserAccountNotVerified, UserBlockedError, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserGender, UserNotFound, UserSex, UserUnderageError, WeakPasswordError, type UserId } from "@/core/user/User";
+import { BiographyTooLong, CommonPasswordError, EmailAddress, getUserGenderFromString, getUserSexFromString, IncorrectPassword, InvalidAgePreferenceError, InvalidEmailFormatError, InvalidPasswordResetToken, InvalidUsernameFormatError, InvalidUserValidationToken, MissingRequestFields, NoProfilePhotoError, TagTooLongError, TooManyTagsError, User, UserAccountNotVerified, UserBlockedError, UserEmailAlreadyExists, UsernameAlreadyExistsError, UserGender, UserNotFound, UserSex, UserUnderageError, WeakPasswordError, type UserId } from "@/core/user/User";
 import { type UserRegisterRequestDto, type UserLoginRequestDto, type UpdateUserRequestDto, type UserProfileResponseDto, LikeStatus, type ProfileVisitorDto } from "@/app/user/UserDto";
 import type { IProfileVisitRepository } from "@/core/profileVisit/IProfileVisitRepository";
 import type { IBlockRepository } from "@/core/block/IBlockRepository";
@@ -83,6 +83,13 @@ export class UserUseCases {
         "admin", "welcome", "login", "passw0rd", "master", "hello", "sunshine", "dragon"
     ];
 
+    private validateUsernameFormat(username: string): void {
+        // Only letters, numbers, dashes, underscores and dots (no spaces/special chars).
+        const usernameRegex = /^[A-Za-z0-9._-]+$/;
+        if (!usernameRegex.test(username))
+            throw new InvalidUsernameFormatError();
+    }
+
     private validateEmailFormat(email: string): void {
         // Standard, reasonably strict email format check.
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,13 +110,14 @@ export class UserUseCases {
             throw new CommonPasswordError();
         }
         // Reject passwords present in the known common/breached passwords table.
-        if (await this.commonPasswordRepository.isCommon(password)) {
+        if (await this.commonPasswordRepository.isCommon(password.toLowerCase())) {
             throw new CommonPasswordError();
         }
     }
 
     async registerUser(dto: UserRegisterRequestDto): Promise<void> {
         this.validateEmailFormat(dto.email);
+        this.validateUsernameFormat(dto.username);
         const userEmail = new EmailAddress(dto.email);
         const userExists: User | null = await this.userRepo.findUserByEmail(userEmail);
         if (userExists) throw new UserEmailAlreadyExists();
@@ -160,11 +168,16 @@ export class UserUseCases {
 
             likeStatus = await this.getLikeStatus(viewerId, userId);
             isBlockedByMe = (await this.blockRepository.getBlockedIds(viewerId)).includes(userId);
-            this.profileVisitRepository.record(viewerId, userId);
-            this.adjustFame(userId, +1);
-            const viewer = await this.userRepo.findUserById(viewerId);
-            if (viewer) {
-                this.notificationService.notifiProfileView(viewer, user).catch(() => {});
+
+            // If the viewer has blocked this user, don't record the visit, bump their
+            // fame, or notify them — they shouldn't see the blocker in their history.
+            if (!isBlockedByMe) {
+                this.profileVisitRepository.record(viewerId, userId);
+                this.adjustFame(userId, +1);
+                const viewer = await this.userRepo.findUserById(viewerId);
+                if (viewer) {
+                    this.notificationService.notifiProfileView(viewer, user).catch(() => {});
+                }
             }
         }
 
