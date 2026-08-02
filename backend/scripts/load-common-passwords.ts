@@ -44,7 +44,7 @@ async function main(): Promise<void> {
 
         for await (const line of rl) {
             if (line.length === 0) continue;
-            batch.push(line);
+            batch.push(line.toLowerCase());
             if (batch.length >= BATCH_SIZE) {
                 await insertBatch(client, batch);
                 total += batch.length;

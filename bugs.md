@@ -41,3 +41,18 @@
 - [X] When searching by name, spaces don't work for some reason, i can only search by either first or last name but not "Name Lastname"
 - [X] If I block someone, they can still see when I visit their profile in the visit history
 - [X] DO NOT ALLOW the upload of unauthorized content => e.g. non-jpg images. Currently prints very long error message from the backend into the frontend
+- [ ] You can create a username with spaces
+- [ ] When selecting your age, the calendar opens on today's date even if you cannot select anything until 18 years ago
+- [ ] In the edit profile dialog, in preferences, you cannot erase and re-write the min/max age, it's validated and overwritten with the minimum before the user manually saves
+    - [ ] Same in search page
+    - [ ] Same in browser > Filter
+- [ ] Browser does not show people who are not interested in my sex and gender, but it does show people that are not interested in my age
+- [ ] When I'm editing my profile, if I change something and don't save, when I re-open the edit profile dialog, the change is still there, pending to be committed. Is this something we want or should the state of the dialog be reset when we close it without saving?
+- [ ] Review errors and warnings on the browser's web developer tools
+- [ ] Make the coopyright footer non-sticky (so it appears at the bottom of the page only if you scroll down to it)
+- [ ] When searching by name, spaces don't work for some reason, i can only search by either first or last name but not "Name Lastname"
+- [ ] If I block someone, they can still see when I visit their profile in the visit history
+- [ ] DO NOT ALLOW the upload of unauthorized content => e.g. non-jpg images. Currently prints very long error message from the backend into the frontend
+- [ ] Browser algorithm: if two people are at the same distance from me, they should be sorted by number of common tags and, if equal, by the highest fame rating
+- [ ] If a user is not currently online, sett the date and time of their last connection in the profile page
+- [ ] Reported users don't appear in the reported Users table in the DB
