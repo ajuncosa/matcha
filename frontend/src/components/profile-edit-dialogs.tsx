@@ -39,7 +39,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input"
 import AuthContext from "@/contexts/AuthContextProvider"
 import type { PhotoAction, PhotoDto, UpdateUserRequestDto, UserProfileResponseDto } from "@/dto/UserDto"
-import { ChevronDownIcon, EditIcon } from "lucide-react"
+import { ArrowLeft, ChevronDownIcon, EditIcon } from "lucide-react"
 import { useContext, useEffect, useState, type ChangeEventHandler, type Dispatch, type SetStateAction } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -356,6 +356,11 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
 
     const [openDialog, setOpenDialog] = useState(false);
 
+    // Which section tab is active, and (on mobile) whether we're viewing that
+    // section's detail vs. the list of sections.
+    const [activeTab, setActiveTab] = useState("basic");
+    const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
+
     async function createFile(path: string, name: string): Promise<File> {
         const response = await fetch(path);
         const data = await response.blob();
@@ -393,6 +398,9 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
         setFormError("");
         setUserForm(buildFormFromProfile());
         loadPhotos();
+        // Return to the section list (mobile) on next open.
+        setMobileDetailOpen(false);
+        setActiveTab("basic");
     }
 
     useEffect(() => {
@@ -604,8 +612,13 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
                                 </div>
                             )}
                     </DialogHeader>
-                    <Tabs defaultValue="basic" className="w-full" orientation="vertical">
-                        <TabsList>
+                    <Tabs
+                        value={activeTab}
+                        onValueChange={(v) => { setActiveTab(v); setMobileDetailOpen(true); }}
+                        className="w-full"
+                        orientation="vertical"
+                    >
+                        <TabsList className={`w-full sm:w-fit ${mobileDetailOpen ? "hidden sm:flex" : "flex"}`}>
                             <TabsTrigger value="basic">Basic info</TabsTrigger>
                             <TabsTrigger value="account">Account details</TabsTrigger>
                             <TabsTrigger value="preferences">Preferences</TabsTrigger>
@@ -615,6 +628,11 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
                             <TabsTrigger value="photos">Photos</TabsTrigger>
                             <TabsTrigger value="location">Location</TabsTrigger>
                         </TabsList>
+                        {/* Detail area: full-width on mobile once a section is picked, always shown on desktop */}
+                        <div className={`w-full min-w-0 ${mobileDetailOpen ? "block" : "hidden sm:block"}`}>
+                        <Button type="button" variant="ghost" size="sm" className="sm:hidden mb-2 -ml-2 cursor-pointer" onClick={() => setMobileDetailOpen(false)}>
+                            <ArrowLeft /> Back
+                        </Button>
                         <TabsContent value="basic">
                             <Card className="gap-2">
                                 <CardHeader>
@@ -718,6 +736,7 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
                                 </CardContent>
                             </Card>
                         </TabsContent>
+                        </div>
                     </Tabs>
                     <DialogFooter>
                         <DialogClose asChild>
