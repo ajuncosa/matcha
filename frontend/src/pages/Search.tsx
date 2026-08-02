@@ -44,13 +44,6 @@ interface SearchResponse {
 const API_URL = "/api";
 const MINIMUM_AGE = 18;
 
-function clampMinimumAge(value: string): string {
-    if (value === "") return value;
-    const num = parseInt(value);
-    if (isNaN(num)) return value;
-    return Math.max(MINIMUM_AGE, num).toString();
-}
-
 export default function SearchPage() {
     // Search inputs
     const [searchText, setSearchText] = useState("");
@@ -207,7 +200,7 @@ export default function SearchPage() {
                                 type="number"
                                 min={MINIMUM_AGE}
                                 value={minAge}
-                                onChange={(e) => setMinAge(clampMinimumAge(e.target.value))}
+                                onChange={(e) => setMinAge(e.target.value)}
                             />
                             -
                             <Input
@@ -217,7 +210,7 @@ export default function SearchPage() {
                                 type="number"
                                 min={MINIMUM_AGE}
                                 value={maxAge}
-                                onChange={(e) => setMaxAge(clampMinimumAge(e.target.value))}
+                                onChange={(e) => setMaxAge(e.target.value)}
                             />
                         </div>
                     </div>

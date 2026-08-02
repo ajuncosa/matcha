@@ -112,15 +112,6 @@ CREATE TABLE IF NOT EXISTS "blocked_users" (
 
 
 
-CREATE TABLE IF NOT EXISTS "reported_users" (
-	"id" SERIAL NOT NULL UNIQUE,
-	"reporter_user_id" BIGINT NOT NULL,
-	"reported_user_id" BIGINT NOT NULL,
-	"created_at" TIMESTAMP NOT NULL,
-	PRIMARY KEY("id")
-);
-
-
 
 
 CREATE TABLE IF NOT EXISTS "messages" (
@@ -182,14 +173,6 @@ ON UPDATE NO ACTION ON DELETE NO ACTION;
 
 ALTER TABLE "blocked_users"
 ADD FOREIGN KEY("blocked_user_id") REFERENCES "users"("id")
-ON UPDATE NO ACTION ON DELETE NO ACTION;
-
-ALTER TABLE "reported_users"
-ADD FOREIGN KEY("reporter_user_id") REFERENCES "users"("id")
-ON UPDATE NO ACTION ON DELETE NO ACTION;
-
-ALTER TABLE "reported_users"
-ADD FOREIGN KEY("reported_user_id") REFERENCES "users"("id")
 ON UPDATE NO ACTION ON DELETE NO ACTION;
 
 ALTER TABLE "messages"

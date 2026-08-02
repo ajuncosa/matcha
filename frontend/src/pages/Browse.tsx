@@ -51,13 +51,6 @@ interface Recommendation {
 const API_URL = "/api";
 const MINIMUM_AGE = 18;
 
-function clampMinimumAge(value: string): string {
-    if (value === "") return value;
-    const num = parseInt(value);
-    if (isNaN(num)) return value;
-    return Math.max(MINIMUM_AGE, num).toString();
-}
-
 export default function BrowsePage() {
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [loading, setLoading] = useState(false);
@@ -201,9 +194,9 @@ export default function BrowsePage() {
                             <div className="grid grid-cols-3 items-center gap-4">
                                 <Label>Age</Label>
                                 <div className="col-span-2 flex gap-1">
-                                    <Input value={filterMinAge} onChange={e => setFilterMinAge(clampMinimumAge(e.target.value))} placeholder="min" className="h-8 flex-1" type="number" min={MINIMUM_AGE} />
+                                    <Input value={filterMinAge} onChange={e => setFilterMinAge(e.target.value)} placeholder="min" className="h-8 flex-1" type="number" min={MINIMUM_AGE} />
                                     -
-                                    <Input value={filterMaxAge} onChange={e => setFilterMaxAge(clampMinimumAge(e.target.value))} placeholder="max" className="h-8 flex-1" type="number" min={MINIMUM_AGE} />
+                                    <Input value={filterMaxAge} onChange={e => setFilterMaxAge(e.target.value)} placeholder="max" className="h-8 flex-1" type="number" min={MINIMUM_AGE} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 items-center gap-4">

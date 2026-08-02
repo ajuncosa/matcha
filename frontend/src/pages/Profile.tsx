@@ -321,7 +321,7 @@ export default function ProfilePage() {
                                 <Badge className={`${userProfileData?.isOnline ? 'bg-emerald-600' : 'bg-red-600'}  h-6 w-6 absolute top-[-12px] right-[-12px] z-1`}></Badge>
                             : <></>
                         }
-                        <Avatar key={userProfileData?.id} className="rounded-lg w-32 h-32">
+                        <Avatar key={userProfileData?.id} className="rounded-lg w-36 h-36">
                             {userProfileData?.profilePhoto &&
                                 <AvatarImage className="object-cover"
                                     src={`http://localhost/api/images/${userProfileData?.profilePhoto.filePath}`}
@@ -343,6 +343,13 @@ export default function ProfilePage() {
                             <SexIcon sex={userProfileData?.sex}/>
                             <span className="mr-1">| {userProfileData?.gender} | {calculateAge()}</span>
                         </div>
+                        {user?.id != userProfileData?.id && !userProfileData?.isOnline && (
+                            <div className="mt-1 text-sm text-muted-foreground">
+                                Last seen {userProfileData?.lastConnection
+                                    ? new Date(userProfileData.lastConnection).toLocaleString()
+                                    : "unknown"}
+                            </div>
+                        )}
                         <div className="flex mt-2 justify-center flex-col">
                             <span className="text-xs text-muted-foreground uppercase">rating</span>
                             <div className="text-4xl font-bold">{userProfileData?.fameRating}</div>
@@ -350,7 +357,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
-            <div className="mt-2">
+            <div className="mt-6">
                 {
                     userProfileData &&
                     (
