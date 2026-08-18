@@ -80,7 +80,7 @@ export default function ProfilePage() {
         const respBody: UserProfileResponseDto = await resp.json();
         
         const filteredPhotos = respBody.profilePhoto
-            ? respBody.photos.filter((photo) => photo.id !== respBody.profilePhoto.id)
+            ? respBody.photos.filter((photo) => photo.id !== respBody.profilePhoto!.id)
             : respBody.photos;
         
         setUserProfileData({...respBody, photos: filteredPhotos});

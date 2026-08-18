@@ -1,6 +1,5 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import AuthContext from "./AuthContextProvider";
-import NotificationsContext from "./NotificationsContextProvider";
 import SocketContext from "./SocketContextProvider";
 
 export interface Message {
@@ -46,7 +45,6 @@ const ChatContext = createContext<ChatContext>(defaultChatContext);
 export function ChatContextProvider({children}: {children: React.ReactElement}) {
     const { user } = useContext(AuthContext);
     const socket = useContext(SocketContext);
-    const { addNotification } = useContext(NotificationsContext);
     const [chats, setChats] = useState<Chat[]>([]);
 
     async function fetchChats() {

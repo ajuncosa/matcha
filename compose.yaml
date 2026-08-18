@@ -60,6 +60,19 @@ services:
             - matcha-net
         restart: unless-stopped
 
+    # Database admin UI on :8080. Convenient for inspecting the DB; consider
+    # removing or firewalling it in a real public deployment.
+    adminer:
+        image: adminer
+        container_name: matcha-adminer
+        depends_on:
+            - database
+        ports:
+            - "8080:8080"
+        networks:
+            - matcha-net
+        restart: unless-stopped
+
 networks:
     matcha-net:
         driver: bridge
