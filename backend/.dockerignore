@@ -8,3 +8,6 @@ out
 *.tsbuildinfo
 # Uploaded images are kept in a volume, not baked into the image.
 images
+# The images backup zip is copied into the volume manually, not baked in.
+# (seed/dump.sql IS included so the entrypoint can restore it.)
+seed/*.zip

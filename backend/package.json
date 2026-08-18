@@ -34,6 +34,7 @@
     "migrate": "bun run ./scripts/migrate.ts",
     "migrate:rollback": "bun run ./scripts/migrate.ts --rollback",
     "load:passwords": "bun run ./scripts/load-common-passwords.ts",
+    "restore:seed": "bun run ./scripts/restore-seed.ts",
     "seed": "bun run ./scripts/seed.ts",
     "seed:users": "bun run ./scripts/seed.ts"
   }

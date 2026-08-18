@@ -2,6 +2,12 @@
 FROM oven/bun:1.3
 
 ENV NODE_ENV=production
+
+# Runtime tools used by the entrypoint to fetch & extract the seed images.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl unzip \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /home/bun/app
 
 # Install dependencies first for better layer caching.

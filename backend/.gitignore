@@ -32,3 +32,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Large images backup zip (regenerate with zip -r seed/images.zip images/)
+seed/*.zip
