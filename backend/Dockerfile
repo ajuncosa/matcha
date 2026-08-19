@@ -5,8 +5,10 @@ ENV NODE_ENV=production
 
 # Runtime tools used by the entrypoint to fetch & extract the seed images.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl unzip \
+    && apt-get install -y --no-install-recommends curl unzip ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+RUN update-ca-certificates
 
 WORKDIR /home/bun/app
 
@@ -23,6 +25,7 @@ USER root
 RUN mkdir -p /home/bun/app/images \
     && chown -R bun:bun /home/bun/app \
     && chmod +x ./docker-entrypoint.sh
+
 USER bun
 
 EXPOSE 3000

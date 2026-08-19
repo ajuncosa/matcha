@@ -1,8 +1,12 @@
 import { Client } from "pg";
 import * as bcrypt from "bcryptjs";
 import { faker } from "@faker-js/faker";
-import { mkdir } from "node:fs/promises";
+import { mkdir, unlink } from "node:fs/promises";
 import PlatformPath from "node:path";
+
+// Set by Ctrl+C so the photo download stops cleanly between users (letting a
+// re-run resume from where it left off).
+let stopRequested = false;
 
 // --- Photo seeding config ---
 // IMAGES_DIR is relative to the app root (cwd when running `bun run seed`), which
@@ -75,10 +79,10 @@ interface SeedUser {
     tags: string[];
 }
 
-function generateUsers(count: number): SeedUser[] {
+function generateUsers(count: number, indexOffset = 0): SeedUser[] {
     const users: SeedUser[] = [];
 
-    for (let i = 0; i < count; i++) {
+    for (let i = indexOffset; i < indexOffset + count; i++) {
         const profile = generateCompatibleProfile();
         // Bias faker's name generation to the profile's sex where it maps cleanly.
         const fakerSex = profile.sex === "male" ? "male" : profile.sex === "female" ? "female" : undefined;
@@ -133,8 +137,8 @@ async function seedTags(client: Client): Promise<Map<string, number>> {
     return tagMap;
 }
 
-async function seedUsers(client: Client, count: number, tagMap: Map<string, number>): Promise<number[]> {
-    const users = generateUsers(count);
+async function seedUsers(client: Client, count: number, tagMap: Map<string, number>, indexOffset = 0): Promise<number[]> {
+    const users = generateUsers(count, indexOffset);
     const userIds: number[] = [];
     let seededCount = 0;
 
@@ -218,15 +222,40 @@ function highResAvatarUrl(): string {
     return url.toString();
 }
 
+// Removes any photos already linked to a user (files + rows). Used to wipe a
+// partially-downloaded user (one interrupted mid-batch, so profile_photo_id is
+// still NULL) before re-downloading, keeping resumes clean.
+async function clearUserPhotos(client: Client, userId: number): Promise<void> {
+    const res = await client.query(
+        "SELECT p.id AS id, p.file_path AS file_path FROM users_photos up JOIN photos p ON p.id = up.photo_id WHERE up.user_id = $1",
+        [userId]
+    );
+    if (res.rows.length === 0) return;
+    for (const row of res.rows) {
+        await unlink(PlatformPath.join(IMAGES_DIR, row.file_path)).catch(() => {});
+    }
+    await client.query("DELETE FROM users_photos WHERE user_id = $1", [userId]);
+    await client.query("DELETE FROM photos WHERE id = ANY($1::int[])", [res.rows.map((r) => r.id as number)]);
+}
+
 // Downloads 3-5 images per user (a faker avatar as the profile photo + random
 // real photos), stores them on disk and links them in the DB. Runs OUTSIDE the
-// main transaction because it is network-bound and slow.
+// main transaction (each user is auto-committed) so it can be interrupted and
+// resumed: a user is "done" only once its profile_photo_id is set.
 async function seedUserPhotos(client: Client, userIds: number[]): Promise<void> {
     await mkdir(IMAGES_DIR, { recursive: true });
     let usersDone = 0;
     let photoCount = 0;
 
     for (const userId of userIds) {
+        if (stopRequested) {
+            console.log(`Stopping — ${userIds.length - usersDone} user(s) still need photos. Re-run to resume.`);
+            break;
+        }
+
+        // Start this user's batch from a clean slate (handles a prior partial run).
+        await clearUserPhotos(client, userId);
+
         const n = faker.number.int({ min: PHOTOS_PER_USER_MIN, max: PHOTOS_PER_USER_MAX });
         let profilePhotoId: number | null = null;
 
@@ -274,14 +303,25 @@ async function seedUserPhotos(client: Client, userIds: number[]): Promise<void> 
         }
     }
 
-    console.log(`Seeded ${photoCount} photos across ${userIds.length} users`);
+    console.log(`Seeded ${photoCount} photos across ${usersDone} user(s) this run.`);
 }
 
 async function main() {
     const args = process.argv.slice(2);
-    const userCount = parseInt(args[0] ?? "") || 50;
+    const userCount = parseInt(args[0] ?? "") || 500;
 
-    console.log(`Starting database seeding with ${userCount} users...`);
+    console.log(`Seeding target: ${userCount} users.`);
+
+    // Ctrl+C: request a clean stop between users so a re-run resumes cleanly.
+    // A second Ctrl+C force-quits.
+    process.on("SIGINT", () => {
+        if (stopRequested) {
+            console.log("\nForce quitting.");
+            process.exit(130);
+        }
+        console.log("\nStop requested — finishing the current user, then exiting. (Ctrl+C again to force quit.) Re-run to resume.");
+        stopRequested = true;
+    });
 
     const client = new Client();
 
@@ -289,22 +329,42 @@ async function main() {
         await client.connect();
         console.log("Connected to database");
 
-        // Seed tags + users in one transaction (fast, no network I/O).
-        await client.query("BEGIN");
-        const tagMap = await seedTags(client);
-        const userIds = await seedUsers(client, userCount, tagMap);
-        await client.query("COMMIT");
+        // Phase 1: create only the users that are missing (idempotent across runs).
+        // Fast, no network I/O, so it runs in a single transaction.
+        const existing = (await client.query("SELECT count(*)::int AS c FROM users_details")).rows[0].c as number;
+        const toCreate = Math.max(0, userCount - existing);
+        if (toCreate > 0) {
+            console.log(`Creating ${toCreate} user(s) (${existing} already exist)...`);
+            await client.query("BEGIN");
+            const tagMap = await seedTags(client);
+            await seedUsers(client, toCreate, tagMap, existing);
+            await client.query("COMMIT");
+        } else {
+            console.log(`${existing} user(s) already exist — skipping user creation.`);
+        }
 
-        // Seed photos separately: network-bound and slow, so it runs on
-        // auto-committed statements rather than holding the transaction open.
-        console.log("\nDownloading and linking profile photos (this can take a while)...");
-        await seedUserPhotos(client, userIds);
+        // Phase 2 (RESUMABLE): download photos for every user still missing a
+        // profile photo. profile_photo_id is set as the last step per user, so an
+        // interrupted user stays NULL and is picked up again on the next run.
+        const pending = (await client.query(
+            "SELECT user_id FROM users_details WHERE profile_photo_id IS NULL ORDER BY user_id"
+        )).rows.map((r) => r.user_id as number);
 
-        console.log("\nDatabase seeding completed successfully!");
-        console.log(`Created:`);
-        console.log(`  - ${userCount} users (${PHOTOS_PER_USER_MIN}-${PHOTOS_PER_USER_MAX} photos each)`);
-        console.log(`  - ${tagNames.length} tags`);
-        console.log(`All users have password: "password123"`);
+        if (pending.length === 0) {
+            console.log("\nAll users already have photos — nothing to download.");
+        } else {
+            console.log(`\n${pending.length} user(s) still need photos. Downloading now — Ctrl+C to stop, then re-run to resume...`);
+            await seedUserPhotos(client, pending);
+        }
+
+        const remaining = (await client.query(
+            "SELECT count(*)::int AS c FROM users_details WHERE profile_photo_id IS NULL"
+        )).rows[0].c as number;
+        if (remaining === 0) {
+            console.log(`\nSeeding complete — all users have photos. Password for all: "password123".`);
+        } else {
+            console.log(`\nStopped with ${remaining} user(s) still needing photos. Re-run \`bun run seed ${userCount}\` to continue.`);
+        }
     } catch (error) {
         try { await client.query("ROLLBACK"); } catch { /* no active tx */ }
         console.error("Error seeding database:", error);
