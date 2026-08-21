@@ -47,6 +47,7 @@ const UploadAndDisplayImage = (
                         }
                         setSelectedImage(file);
                         onImageUpload(file);
+                        event.target.value = "";
                     }}
                 />
             </Button>
