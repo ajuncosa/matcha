@@ -4,7 +4,6 @@ services:
     frontend:
         build:
             context: ./frontend
-        image: matcha-frontend
         container_name: matcha-frontend
         ports:
             - "80:80"
@@ -17,7 +16,6 @@ services:
     backend:
         build:
             context: ./backend
-        image: matcha-backend
         container_name: matcha-backend
         env_file: "./backend/.env"
         depends_on:
