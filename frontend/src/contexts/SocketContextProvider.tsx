@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef } from "react";
 import { io, type Socket as SocketIO } from "socket.io-client";
 import AuthContext from "./AuthContextProvider";
+import { SOCKET_URL } from "@/lib/config";
 
 type EventCallbackFn = (payload: any) => void;
 
@@ -87,8 +88,7 @@ class UserSocket {
     }
 }
 
-//TODO: Move this url to .env file
-const userSocket: UserSocket = new UserSocket("http://localhost");
+const userSocket: UserSocket = new UserSocket(SOCKET_URL);
 const SocketContext = createContext<UserSocket>(userSocket);
 
 export function SocketContextProvider({children}: {children: React.ReactElement}) {

@@ -11,6 +11,7 @@ import ChatContext from "@/contexts/ChatContextProvider";
 import { ArrowLeft, MessageSquareOff, SendHorizonal } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router";
+import { API_URL } from "@/lib/config";
 
 export interface Message {
     id: number;
@@ -151,7 +152,7 @@ export default function ChatPage() {
                                             {chat.otherUser.profilePhotoPath && (
                                                 <AvatarImage
                                                     className="object-cover"
-                                                    src={`/api/images/${chat.otherUser.profilePhotoPath}`}
+                                                    src={`${API_URL}/images/${chat.otherUser.profilePhotoPath}`}
                                                     alt={`${chat.otherUser.name} ${chat.otherUser.lastname}`}
                                                 />
                                             )}
@@ -194,7 +195,7 @@ export default function ChatPage() {
                                         {activeChat.otherUser.profilePhotoPath && (
                                             <AvatarImage
                                                 className="object-cover"
-                                                src={`/api/images/${activeChat.otherUser.profilePhotoPath}`}
+                                                src={`${API_URL}/images/${activeChat.otherUser.profilePhotoPath}`}
                                                 alt={`${activeChat.otherUser.name} ${activeChat.otherUser.lastname}`}
                                             />
                                         )}

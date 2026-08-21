@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { useState } from "react";
 import { Link } from "react-router";
 import { CheckCircle2, Check, X } from "lucide-react";
+import { API_URL } from "@/lib/config";
 
 const passwordRules = [
     { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
@@ -81,7 +82,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             return;
         }
 
-        const resp : Response = await fetch("http://localhost/api/auth/register", {
+        const resp : Response = await fetch(`${API_URL}/auth/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

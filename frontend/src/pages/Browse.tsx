@@ -1,3 +1,4 @@
+import { API_URL } from "@/lib/config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -48,7 +49,6 @@ interface Recommendation {
     distanceBetween: string;
 }
 
-const API_URL = "/api";
 const MINIMUM_AGE = 18;
 
 export default function BrowsePage() {

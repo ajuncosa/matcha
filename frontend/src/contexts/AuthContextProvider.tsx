@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState, type ReactElement } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { API_URL } from "@/lib/config";
 
 export interface User {
     id: number;
@@ -71,7 +72,7 @@ function mergeSession(prev: User, session: SessionResponse): User {
 const AuthContext = createContext<AuthContextType>(defaultUserValue);
 
 export async function logInUser(username: string, password: string): Promise<User> {
-     const resp : Response = await fetch("http://localhost/api/auth/login", {
+     const resp : Response = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -107,7 +108,7 @@ export function AuthContextProvider({ children }: { children: ReactElement }) {
     const navigate = useNavigate();
 
     async function checkSession(): Promise<SessionResponse | null> {
-        const request = await fetch('http://localhost/api/auth/check-session');
+        const request = await fetch(`${API_URL}/auth/check-session`);
         if (request.status == 200) {
             const json: SessionResponse = await request.json();
             return json;

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactElement } fro
 import AuthContext from "./AuthContextProvider";
 import SocketContext from "./SocketContextProvider";
 import { toast } from "sonner";
+import { API_URL } from "@/lib/config";
 
 export type NotificationType = 'message' | 'like' | 'profile_view' | 'unlike';
 
@@ -43,7 +44,7 @@ export function NotificationsContextProvider({children}: {children: ReactElement
     }
 
     async function fetchNotificationsAsViewed(notificationsIds: number[]): Promise<number> {
-        const request = await fetch('http://localhost/api/notification/mark-as-viewed', {
+        const request = await fetch(`${API_URL}/notification/mark-as-viewed`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -85,7 +86,7 @@ export function NotificationsContextProvider({children}: {children: ReactElement
     }
 
     async function fetchUnreadNotifications() {
-        const request = await fetch('http://localhost/api/notification/new');
+        const request = await fetch(`${API_URL}/notification/new`);
         const requestBody = await request.json();
         
         setNotifications(requestBody);

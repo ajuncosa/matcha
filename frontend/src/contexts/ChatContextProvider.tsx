@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import AuthContext from "./AuthContextProvider";
 import SocketContext from "./SocketContextProvider";
+import { API_URL } from "@/lib/config";
 
 export interface Message {
     id: number;
@@ -49,7 +50,7 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
     const [chats, setChats] = useState<Chat[]>([]);
 
     async function fetchChats() {
-        const request = await fetch("http://localhost/api/chat");
+        const request = await fetch(`${API_URL}/chat`);
         // Not authenticated (or any error): the body isn't chat JSON, so bail out.
         if (!request.ok)
             return;
@@ -87,7 +88,7 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
             )
         );
 
-        await fetch("http://localhost/api/chat/viewed", {
+        await fetch(`${API_URL}/chat/viewed`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

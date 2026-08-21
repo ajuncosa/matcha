@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Check, CheckCircle2, X } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { API_URL } from "@/lib/config";
 
 const passwordRules = [
     { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
@@ -30,7 +31,7 @@ export default function ResetPasswordPage() {
         if (!isValid) { setError("Password does not meet the requirements"); return; }
         if (password !== confirm) { setError("Passwords do not match"); return; }
 
-        const resp = await fetch("/api/auth/reset-password", {
+        const resp = await fetch(`${API_URL}/auth/reset-password`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token, password }),

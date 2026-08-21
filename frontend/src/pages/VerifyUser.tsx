@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { API_URL } from "@/lib/config";
 
 export default function VerifyUser() {
     const { id } = useParams();
@@ -10,7 +11,7 @@ export default function VerifyUser() {
     const [accountVerified, setAccountVerified] = useState("loading");
 
     async function verifyUser() {
-        const request = await fetch(`http://localhost/api/auth/verify/${id}`);
+        const request = await fetch(`${API_URL}/auth/verify/${id}`);
         if (request.status == 200) {
             setAccountVerified("verified");
         }

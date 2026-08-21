@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, NavLink } from "react-router";
+import { API_URL } from "@/lib/config";
 
 interface ProfileVisitorDto {
     id: number;
@@ -91,10 +92,10 @@ export default function ProfilePage() {
     }
 
     async function getProfile(): Promise<void> {
-        await fetchUserData("http://localhost/api/user/profile");
+        await fetchUserData(`${API_URL}/user/profile`);
         const [visitorsResp, likersResp] = await Promise.all([
-            fetch("/api/user/visitors"),
-            fetch("/api/user/likers"),
+            fetch(`${API_URL}/user/visitors`),
+            fetch(`${API_URL}/user/likers`),
         ]);
         if (visitorsResp.ok) setVisitors(await visitorsResp.json());
         if (likersResp.ok) setLikers(await likersResp.json());
@@ -108,7 +109,7 @@ export default function ProfilePage() {
     }
 
     async function getUser(id: number): Promise<void> {
-        const resp = await fetch(`/api/user/${id}`);
+        const resp = await fetch(`${API_URL}/user/${id}`);
         if (resp.status === 403 || resp.status === 404) {
             navigate('/browser');
             return;
@@ -147,7 +148,7 @@ export default function ProfilePage() {
     };
 
     async function likeUser(id: number) {
-        const resp : Response = await fetch(`http://localhost/api/user/like/${id}`, {
+        const resp : Response = await fetch(`${API_URL}/user/like/${id}`, {
             method: "POST"
         });
 
@@ -166,7 +167,7 @@ export default function ProfilePage() {
     }
 
     async function unLikeUser(id: number) {
-        const resp : Response = await fetch(`http://localhost/api/user/unlike/${id}`, {
+        const resp : Response = await fetch(`${API_URL}/user/unlike/${id}`, {
             method: "POST"
         });
 
@@ -180,7 +181,7 @@ export default function ProfilePage() {
     }
 
     async function blockUser(id: number) {
-        const resp = await fetch(`/api/user/block/${id}`, { method: "POST" });
+        const resp = await fetch(`${API_URL}/user/block/${id}`, { method: "POST" });
         if (resp.ok) {
             setUserProfileData(prev => prev ? { ...prev, isBlockedByMe: true, likeStatus: "NOT_LIKED" } : prev);
             toast.success(`You blocked ${userProfileData!.name}`);
@@ -190,7 +191,7 @@ export default function ProfilePage() {
     }
 
     async function unblockUser(id: number) {
-        const resp = await fetch(`/api/user/unblock/${id}`, { method: "POST" });
+        const resp = await fetch(`${API_URL}/user/unblock/${id}`, { method: "POST" });
         if (resp.ok) {
             setUserProfileData(prev => prev ? { ...prev, isBlockedByMe: false } : prev);
             toast.success(`You unblocked ${userProfileData!.name}`);
@@ -200,7 +201,7 @@ export default function ProfilePage() {
     }
 
     async function reportUser(id: number) {
-        const resp = await fetch(`/api/user/report/${id}`, { method: "POST" });
+        const resp = await fetch(`${API_URL}/user/report/${id}`, { method: "POST" });
         if (resp.ok) {
             toast.success(`You reported ${userProfileData!.name} as fake.`);
         } else {
@@ -331,7 +332,7 @@ export default function ProfilePage() {
                         <Avatar key={userProfileData?.id} className="rounded-lg w-36 h-36">
                             {userProfileData?.profilePhoto &&
                                 <AvatarImage className="object-cover"
-                                    src={`http://localhost/api/images/${userProfileData?.profilePhoto.filePath}`}
+                                    src={`${API_URL}/images/${userProfileData?.profilePhoto.filePath}`}
                                     alt={`${userProfileData?.name} ${userProfileData?.lastname}`}
                                 />
                             }
@@ -420,7 +421,7 @@ export default function ProfilePage() {
                     <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                         {
                             userProfileData?.photos.map((photo) => {
-                                const url = `http://localhost/api/images/${photo.filePath}`;
+                                const url = `${API_URL}/images/${photo.filePath}`;
                                 return (
                                     <button
                                         key={photo.id}
@@ -476,7 +477,7 @@ export default function ProfilePage() {
                                         <CardContent className="flex items-center gap-3 p-2">
                                             <Avatar className="rounded-lg w-12 h-12 shrink-0">
                                                 {l.profilePhotoPath && (
-                                                    <AvatarImage className="object-cover" src={`/api/images/${l.profilePhotoPath}`} alt={`${l.name} ${l.lastname}`} />
+                                                    <AvatarImage className="object-cover" src={`${API_URL}/images/${l.profilePhotoPath}`} alt={`${l.name} ${l.lastname}`} />
                                                 )}
                                                 <AvatarFallback className="rounded-lg text-sm font-semibold">{l.name[0]}{l.lastname[0]}</AvatarFallback>
                                             </Avatar>
@@ -508,7 +509,7 @@ export default function ProfilePage() {
                                                 {v.profilePhotoPath && (
                                                     <AvatarImage
                                                         className="object-cover"
-                                                        src={`/api/images/${v.profilePhotoPath}`}
+                                                        src={`${API_URL}/images/${v.profilePhotoPath}`}
                                                         alt={`${v.name} ${v.lastname}`}
                                                     />
                                                 )}

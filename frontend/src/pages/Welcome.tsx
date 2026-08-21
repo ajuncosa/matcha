@@ -25,6 +25,7 @@ import UploadAndDisplayImage from "@/components/upload-image";
 import LocationPicker from "@/components/location-picker";
 import TagsPicker from "@/components/tags-picker";
 import type { UpdateUserRequestDto } from "@/dto/UserDto";
+import { API_URL } from "@/lib/config";
 
 interface FormState {
     gender: string;
@@ -227,7 +228,7 @@ export default function Welcome() {
             tags: formState.tags.map((tagName) => {return {action: "add", value: tagName}})
         }
 
-        const resp : Response = await fetch("http://localhost/api/user/profile", {
+        const resp : Response = await fetch(`${API_URL}/user/profile`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -253,7 +254,7 @@ export default function Welcome() {
             }
         }
 
-        const respPhotos : Response = await fetch("http://localhost/api/user/photos", {
+        const respPhotos : Response = await fetch(`${API_URL}/user/photos`, {
             method: "POST",
             body: photosFormData
         });

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
+import { API_URL } from "@/lib/config";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -16,7 +17,7 @@ export default function ForgotPasswordPage() {
         setError("");
         if (!email) { setError("Please enter your email"); return; }
 
-        const resp = await fetch("/api/auth/forgot-password", {
+        const resp = await fetch(`${API_URL}/auth/forgot-password`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),

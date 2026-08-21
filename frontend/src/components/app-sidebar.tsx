@@ -24,6 +24,7 @@ import { NavLink } from "react-router"
 import { useContext, useMemo } from "react"
 import AuthContext from "@/contexts/AuthContextProvider"
 import ChatContext from "@/contexts/ChatContextProvider"
+import { API_URL } from "@/lib/config"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { user } = useContext(AuthContext);
@@ -38,7 +39,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const navUser = {
 		name: `${user.name} ${user.lastname}`.trim(),
 		email: user.email,
-		avatar: user.profilePhotoPath ? `/api/images/${user.profilePhotoPath}` : ""
+		avatar: user.profilePhotoPath ? `${API_URL}/images/${user.profilePhotoPath}` : ""
 	};
 	return (
 		<Sidebar variant="inset" {...props}>

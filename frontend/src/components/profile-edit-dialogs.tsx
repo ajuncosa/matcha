@@ -50,6 +50,7 @@ import TagsPicker from "./tags-picker"
 import { Textarea } from "./ui/textarea"
 import UploadAndDisplayImage from "./upload-image"
 import LocationPicker from "./location-picker"
+import { API_URL } from "@/lib/config"
 import {
   Carousel,
   CarouselContent,
@@ -371,13 +372,13 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
     async function loadPhotos() {
         const loadedProfilePhoto : PhotoAction = {
             action: "none",
-            file: profileData.profilePhoto ? await createFile(`http://localhost/api/images/${profileData.profilePhoto.filePath}`, profileData.profilePhoto.filePath) : null
+            file: profileData.profilePhoto ? await createFile(`${API_URL}/images/${profileData.profilePhoto.filePath}`, profileData.profilePhoto.filePath) : null
         }
         const loadedPhotos : PhotoAction[] = await Promise.all(
             profileData.photos.map(async (p) => {
                 return {
                     action: "none",
-                    file: await createFile(`http://localhost/api/images/${p.filePath}`, p.filePath)
+                    file: await createFile(`${API_URL}/images/${p.filePath}`, p.filePath)
                 }
             })
         )
@@ -527,7 +528,7 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
             tags: tagActions,
         };
 
-        const resp: Response = await fetch("http://localhost/api/user/profile", {
+        const resp: Response = await fetch(`${API_URL}/user/profile`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dto)
@@ -546,7 +547,7 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
 
         for (const p of userForm.photos) {
             if (p.action === "delete") {
-                await fetch(`http://localhost/api/user/photos/${p.id}`, { method: "DELETE" });
+                await fetch(`${API_URL}/user/photos/${p.id}`, { method: "DELETE" });
             }
         }
 
@@ -558,20 +559,20 @@ export default function ProfileEditDialog({ profileData, onUpdate }: {
 
             if (userForm.profilePhoto.action === "add") {
                 if (profileData.profilePhoto)
-                    await fetch(`http://localhost/api/user/photos/${profileData.profilePhoto.id}`, { method: "DELETE" });
+                    await fetch(`${API_URL}/user/photos/${profileData.profilePhoto.id}`, { method: "DELETE" });
                 formData.append("profile_photo", userForm.profilePhoto.file);
             }
 
             for (let [idx, p] of userForm.photos.entries()) {
                 if (p.action === "add") {
                     if (profileData.photos[idx])
-                        await fetch(`http://localhost/api/user/photos/${profileData.photos[idx].id}`, { method: "DELETE" });
+                        await fetch(`${API_URL}/user/photos/${profileData.photos[idx].id}`, { method: "DELETE" });
 
                     formData.append("photos", p.file);
                 }
             }
 
-            const respPhotos: Response = await fetch("http://localhost/api/user/photos", {
+            const respPhotos: Response = await fetch(`${API_URL}/user/photos`, {
                 method: "POST",
                 body: formData
             });
