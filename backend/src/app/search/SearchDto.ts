@@ -9,6 +9,8 @@ export interface SearchRequestDto {
     maxDistance?: number;
     tags?: string;
     minCommonTags?: number;
+    gender?: string;
+    sex?: string;
     sortBy?: "age" | "location" | "fame-rating" | "common-tags" | "none";
     sortOrder?: "asc" | "desc";
     page?: number;

@@ -54,6 +54,8 @@ export default function SearchPage() {
     const [maxDistance, setMaxDistance] = useState("");
     const [tags, setTags] = useState("");
     const [minCommonTags, setMinCommonTags] = useState("");
+    const [gender, setGender] = useState<string>("");
+    const [sex, setSex] = useState<string>("");
     const [sortBy, setSortBy] = useState<string>("");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
@@ -79,13 +81,15 @@ export default function SearchPage() {
         if (maxDistance) params.set("maxDistance", maxDistance);
         if (tags) params.set("tags", tags);
         if (minCommonTags) params.set("minCommonTags", minCommonTags);
+        if (gender && gender !== "any") params.set("gender", gender);
+        if (sex && sex !== "any") params.set("sex", sex);
         if (sortBy && sortBy !== "no-sort") params.set("sortBy", sortBy);
         params.set("sortOrder", sortOrder);
         params.set("page", pageNum.toString());
         params.set("limit", "20");
 
         return `${API_URL}/search?${params.toString()}`;
-    }, [searchText, minAge, maxAge, minFame, maxFame, maxDistance, tags, minCommonTags, sortBy, sortOrder]);
+    }, [searchText, minAge, maxAge, minFame, maxFame, maxDistance, tags, minCommonTags, gender, sex, sortBy, sortOrder]);
 
     const performSearch = useCallback(async (pageNum: number, append: boolean = false) => {
         setLoading(true);
@@ -159,6 +163,8 @@ export default function SearchPage() {
         setMaxDistance("");
         setTags("");
         setMinCommonTags("");
+        setGender("");
+        setSex("");
         setSortBy("");
         setSortOrder("asc");
     };
@@ -272,6 +278,39 @@ export default function SearchPage() {
                                 value={minCommonTags}
                                 onChange={(e) => setMinCommonTags(e.target.value)}
                             />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-3 items-center gap-4">
+                        <Label htmlFor="gender">Gender</Label>
+                        <div className="col-span-2 flex gap-1">
+                            <Select value={gender} onValueChange={setGender}>
+                                <SelectTrigger id="gender" className="flex-1 cursor-pointer">
+                                    <SelectValue placeholder="Any" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="any">Any</SelectItem>
+                                    <SelectItem value="man">Man</SelectItem>
+                                    <SelectItem value="woman">Woman</SelectItem>
+                                    <SelectItem value="non_binary">Non Binary</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-3 items-center gap-4">
+                        <Label htmlFor="sex">Sex</Label>
+                        <div className="col-span-2 flex gap-1">
+                            <Select value={sex} onValueChange={setSex}>
+                                <SelectTrigger id="sex" className="flex-1 cursor-pointer">
+                                    <SelectValue placeholder="Any" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="any">Any</SelectItem>
+                                    <SelectItem value="male">Male</SelectItem>
+                                    <SelectItem value="female">Female</SelectItem>
+                                    <SelectItem value="intersex">Intersex</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-4">

@@ -43,6 +43,18 @@ export default class SearchRepositoryPostgres implements ISearchRepository {
             paramIndex++;
         }
 
+        if (criteria.gender) {
+            conditions.push(`ud.gender = $${paramIndex}`);
+            params.push(criteria.gender);
+            paramIndex++;
+        }
+
+        if (criteria.sex) {
+            conditions.push(`ud.sex = $${paramIndex}`);
+            params.push(criteria.sex);
+            paramIndex++;
+        }
+
         if (criteria.tags && criteria.tags.length > 0) {
             const tagPlaceholders = criteria.tags.map(() => `$${paramIndex++}`).join(",");
             conditions.push(`EXISTS (
