@@ -29,7 +29,8 @@ export default class ChatUseCases {
             name: otherUser.name,
             lastname: otherUser.lastname,
             lastConnection: otherUser.details?.lastConnection ?? null,
-            isOnline: this.socketRegistry.getUserSocket(otherUser.id) ? true : false
+            isOnline: this.socketRegistry.getUserSocket(otherUser.id) ? true : false,
+            profilePhotoPath: otherUser.details?.profilePhoto?.filePath ?? null
         };
     }
 

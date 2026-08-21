@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -27,6 +27,7 @@ export interface ChatUser {
     lastname: string;
     lastConnection: string | null;
     isOnline: boolean;
+    profilePhotoPath: string | null;
 }
 
 export interface Chat {
@@ -147,6 +148,13 @@ export default function ChatPage() {
                                 <Item key={index} variant="outline" className="cursor-pointer" onClick={() => changeChat(index)}>
                                     <ItemMedia>
                                         <Avatar className="rounded-lg size-10">
+                                            {chat.otherUser.profilePhotoPath && (
+                                                <AvatarImage
+                                                    className="object-cover"
+                                                    src={`/api/images/${chat.otherUser.profilePhotoPath}`}
+                                                    alt={`${chat.otherUser.name} ${chat.otherUser.lastname}`}
+                                                />
+                                            )}
                                             <AvatarFallback className="rounded-lg font-semibold">
                                                 {chat.otherUser.name[0]}{chat.otherUser.lastname[0]}
                                             </AvatarFallback>
@@ -183,6 +191,13 @@ export default function ChatPage() {
                                         <ArrowLeft />
                                     </Button>
                                     <Avatar className="rounded-lg size-10">
+                                        {activeChat.otherUser.profilePhotoPath && (
+                                            <AvatarImage
+                                                className="object-cover"
+                                                src={`/api/images/${activeChat.otherUser.profilePhotoPath}`}
+                                                alt={`${activeChat.otherUser.name} ${activeChat.otherUser.lastname}`}
+                                            />
+                                        )}
                                         <AvatarFallback className="rounded-lg font-semibold">
                                             {activeChat.otherUser.name[0]}{activeChat.otherUser.lastname[0]}
                                         </AvatarFallback>

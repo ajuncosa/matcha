@@ -17,6 +17,7 @@ export interface ChatUser {
     lastname: string;
     lastConnection: string | null;
     isOnline: boolean;
+    profilePhotoPath: string | null;
 }
 
 export interface Chat {
