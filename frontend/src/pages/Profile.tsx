@@ -55,7 +55,7 @@ function timeAgo(dateStr: string): string {
 
 export default function ProfilePage() {
     const { id } = useParams();
-    const { user } = useContext(AuthContext);
+    const { user, refreshUser } = useContext(AuthContext);
     const [userProfileData, setUserProfileData] = useState<UserProfileResponseDto>();
     const [location, setLocation] = useState<{lat: number, lon: number}>({lat: 40.4168, lon: -3.7038});
     const [visitors, setVisitors] = useState<ProfileVisitorDto[]>([]);
@@ -98,6 +98,13 @@ export default function ProfilePage() {
         ]);
         if (visitorsResp.ok) setVisitors(await visitorsResp.json());
         if (likersResp.ok) setLikers(await likersResp.json());
+    }
+
+    // After an edit is saved, also refresh the auth user so the sidebar footer
+    // picks up a changed profile photo / name / email without a page reload.
+    async function onProfileUpdated(): Promise<void> {
+        await getProfile();
+        await refreshUser();
     }
 
     async function getUser(id: number): Promise<void> {
@@ -373,7 +380,7 @@ export default function ProfilePage() {
                                 onReport={reportUser}
                             />
                         ) : (
-                            <ProfileEditDialog profileData={userProfileData} onUpdate={getProfile} />
+                            <ProfileEditDialog profileData={userProfileData} onUpdate={onProfileUpdated} />
                         )
                     )
                 }

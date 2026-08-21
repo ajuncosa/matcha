@@ -55,7 +55,7 @@ function calculateAge(birthday: Date): number {
 }
 
 export default function Welcome() {
-    const { user } = useContext(AuthContext);
+    const { user, refreshUser } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const maxBirthday = new Date();
@@ -267,6 +267,10 @@ export default function Welcome() {
                 setFormError(`Server error (${respPhotos.status})`);
             return;
         }
+
+        // Pull in the freshly-created profile (photo included) before leaving
+        // onboarding, so the sidebar renders it immediately.
+        await refreshUser();
 
         navigate('/browser');
     }

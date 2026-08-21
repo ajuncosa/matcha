@@ -33,6 +33,8 @@ export default class AuthRouter extends MatchaRouter {
                 userId: user.id,
                 name: user.name,
                 lastname: user.lastname,
+                email: user.email.value(),
+                profilePhotoPath: user.details?.profilePhoto?.filePath ?? null,
                 profileCompleted: user.details != null
             });
         }
@@ -101,15 +103,33 @@ export default class AuthRouter extends MatchaRouter {
     }
 
     async checkSession(req: Request, res: Response) {
-        if (req.session && req.session.userId) {
+        if (!req.session || !req.session.userId) {
+            res.status(401).send();
+            return;
+        }
+
+        try {
             const userProfile: UserProfileResponseDto = await this.userUseCases.getUser(req.session.userId);
 
             res.status(200).json({
+                userId: userProfile.id,
+                name: userProfile.name,
+                lastname: userProfile.lastname,
+                email: userProfile.email,
+                profilePhotoPath: userProfile.profilePhoto?.filePath ?? null,
                 profileCompleted: userProfile.biography != null
             });
         }
-        else {
-            res.status(401).send();
+        catch (e) {
+            // getUser() throws UserNotFound when the user has no details row yet,
+            // i.e. onboarding is still pending. The session itself is still valid,
+            // so report it as an incomplete profile rather than failing the request.
+            if (e instanceof UserNotFound) {
+                res.status(200).json({ profileCompleted: false });
+            }
+            else {
+                throw e;
+            }
         }
     }
 

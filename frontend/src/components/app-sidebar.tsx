@@ -36,10 +36,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         { title: "Chat", url: "/chat", icon: MessageCircle, badge: totalUnread || undefined },
     ];
 	const navUser = {
-		name: `${user.name} ${user.lastname}`,
-		// TODO: fill this in
-		email: "m@example.com",
-		avatar: "/avatars/shadcn.jpg"
+		name: `${user.name} ${user.lastname}`.trim(),
+		email: user.email,
+		avatar: user.profilePhotoPath ? `/api/images/${user.profilePhotoPath}` : ""
 	};
 	return (
 		<Sidebar variant="inset" {...props}>
