@@ -7,7 +7,6 @@ import { fileTypeFromFile } from "file-type";
 import { unlink } from "node:fs/promises";
 import type { Request, Response, NextFunction } from "express";
 
-// Real image formats we accept, verified by magic bytes (not the client-provided mime).
 const ALLOWED_IMAGE_MIMES = new Set([
     "image/jpeg",
     "image/png",
@@ -50,9 +49,6 @@ export class PhotoService implements IPhotoService {
         });
     }
 
-    // Wraps a multer middleware so upload errors (wrong file type, too large, too
-    // many files) return a clean 422 message instead of Express's default HTML
-    // error page with a stack trace.
     private withUploadErrorHandling(middleware: ReturnType<Multer["fields"]>) {
         return (req: Request, res: Response, next: NextFunction) => {
             middleware(req, res, (err: any) => {
@@ -79,11 +75,6 @@ export class PhotoService implements IPhotoService {
         ]));
     }
 
-    // Express middleware that runs AFTER multer has written the files to disk.
-    // It reads each file's magic bytes to confirm it is a genuine image, and
-    // rejects (deleting every uploaded file) if any is not. This defends against
-    // spoofed extensions / mime types, since multer's fileFilter only sees the
-    // client-provided mimetype.
     validateImages()
     {
         return async (req: Request, res: Response, next: NextFunction) => {

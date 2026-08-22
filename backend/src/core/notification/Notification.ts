@@ -41,8 +41,6 @@ export class Notification {
     }
 }
 
-//FIXME: ?? Are these types above useless? :(
-
 export class MessageNotification extends Notification {
 
     constructor(id: NotificationId, producer: UserId, target: UserId, text: string) {

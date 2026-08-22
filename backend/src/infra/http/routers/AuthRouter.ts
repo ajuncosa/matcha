@@ -121,9 +121,6 @@ export default class AuthRouter extends MatchaRouter {
             });
         }
         catch (e) {
-            // getUser() throws UserNotFound when the user has no details row yet,
-            // i.e. onboarding is still pending. The session itself is still valid,
-            // so report it as an incomplete profile rather than failing the request.
             if (e instanceof UserNotFound) {
                 res.status(200).json({ profileCompleted: false });
             }

@@ -65,8 +65,6 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
         const userSock: Socket = new IoSocket(socket, socket.id, userId);
         this.usersSocketsMap.set(userId, userSock);
         
-        //WARNING: this fucker sometimes does not work when the server restars bc of modified files.
-        // YOU HAVE TO RESTART THE PROCESS IN THE TERMINAL "CTRL+C and the bun run dev"
         socket.onAny((event, payload: any) => this.onAnyEvent(event, userSock, payload));
 
         socket.on('disconnect', (reason: DisconnectReason) =>
@@ -83,9 +81,6 @@ export class SocketRegistrySocketIO implements IUserSocketRegistry {
 
         if (!userId) return;
 
-        // Only clear presence if this exact socket is still the registered one.
-        // Prevents a replaced socket (e.g. user opened a second tab) from marking
-        // the still-online user as offline.
         const currentSocket: Socket | undefined = this.usersSocketsMap.get(userId);
         if (!currentSocket || currentSocket.id !== socket.id) return;
 

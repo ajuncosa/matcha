@@ -27,8 +27,6 @@ export class SearchUseCases {
 
         const searcherTags = searcher.details?.tags || [];
 
-        // Default distance origin to the searcher's own location so distance is
-        // always computed, even when lat/lon are not passed as query params.
         if (criteria.userLat === undefined && criteria.userLon === undefined && searcher.details) {
             criteria.userLat = searcher.details.lat;
             criteria.userLon = searcher.details.lon;
