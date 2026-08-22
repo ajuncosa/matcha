@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input"
 import { Link, useNavigate } from "react-router";
 import { useContext, useState } from "react"
 import AuthContext, { logInUser, type User } from "@/contexts/AuthContextProvider"
-import SocketContext from "@/contexts/SocketContextProvider"
 
 interface LoginForm {
     username: string;
@@ -30,7 +29,6 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
     const navigate = useNavigate();
     const { setUser } = useContext(AuthContext);
-    const userSocket = useContext(SocketContext);
 
     const [form, setForm] = useState<LoginForm>({
         username: "",
@@ -62,7 +60,10 @@ export function LoginForm({
             }
 
             setUser(loggedInUser);
-            userSocket.connect();
+            // The socket connects reactively from SocketContextProvider when
+            // loggedIn flips true. Connecting again here created a second, racing
+            // socket without the event bridge — the cause of the chat unread badge
+            // not updating live right after the first login.
 
             if (loggedInUser.profileCompleted)
                 navigate('/browser');

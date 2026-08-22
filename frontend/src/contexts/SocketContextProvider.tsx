@@ -23,12 +23,28 @@ class UserSocket {
     }
 
     connect() {
+        // Idempotent: never create a second socket. A duplicate socket would race
+        // the first one (the backend keeps only one per user) and, worse, could be
+        // left without the onAny bridge below — silently dropping every server
+        // event (e.g. chat:message that drives the unread badge).
+        if (this.socket) return;
         this.socket = io(this.url);
         this.isConnected = true;
+        // Bridge every incoming server event to our own subscriber registry.
+        // Attaching it here (not in the provider effect) guarantees any socket we
+        // create always has it, no matter who triggered the connect.
+        this.socket.onAny((event, args) => this.emitEventFromServer(event, args));
+        // socket.io reconnects on its own after a dropped transport. onAny does
+        // NOT fire for the reserved 'connect' event, so bridge it explicitly as a
+        // synthetic event: consumers can resync any state they may have missed
+        // while the connection was down (e.g. refetch chats for the unread badge).
+        this.socket.on("connect", () => this.emitEventFromServer("socket:connect", null));
     }
 
     disconnect() {
         this.socket?.disconnect();
+        this.socket = null;
+        this.isConnected = false;
     }
 
 
@@ -66,14 +82,12 @@ class UserSocket {
         });
 
         if (subscriberIndex === -1) return;
-        
+
         eventSubs.splice(subscriberIndex, 1);
-        
+
         if (eventSubs.length === 0) {
             this.eventsSubscribers.delete(event);
         }
-
-        eventSubs.splice(subscriberIndex, 1);
     }
 
     emitEventFromServer(event: string, payload: any): void {
@@ -102,9 +116,10 @@ export function SocketContextProvider({children}: {children: React.ReactElement}
     }
 
     useEffect(() => {
+        // connect() is idempotent and attaches the onAny bridge itself, so the
+        // connection lifecycle is owned entirely here (driven by login state) —
+        // no component should call connect() manually.
         checkSocketConnection();
-        //socket.current.socket?.on('notification-like', onLikeNotification);
-        socket.current.socket?.onAny((event, args) => socket.current.emitEventFromServer(event, args));
     }, [user.loggedIn]);
 
     return (

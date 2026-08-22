@@ -1,6 +1,9 @@
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 
+import "leaflet/dist/leaflet.css";
+import "@/lib/leaflet-icon";
+
 function ChangeView({ center }: { center: [number, number] }) {
   const map = useMap();
   

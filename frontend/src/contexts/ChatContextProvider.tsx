@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import AuthContext from "./AuthContextProvider";
 import SocketContext from "./SocketContextProvider";
 import { API_URL } from "@/lib/config";
@@ -48,6 +48,11 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
     const { user } = useContext(AuthContext);
     const socket = useContext(SocketContext);
     const [chats, setChats] = useState<Chat[]>([]);
+    // The socket 'chat:message' handler is registered once and would otherwise
+    // close over a stale chats value. Keep a ref in sync so it can read the
+    // current list (e.g. to tell whether the sender's chat is loaded yet).
+    const chatsRef = useRef<Chat[]>([]);
+    useEffect(() => { chatsRef.current = chats; }, [chats]);
 
     async function fetchChats() {
         const request = await fetch(`${API_URL}/chat`);
@@ -121,6 +126,16 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
     }
 
     async function receiveMessage(payload: Message) {
+        // Conversation not in our local list yet — this happens when the match was
+        // made after we loaded chats (log in, then match, then get a message). Pull
+        // the authoritative list so the new chat and its unread count (and thus the
+        // sidebar badge) appear live instead of only after opening the chat page.
+        const chatLoaded = chatsRef.current.some((chat) => chat.otherUser.id == payload.sender);
+        if (!chatLoaded) {
+            await fetchChats();
+            return;
+        }
+
         setChats((prevChats) => {
             return prevChats.map((chat) => {
                 if (chat.otherUser.id == payload.sender) {
@@ -192,11 +207,20 @@ export function ChatContextProvider({children}: {children: React.ReactElement}) 
             "ChatContextProvider",
             (payload) => closeChat(payload)
         );
+        // Resync on every (re)connect so messages that arrived while the socket
+        // was down still surface (and the unread badge stays accurate). Refetch
+        // pulls authoritative server state, so it never invents unread messages.
+        const reconnectSubId: number = socket.subscribeToEvent(
+            'socket:connect',
+            "ChatContextProvider",
+            () => { if (user.loggedIn) fetchChats(); }
+        );
 
         return () => {
             socket.unsubscribeFromEvent(subscriberId, 'chat:message', "ChatContextProvider");
             socket.unsubscribeFromEvent(presenceSubId, 'presence:update', "ChatContextProvider");
             socket.unsubscribeFromEvent(chatClosedSubId, 'chat:closed', "ChatContextProvider");
+            socket.unsubscribeFromEvent(reconnectSubId, 'socket:connect', "ChatContextProvider");
         }
 
     }, [user.loggedIn]);

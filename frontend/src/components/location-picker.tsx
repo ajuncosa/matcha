@@ -2,6 +2,7 @@ import L from 'leaflet';
 import { useEffect, useRef, useState } from 'react';
 
 import "leaflet/dist/leaflet.css";
+import "@/lib/leaflet-icon";
 
 export default function LocationPicker({setLocation, defaultLat, defaultLon, askForLocation} : {setLocation: CallableFunction, defaultLat: number, defaultLon: number, askForLocation: boolean}) {
     const mapRef = useRef(null);
